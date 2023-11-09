@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "NTR";
+  src: url("fonts/NTR-Regular.ttf");
+}
+
+@font-face {
+  font-family: "ComingSoon";
+  src: url("fonts/ComingSoon.ttf");
+  font-display: swap;
+}
+
+@layer base {
+  body {
+    @apply bg-background;
+    @apply text-text;
+    @apply min-h-screen;
+    font-family: "NTR";
+    transition: 0.3s;
+  }
+  button, .toast, h1, h2, h3, h4, h5, h6 {
+    font-family: "ComingSoon", sans-serif;
+  }
+  .scale-1,.scale-3,.scale-5,
+  .scale-1:hover,.scale-3:hover,.scale-5:hover {
+    transition: .3s;
+  }
+  .scale-1:hover {
+    transform: scale(1.1);
+  }
+  .scale-3:hover {
+    transform: scale(1.2);
+  }
+  .scale-5:hover {
+    transform: scale(1.5);
+  }
+  .scale-0:hover {
+    transform: scale(1) !important;
+  }
+}

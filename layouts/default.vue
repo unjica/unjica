@@ -1,7 +1,8 @@
 <template>
-  <div class="flex flex-col">
-    <NavBar class="h-18 sticky top-0 z-20" />
-    <Nuxt class=" sticky top-0 z-10" />
+  <div class="flex flex-col justify-between h-screen">
+    <NavBar class="h-18" />
+    <Nuxt class="h-full" />
+
     <Toast />
   </div>
 </template>

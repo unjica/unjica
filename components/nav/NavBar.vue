@@ -10,21 +10,21 @@
       <Logo />
 
       <div class="flex">
-        <button
-          @click="$router.push('#about')"
-          class="mr-5 scale-1"
-        >About</button>
-        <button
-          @click="$router.push('#work')"
-          class="mr-5 scale-1"
-        >Work</button>
-        <button
-          @click="$router.push('#experience')"
-          class="mr-5 scale-1"
-        >Experience</button>
-        <button
-          class="mr-5 scale-1"
-        >Contact</button>
+<!--        <button-->
+<!--          @click="$router.push('#about')"-->
+<!--          class="mr-5 scale-1"-->
+<!--        >About</button>-->
+<!--        <button-->
+<!--          @click="$router.push('#work')"-->
+<!--          class="mr-5 scale-1"-->
+<!--        >Work</button>-->
+<!--        <button-->
+<!--          @click="$router.push('#experience')"-->
+<!--          class="mr-5 scale-1"-->
+<!--        >Experience</button>-->
+<!--        <button-->
+<!--          class="mr-5 scale-1"-->
+<!--        >Contact</button>-->
       </div>
 
       <button v-if="theme === themes.dark" @click="setTheme(themes.light)">
