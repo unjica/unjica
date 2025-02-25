@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import Image from 'next/image';
 import { GoogleAnalytics } from 'nextjs-google-analytics';
+import { GradientText } from '@/components/ui/GradientText';
+import { Button } from '@/components/ui/Button';
+import { Container } from '@/components/ui/Container';
+import { BlurredBackground } from '@/components/ui/BlurredBackground';
 
 export default function Home() {
   const [email, setEmail] = useState('');
@@ -14,7 +17,7 @@ export default function Home() {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 
-  const springConfig = { damping: 40, stiffness: 400 };
+  const springConfig = { damping: 25, stiffness: 200 };
   const mouseX = useSpring(x, springConfig);
   const mouseY = useSpring(y, springConfig);
 
@@ -75,37 +78,15 @@ export default function Home() {
         gaMeasurementId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} 
       />
       
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="max-w-2xl mx-auto text-center"
-      >
-        <motion.h1 
-          id="title"
-          className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 bg-clip-text text-transparent cursor-pointer perspective-1000"
-          animate={{ 
-            y: [0, -8, 0],
-          }}
-          style={{
-            rotateX: rotateX,
-            rotateY: rotateY,
-          }}
-          transition={{ 
-            duration: 4,
-            repeat: Infinity,
-            repeatType: "reverse",
-            ease: "easeInOut"
-          }}
-          whileHover={{ 
-            scale: 1.05,
-            textShadow: "0 0 8px rgba(255,255,255,0.2)",
-          }}
-          whileTap={{ scale: 0.95 }}
-        >
-          Modern Art News
-        </motion.h1>
-        
+      <Container>
+        <motion.div style={{ rotateX, rotateY, perspective: 1000 }}>
+          <GradientText 
+            className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6"
+            id="title"
+          >
+            Modern Art News
+          </GradientText>
+        </motion.div>
         <motion.p 
           className="text-xl md:text-2xl mb-8 text-gray-300"
           animate={{ opacity: 1 }}
@@ -132,23 +113,7 @@ export default function Home() {
                   aria-label="Email address"
                   disabled={isLoading}
                 />
-                <button
-                  type="submit"
-                  className="px-6 py-3 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 relative"
-                  aria-label="Submit email for updates"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <span className="opacity-0">Notify Me</span>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      </div>
-                    </>
-                  ) : (
-                    'Notify Me'
-                  )}
-                </button>
+                <Button>Notify Me</Button>
               </form>
             ) : (
               <motion.p
@@ -191,27 +156,9 @@ export default function Home() {
             </nav>
           </motion.div>
         </footer>
-      </motion.div>
+      </Container>
 
-      {/* Background with blurred logo */}
-      <div className="fixed inset-0 -z-10 overflow-hidden" aria-hidden="true">
-        <div className="absolute inset-0 w-full h-full">
-          <Image
-            src={'/Unjica LOGO.jpeg'}
-            alt="Background Logo"
-            fill
-            priority
-            sizes="100vw"
-            style={{ 
-              objectFit: 'cover',
-              position: 'absolute',
-            }}
-            className="blur-[4px] brightness-[0.3] scale-110"
-            quality={100}
-          />
-        </div>
-        <div className="absolute inset-0 bg-black/30" />
-      </div>
+      <BlurredBackground />
     </main>
   );
 }
