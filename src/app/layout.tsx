@@ -2,7 +2,6 @@ import './globals.css';
 import { Inter } from 'next/font/google';
 import defaultMetadata from './metadata';
 import type { Viewport } from 'next';
-import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 const inter = Inter({ subsets: ['latin'] });
 
