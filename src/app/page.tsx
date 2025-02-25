@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import Image from 'next/image';
+import { GoogleAnalytics } from 'nextjs-google-analytics';
 
 export default function Home() {
   const [email, setEmail] = useState('');
@@ -69,6 +70,11 @@ export default function Home() {
 
   return (
     <main className="min-h-screen text-white flex flex-col items-center justify-center p-4" role="main">
+      <GoogleAnalytics 
+        trackPageViews 
+        gaMeasurementId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} 
+      />
+      
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
