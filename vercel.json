@@ -1,0 +1,21 @@
+{
+  "crons": [
+    {
+      "path": "/api/scheduler",
+      "schedule": "0 * * * *"
+    }
+  ],
+  "env": {
+    "CRON_SECRET": "@cron_secret",
+    "DATABASE_URL": "@database_url"
+  },
+  "buildCommand": "prisma generate && next build",
+  "functions": {
+    "app/api/scheduler/route.ts": {
+      "memory": 512
+    },
+    "app/api/art-digest/route.ts": {
+      "memory": 1024
+    }
+  }
+} 

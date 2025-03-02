@@ -1,6 +1,6 @@
 {
   "name": "unjica",
-  "version": "0.1.0",
+  "version": "20250302",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -9,18 +9,25 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.8.0",
+    "@prisma/client": "^6.4.1",
     "@radix-ui/react-slot": "^1.1.2",
+    "@supabase/supabase-js": "^2.49.1",
+    "bcryptjs": "^3.0.2",
     "clsx": "^2.1.1",
     "framer-motion": "^12.4.7",
     "next": "15.1.7",
+    "next-auth": "^5.0.0-beta.25",
     "nextjs-google-analytics": "^2.3.7",
     "nodemailer": "^6.10.0",
+    "prisma": "^6.4.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^3.0.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@types/next-auth": "^3.13.0",
     "@types/node": "^20",
     "@types/nodemailer": "^6.4.17",
     "@types/react": "^19",

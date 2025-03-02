@@ -2,6 +2,10 @@ import './globals.css';
 import { Inter } from 'next/font/google';
 import defaultMetadata from './metadata';
 import type { Viewport } from 'next';
+import { Navbar } from '@/components/ui/Navbar';
+import { SchedulerInitializer } from '@/components/ui/SchedulerInitializer';
+import { Footer } from '@/components/ui/Footer';
+import { SessionProvider } from '@/components/providers/SessionProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -39,9 +43,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="canonical" href="https://modernartnews.com" />
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Unjica - Art News & AI Digest</title>
+        <meta name="description" content="Discover modern art news and AI-generated digest articles." />
+        <link rel="canonical" href="https://unjica.com" />
         <link rel="icon" href="/favicon.png" type="image/png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
@@ -56,10 +64,10 @@ export default function RootLayout({
               '@type': 'WebSite',
               name: 'Modern Art News',
               description: 'Your curated source for contemporary art insights',
-              url: 'https://modernartnews.com',
+              url: 'https://unjica.com',
               potentialAction: {
                 '@type': 'SearchAction',
-                target: 'https://modernartnews.com/search?q={search_term_string}',
+                target: 'https://unjica.com/search?q={search_term_string}',
                 'query-input': 'required name=search_term_string',
               },
             }),
@@ -67,8 +75,15 @@ export default function RootLayout({
         />
       </head>
 
-      <body className={inter.className}>
-        {children}
+      <body className={`${inter.className} min-h-screen flex flex-col bg-white dark:bg-gray-900`}>
+        <SessionProvider>
+          <SchedulerInitializer />
+          <Navbar />
+          <main className="flex-grow">
+            {children}
+          </main>
+          <Footer />
+        </SessionProvider>
       </body>
     </html>
   );

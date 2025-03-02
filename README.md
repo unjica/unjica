@@ -1,10 +1,10 @@
 # Unjica
 
-A modern web application built with Next.js 15, React 19, and TypeScript.
+A modern web application built with Next.js 15, React 19, and TypeScript featuring AI-generated art news digests.
 
 ## Overview
 
-Unjica is a clean, modern web application that serves as a foundation for building dynamic web experiences. It features responsive design, interactive UI components with smooth animations, and email subscription functionality.
+Unjica is a clean, modern web application that serves as a platform for modern art news and AI-generated art digests. It features responsive design, interactive UI components with smooth animations, a database for storing generated content, and an automated scheduler that generates new art digests hourly.
 
 ## Key Technologies
 
@@ -13,7 +13,10 @@ Unjica is a clean, modern web application that serves as a foundation for buildi
 - **TypeScript** - Type-safe JavaScript superset
 - **Tailwind CSS** - Utility-first CSS framework
 - **Framer Motion** - Animation library for React
-- **Nodemailer** - For email functionality
+- **Prisma** - Type-safe ORM for database access
+- **SQLite/PostgreSQL** - Database for storing generated articles
+- **News API** - External API for fetching art news
+- **Vercel Cron** - For scheduled tasks that run hourly even when no users are active
 
 ## Getting Started
 
@@ -31,6 +34,18 @@ Create a `.env.local` file based on the `.env.local.example`:
 cp .env.local.example .env.local
 ```
 
+Add your News API key to the `.env.local` file:
+
+```
+NEWS_API_KEY=your_api_key_here
+```
+
+Initialize the database:
+
+```bash
+npx prisma migrate dev
+```
+
 Then, run the development server:
 
 ```bash
@@ -40,6 +55,13 @@ yarn dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
+
+## Features
+
+- **Modern Art News** - View the latest news from the art world
+- **AI-Generated Digests** - Read AI-generated analysis of art trends and news
+- **Hourly Updates** - New digest articles are automatically generated hourly
+- **Central Database** - All generated articles are stored in a database for all users to access
 
 ## Documentation
 
@@ -57,12 +79,65 @@ For comprehensive documentation about the project, please refer to the [document
 - `npm run build` - Build the application for production
 - `npm run start` - Start the production server
 - `npm run lint` - Run ESLint for code linting
+- `npx prisma studio` - Open Prisma Studio to view and edit database data
 
 ## Deployment
 
 The easiest way to deploy the application is to use the [Vercel Platform](https://vercel.com) from the creators of Next.js.
 
+For deployment with the scheduler functionality, make sure to:
+
+1. Set up these environment variables on Vercel:
+   - `DATABASE_URL` - URL to your PostgreSQL database
+   - `NEWS_API_KEY` - Your News API key
+   - `CRON_SECRET` - A secret key for securing cron job endpoints
+
+2. **IMPORTANT: Setting up the Scheduler**
+
+   The application relies on hourly article generation, which requires a proper cron job setup. Due to the serverless nature of Next.js API routes, the built-in scheduler won't run continuously.
+
+   **Option 1: Vercel Cron (Recommended)**
+   
+   Add this to your `vercel.json` file:
+   ```json
+   {
+     "crons": [
+       {
+         "path": "/api/scheduler",
+         "schedule": "0 * * * *"
+       }
+     ]
+   }
+   ```
+
+   **Option 2: External cron service**
+   
+   Use a service like cron-job.org, Upstash, or GitHub Actions to call your `/api/scheduler` endpoint hourly.
+
+   **Option 3: Local development**
+   
+   For local testing, you can run the included script:
+   ```bash
+   # Make it executable first
+   chmod +x scripts/generate-digest-cron.js
+   
+   # Then run it
+   ./scripts/generate-digest-cron.js
+   ```
+
+   You can add this to your local crontab to run hourly:
+   ```
+   0 * * * * /path/to/your/project/scripts/generate-digest-cron.js
+   ```
+
 For more information on deployment options, see the [Setup Guide](./documentation/setup-guide.md#deployment).
+
+## Database Options
+
+- **Development**: Uses SQLite for local development (file-based)
+- **Production**: For production, it's recommended to use PostgreSQL
+  - Update the `provider` in `prisma/schema.prisma` to `postgresql`
+  - Update your `DATABASE_URL` environment variable
 
 ## License
 

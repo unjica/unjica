@@ -2,41 +2,70 @@
 
 ## Introduction
 
-Unjica is a modern web application built using Next.js 15, React 19, and TypeScript. The project follows the App Router architecture introduced in Next.js 13+ and leverages the latest features of the React ecosystem to provide a robust and performant user experience.
+Unjica is a modern web application built using Next.js 15, React 19, and TypeScript. The project follows the App Router architecture introduced in Next.js 13+ and leverages the latest features of the React ecosystem to provide a robust and performant user experience. It features AI-generated art news digests that keep users updated on the latest trends in the art world.
 
 ## Key Features
 
 - **Modern Frontend Stack**: Built with Next.js 15 and React 19
 - **TypeScript Integration**: Full TypeScript support for enhanced developer experience and code quality
-- **Email Functionality**: Email subscription and contact capabilities via Nodemailer
+- **AI-Generated Art Digests**: Hourly generated articles analyzing current art news and trends
+- **Database Integration**: Prisma ORM with SQLite/PostgreSQL for storing generated content
+- **Scheduling System**: Reliable cron-based scheduling for automatic content generation
 - **Responsive Design**: Mobile-friendly layout with Tailwind CSS
 - **Interactive UI**: Animation and interaction effects powered by Framer Motion
-- **Analytics**: Google Analytics integration through nextjs-google-analytics
-- **Component Library**: Custom UI components with Radix UI primitives
-- **CSS Styling**: Tailwind CSS with additional utilities via clsx and tailwind-merge
+- **Analytics**: Google Analytics integration
+- **Component Library**: Custom UI components with modern design
+
+## AI Content Generation
+
+The application features an intelligent content generation system:
+
+### Art News Digests
+
+- **Automated Generation**: New digests are created hourly
+- **Art News Analysis**: Identifies trends and patterns in recent art news
+- **Rich Content**: Includes titles, summaries, detailed content, and tags
+- **Database Storage**: All generated articles are stored for future access
+
+### Scheduling System
+
+- **External Cron Triggering**: Uses Vercel Cron or other external services
+- **Configurable Schedule**: Default hourly generation with customizable timing
+- **Manual Generation**: Admin users can trigger generation on demand
+- **Stateless Architecture**: Compatible with serverless deployment models
 
 ## Project Goals
 
-The Unjica project aims to provide a clean, modern web application that serves as a foundation for building dynamic web experiences. It includes features like:
+The Unjica project aims to provide a modern platform for art enthusiasts to stay updated with the latest trends and developments in the contemporary art world. It showcases how AI can be used to analyze and synthesize information from multiple sources into cohesive, readable content.
 
-- Interactive UI components with smooth animations
-- Email subscription functionality
-- Responsive design suitable for various devices
-- Performance optimization techniques
-- Modern development patterns
+Specific goals include:
+
+- Demonstrating AI-powered content generation capabilities
+- Providing a reliable system for automatic content updates
+- Creating an engaging user experience for art news consumption
+- Implementing modern web development patterns and practices
+- Showcasing integration of AI with database and frontend systems
 
 ## Target Audience
 
 This project is intended for:
 
+- Art enthusiasts interested in staying updated on art trends
 - Frontend developers working with React and Next.js
-- Designers looking for a modern, customizable UI framework
-- Product teams needing a robust starting point for web applications
+- Developers interested in AI content generation
 - Students and learners exploring modern web development patterns
+
+## Technology Stack
+
+- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes, Prisma ORM
+- **Database**: SQLite (development), PostgreSQL (production)
+- **Deployment**: Vercel with Cron Jobs
+- **Scheduling**: External cron services, Vercel Cron
 
 ## Project Status
 
-The project is currently in active development with version 0.1.0. Features and integrations continue to be added as the project evolves.
+The project is currently in active development with ongoing improvements to the content generation system and user interface.
 
 ## License and Usage
 

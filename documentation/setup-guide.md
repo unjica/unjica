@@ -48,9 +48,26 @@ EMAIL_FROM=sender@example.com
 
 # Google Analytics
 GA_MEASUREMENT_ID=G-XXXXXXXXXX
+
+# News API
+NEWS_API_KEY=your_news_api_key
+
+# Database URL
+DATABASE_URL=file:./dev.db
+
+# Scheduler Security
+CRON_SECRET=your_secret_key_here
 ```
 
-### 4. Run the Development Server
+### 4. Initialize the Database
+
+```bash
+npx prisma migrate dev
+```
+
+This will create the SQLite database and apply all migrations.
+
+### 5. Run the Development Server
 
 ```bash
 npm run dev
@@ -60,12 +77,74 @@ yarn dev
 
 The application will be available at [http://localhost:3000](http://localhost:3000).
 
+## Setting Up the Scheduler
+
+The application includes an hourly art digest generation feature that requires proper scheduling configuration. Since Next.js API routes are serverless functions that don't maintain state between requests, we need to set up external scheduling.
+
+### Option 1: Development Testing
+
+For testing during development, you can use the included script:
+
+```bash
+# Make the script executable
+chmod +x scripts/generate-digest-cron.js
+
+# Run it manually
+./scripts/generate-digest-cron.js
+```
+
+### Option 2: Local Cron Job
+
+To set up a local cron job for hourly generation:
+
+1. Open your crontab file:
+   ```bash
+   crontab -e
+   ```
+
+2. Add the following line to run the script every hour:
+   ```
+   0 * * * * /absolute/path/to/your/project/scripts/generate-digest-cron.js
+   ```
+
+3. Save and exit.
+
+### Option 3: Vercel Deployment with Cron (Production)
+
+For production deployment on Vercel:
+
+1. Ensure your `vercel.json` file includes the cron job configuration:
+   ```json
+   {
+     "crons": [
+       {
+         "path": "/api/scheduler",
+         "schedule": "0 * * * *"
+       }
+     ]
+   }
+   ```
+
+2. Set the required environment variables in your Vercel project:
+   - `DATABASE_URL` - URL to your PostgreSQL database (for production)
+   - `NEWS_API_KEY` - Your News API key
+   - `CRON_SECRET` - A secure random string for protecting your scheduler endpoint
+
+### Option 4: External Cron Service
+
+You can also use external cron services like cron-job.org, Upstash Qstash, or GitHub Actions to call your scheduler endpoint:
+
+```
+https://your-domain.com/api/scheduler?secret=your_cron_secret
+```
+
 ## Available Scripts
 
 - `npm run dev` - Start the development server
 - `npm run build` - Build the application for production
 - `npm run start` - Start the production server
 - `npm run lint` - Run ESLint for code linting
+- `scripts/generate-digest-cron.js` - Manually trigger art digest generation
 
 ## Troubleshooting
 
@@ -94,6 +173,15 @@ The application will be available at [http://localhost:3000](http://localhost:30
    yarn dev -p 3001
    ```
 
+4. **Scheduler Not Working**
+
+   If your art digests aren't being generated automatically:
+   
+   - Check that your cron job is properly configured
+   - Verify that the scheduler endpoint is accessible
+   - Ensure your `CRON_SECRET` matches in both the environment and your cron job request
+   - Look for errors in your logs
+
 ### Getting Help
 
 If you encounter issues not covered in this guide, please:
@@ -104,7 +192,20 @@ If you encounter issues not covered in this guide, please:
 
 ## Deployment
 
-For production deployment, follow these steps:
+### Vercel Deployment (Recommended)
+
+For the simplest deployment experience with automatic cron jobs:
+
+1. Push your code to a Git repository
+2. Connect the repository to Vercel
+3. Set up the required environment variables
+4. Deploy your project
+
+Vercel will automatically detect the Next.js project and deploy it. The cron jobs defined in `vercel.json` will be automatically set up and executed according to the schedule.
+
+### Alternative Deployments
+
+For other hosting providers:
 
 1. Build the application:
    ```bash
@@ -120,8 +221,4 @@ For production deployment, follow these steps:
    yarn start
    ```
 
-Alternatively, deploy to Vercel for the simplest deployment experience:
-
-1. Push your code to a Git repository
-2. Connect the repository to Vercel
-3. Vercel will automatically detect the Next.js project and deploy it 
+3. Set up an external cron service to call your scheduler endpoint hourly. 

@@ -14,7 +14,12 @@ src/
         ├── GradientText.tsx
         ├── Container.tsx
         ├── BlurredBackground.tsx
-        └── ...
+        ├── Navbar.tsx
+        └── art-news/
+            ├── ArtNewsCard.tsx
+            ├── ArtNewsList.tsx
+            └── digest/
+                └── DigestArticleCard.tsx
 ```
 
 ## Core Components
@@ -93,6 +98,74 @@ Creates a stylish blurred background effect.
 import { BlurredBackground } from '@/components/ui/BlurredBackground';
 
 <BlurredBackground />
+```
+
+## Art News Components
+
+### ArtNewsCard
+
+Displays a single art news item with image, title, description, source, and tags.
+
+**Props:**
+- `news`: Art news item object
+- `className`: Additional CSS classes
+
+**Usage:**
+```tsx
+import { ArtNewsCard } from '@/components/ui/art-news/ArtNewsCard';
+import type { ArtNewsItem } from '@/lib/agents/artNewsAgent';
+
+const newsItem: ArtNewsItem = {
+  id: '1',
+  title: 'New Exhibition Opening',
+  description: 'A new exhibition featuring...',
+  source: 'Art Magazine',
+  url: 'https://example.com',
+  publishedAt: '2023-06-01T12:00:00Z',
+  tags: ['exhibition', 'modern art']
+};
+
+<ArtNewsCard news={newsItem} />
+```
+
+### ArtNewsList
+
+Displays a grid of art news items with pagination support.
+
+**Props:**
+- `initialNews`: Initial array of news items
+- `className`: Additional CSS classes
+
+**Usage:**
+```tsx
+import { ArtNewsList } from '@/components/ui/art-news/ArtNewsList';
+
+// For client-side loading
+<ArtNewsList />
+
+// With server-provided initial data
+<ArtNewsList initialNews={newsItems} />
+```
+
+### DigestArticleCard
+
+Displays an AI-generated digest article with expandable content.
+
+**Props:**
+- `article`: Generated article object
+- `className`: Additional CSS classes
+- `isExpanded`: Whether the article should be expanded by default
+
+**Usage:**
+```tsx
+import { DigestArticleCard } from '@/components/ui/art-news/digest/DigestArticleCard';
+import type { GeneratedArticle } from '@/lib/agents/models/generatedArticle';
+
+const article: GeneratedArticle = {
+  // article properties
+};
+
+<DigestArticleCard article={article} isExpanded={true} />
 ```
 
 ## Component Usage Guidelines

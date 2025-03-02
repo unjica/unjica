@@ -12,6 +12,10 @@ src/
     └── api/
         ├── subscribe/
         │   └── route.ts
+        ├── scheduler/
+        │   └── route.ts
+        ├── art-digest/
+        │   └── route.ts
         └── ...
 ```
 
@@ -52,6 +56,114 @@ src/
 
 **Implementation:**
 The endpoint uses Nodemailer to send email notifications about new subscriptions. Configuration for the email service is set in environment variables.
+
+### Art Digest Generation
+
+**Endpoint:** `GET /api/art-digest`
+
+**Description:** Retrieves all generated art digest articles.
+
+**Response:**
+- **200 OK**: Successfully retrieved articles
+  ```json
+  {
+    "articles": [
+      {
+        "id": "abc123",
+        "title": "Modern Art Trends: Weekly Digest",
+        "content": "...",
+        "primaryTopic": "Modern Art",
+        "summary": "...",
+        "tags": ["modern art", "art digest", "contemporary"],
+        "publishedAt": "2023-05-01T12:00:00Z",
+        "lastUpdated": "2023-05-01T12:00:00Z",
+        "imageUrl": "https://example.com/image.jpg",
+        "slug": "modern-art-trends-weekly-digest"
+      }
+    ]
+  }
+  ```
+- **500 Internal Server Error**: Server error
+  ```json
+  {
+    "error": "Failed to fetch articles"
+  }
+  ```
+
+**Endpoint:** `POST /api/art-digest`
+
+**Description:** Generates a new art digest article based on recent news.
+
+**Response:**
+- **200 OK**: Successfully generated article
+  ```json
+  {
+    "article": {
+      "id": "abc123",
+      "title": "Modern Art Trends: Weekly Digest",
+      "content": "...",
+      "primaryTopic": "Modern Art",
+      "summary": "...",
+      "tags": ["modern art", "art digest", "contemporary"],
+      "publishedAt": "2023-05-01T12:00:00Z",
+      "lastUpdated": "2023-05-01T12:00:00Z",
+      "imageUrl": "https://example.com/image.jpg",
+      "slug": "modern-art-trends-weekly-digest"
+    },
+    "success": true
+  }
+  ```
+- **500 Internal Server Error**: Server error
+  ```json
+  {
+    "error": "Failed to generate article"
+  }
+  ```
+
+### Scheduler
+
+**Endpoint:** `GET /api/scheduler`
+
+**Description:** Retrieves the current status of the scheduler.
+
+**Response:**
+- **200 OK**:
+  ```json
+  {
+    "status": "OK",
+    "message": "Scheduler API is working",
+    "lastRun": "2023-05-01T12:00:00Z",
+    "canRunNow": true,
+    "note": "This API doesn't provide actual scheduling. Set up an external cron job to call this API with POST to generate articles."
+  }
+  ```
+
+**Endpoint:** `POST /api/scheduler`
+
+**Description:** Manually triggers the art digest generation task.
+
+**Response:**
+- **200 OK**: Task successfully triggered
+  ```json
+  {
+    "status": "OK",
+    "message": "Article digest generation triggered successfully",
+    "lastRun": "2023-05-01T12:00:00Z"
+  }
+  ```
+- **500 Internal Server Error**: Server error
+  ```json
+  {
+    "error": "Failed to run scheduled task"
+  }
+  ```
+
+**Security Notes:**
+The scheduler endpoint can be secured with a secret key provided in the `CRON_SECRET` environment variable. When calling the endpoint from external cron services, include this secret in the query parameter:
+
+```
+/api/scheduler?secret=your_secret_key
+```
 
 ## Authentication
 
@@ -95,6 +207,33 @@ async function subscribeToNewsletter(email) {
     }
     
     return data;
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
+  }
+}
+```
+
+### Manually Generating an Art Digest
+
+**Example Request:**
+```javascript
+async function generateArtDigest() {
+  try {
+    const response = await fetch('/api/art-digest', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Generation failed');
+    }
+    
+    return data.article;
   } catch (error) {
     console.error('Error:', error);
     throw error;
