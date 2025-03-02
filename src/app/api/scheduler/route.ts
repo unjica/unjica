@@ -84,4 +84,5 @@ export async function POST() {
 }
 
 // Make this route dynamic to avoid caching
-export const dynamic = 'force-dynamic'; 
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // 1 minute max execution time (Vercel Hobby plan limit) 

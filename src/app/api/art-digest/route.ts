@@ -190,4 +190,5 @@ export async function DELETE(request: Request) {
 }
 
 // Make this API route dynamic to avoid caching
-export const dynamic = 'force-dynamic'; 
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // 1 minute max execution time (Vercel Hobby plan limit) 

@@ -76,4 +76,4 @@ export async function GET(request: Request) {
 
 // For Vercel Cron Jobs integration, add this export
 export const dynamic = 'force-dynamic';
-export const maxDuration = 300; // 5 minutes max execution time 
+export const maxDuration = 60; // 1 minute max execution time 
