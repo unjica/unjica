@@ -6,7 +6,7 @@ export async function GET(request: Request) {
     // Safely expose environment variables (redact sensitive values)
     const envVars: Record<string, string> = {
       // Database
-      API_URL: process.env.API_URL ? '[REDACTED]' : 'not set',
+      DATABASE_URL: process.env.DATABASE_URL || 'not set',
       
       // Supabase (server-side)
       SUPABASE_URL: process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || 'not set',

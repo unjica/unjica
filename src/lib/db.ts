@@ -5,7 +5,7 @@ const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
 // Validate and fix DATABASE_URL if needed
 const validateDatabaseUrl = () => {
-  const dbUrl = process.env.API_URL || '';
+  const dbUrl = process.env.DATABASE_URL || '';
   
   // Check if DATABASE_URL is properly formatted
   if (!dbUrl.startsWith('postgresql://') && !dbUrl.startsWith('postgres://')) {
@@ -16,7 +16,7 @@ const validateDatabaseUrl = () => {
       // It looks like a database URL without protocol, try to add it
       const fixedUrl = `postgresql://${dbUrl}`;
       console.log('Fixed DATABASE_URL:', fixedUrl.replace(/:[^:]*@/, ':****@'));
-      process.env.API_URL = fixedUrl;
+      process.env.DATABASE_URL = fixedUrl;
     } else {
       console.error('DATABASE_URL is invalid and cannot be automatically fixed. Please check your environment variables.');
     }
