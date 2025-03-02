@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { supabase } from '@/lib/supabase';
+import { Prisma } from '@prisma/client';
 
 // GET handler to fetch a user's reaction to an article
 export async function GET(request: Request) {
@@ -240,57 +241,114 @@ export async function POST(request: Request) {
       );
     }
 
-    // Handle authenticated user with valid database user
-    if (userId) {
-      // Authenticated user flow
-      // Delete existing reaction if removing or changing type
-      if (type === null) {
-        console.log('Deleting reaction for user:', userId);
-        await prisma.reaction.deleteMany({
+    // Use a transaction to handle race conditions
+    let likesCount = 0;
+    let dislikesCount = 0;
+
+    await prisma.$transaction(async (tx) => {
+      // Handle authenticated user with valid database user
+      if (userId) {
+        // Authenticated user flow
+        // Delete existing reaction if removing or changing type
+        if (type === null) {
+          console.log('Deleting reaction for user:', userId);
+          await tx.reaction.deleteMany({
+            where: {
+              userId: userId,
+              articleId: articleId || null,
+              commentId: commentId || null,
+            },
+          });
+        } else if (commentId) {
+          console.log('Upserting comment reaction for user:', userId);
+          // Upsert reaction for comments (with commentId)
+          await tx.reaction.upsert({
+            where: {
+              user_reaction_unique: {
+                userId: userId,
+                articleId: articleId || null,
+                commentId: commentId,
+              },
+            },
+            update: {
+              type,
+            },
+            create: {
+              userId: userId,
+              articleId: articleId || null,
+              commentId: commentId,
+              type,
+            },
+          });
+        } else {
+          console.log('Processing article reaction for user:', userId);
+          // For article reactions (without commentId), use findFirst/delete+create pattern
+          try {
+            const existingReaction = await tx.reaction.findFirst({
+              where: {
+                userId: userId,
+                articleId: articleId,
+                commentId: null,
+              },
+            });
+            
+            console.log('Existing reaction found:', existingReaction);
+            
+            if (existingReaction) {
+              console.log('Updating existing reaction');
+              await tx.reaction.update({
+                where: {
+                  id: existingReaction.id,
+                },
+                data: {
+                  type,
+                },
+              });
+            } else {
+              console.log('Creating new reaction');
+              await tx.reaction.create({
+                data: {
+                  userId: userId,
+                  articleId: articleId,
+                  commentId: null,
+                  type,
+                },
+              });
+            }
+          } catch (err) {
+            console.error('Error processing article reaction:', err);
+            throw err;
+          }
+        }
+      } else if (anonymousId) {
+        // Anonymous user flow (including authenticated users without database records)
+        console.log('Using anonymous flow with ID:', anonymousId);
+        
+        // First, check if a reaction already exists
+        const existingReaction = await tx.reaction.findFirst({
           where: {
-            userId: userId,
+            anonymousId: anonymousId,
             articleId: articleId || null,
             commentId: commentId || null,
           },
         });
-      } else if (commentId) {
-        console.log('Upserting comment reaction for user:', userId);
-        // Upsert reaction for comments (with commentId)
-        await prisma.reaction.upsert({
-          where: {
-            user_reaction_unique: {
-              userId: userId,
-              articleId: articleId || null,
-              commentId: commentId,
-            },
-          },
-          update: {
-            type,
-          },
-          create: {
-            userId: userId,
-            articleId: articleId || null,
-            commentId: commentId,
-            type,
-          },
-        });
-      } else {
-        console.log('Processing article reaction for user:', userId);
-        // For article reactions (without commentId), use findFirst/delete+create pattern
-        try {
-          const existingReaction = await prisma.reaction.findFirst({
-            where: {
-              userId: userId,
-              articleId: articleId,
-              commentId: null,
-            },
-          });
-          
-          console.log('Existing reaction found:', existingReaction);
-          
+        
+        // Delete existing reaction if removing
+        if (type === null) {
           if (existingReaction) {
-            console.log('Updating existing reaction');
-            await prisma.reaction.update({
+            console.log('Deleting anonymous reaction');
+            await tx.reaction.delete({
+              where: {
+                id: existingReaction.id,
+              },
+            });
+          }
+        } else {
+          // Update existing or create new
+          if (existingReaction) {
+            // Update existing reaction
+            console.log('Updating anonymous reaction');
+            await tx.reaction.update({
               where: {
                 id: existingReaction.id,
               },
@@ -299,87 +357,75 @@ export async function POST(request: Request) {
               },
             });
           } else {
-            console.log('Creating new reaction');
-            await prisma.reaction.create({
-              data: {
-                userId: userId,
-                articleId: articleId,
-                commentId: null,
-                type,
-              },
-            });
+            // Create new reaction
+            console.log('Creating new anonymous reaction');
+            try {
+              await tx.reaction.create({
+                data: {
+                  anonymousId: anonymousId,
+                  articleId: articleId || null,
+                  commentId: commentId || null,
+                  type,
+                },
+              });
+            } catch (createError) {
+              console.error('Error creating anonymous reaction:', createError);
+              // If it's a unique constraint violation, try to handle it
+              if (createError instanceof Prisma.PrismaClientKnownRequestError && createError.code === 'P2002') {
+                console.log('Handling potential race condition with anonymous reaction');
+                // Try to find the reaction again (it might have been created in a race condition)
+                const racedReaction = await tx.reaction.findFirst({
+                  where: {
+                    anonymousId: anonymousId,
+                    articleId: articleId || null,
+                    commentId: commentId || null,
+                  },
+                });
+                
+                if (racedReaction) {
+                  // Update the existing reaction instead
+                  await tx.reaction.update({
+                    where: {
+                      id: racedReaction.id,
+                    },
+                    data: {
+                      type,
+                    },
+                  });
+                } else {
+                  // If we still can't find it, rethrow the error
+                  throw createError;
+                }
+              } else {
+                // If it's not a unique constraint error, rethrow
+                throw createError;
+              }
+            }
           }
-        } catch (err) {
-          console.error('Error processing article reaction:', err);
-          throw err;
         }
       }
-    } else if (anonymousId) {
-      // Anonymous user flow (including authenticated users without database records)
-      console.log('Using anonymous flow with ID:', anonymousId);
-      
-      // First, check if a reaction already exists
-      const existingReaction = await prisma.reaction.findFirst({
+
+      // Get updated counts within the transaction
+      likesCount = await tx.reaction.count({
         where: {
-          anonymousId: anonymousId,
-          articleId: articleId || null,
-          commentId: commentId || null,
+          articleId: articleId || undefined,
+          commentId: commentId || undefined,
+          type: 'LIKE',
         },
       });
-      
-      // Delete existing reaction if removing
-      if (type === null) {
-        if (existingReaction) {
-          console.log('Deleting anonymous reaction');
-          await prisma.reaction.delete({
-            where: {
-              id: existingReaction.id,
-            },
-          });
-        }
-      } else {
-        // Update existing or create new
-        if (existingReaction) {
-          // Update existing reaction
-          console.log('Updating anonymous reaction');
-          await prisma.reaction.update({
-            where: {
-              id: existingReaction.id,
-            },
-            data: {
-              type,
-            },
-          });
-        } else {
-          // Create new reaction
-          console.log('Creating new anonymous reaction');
-          await prisma.reaction.create({
-            data: {
-              anonymousId: anonymousId,
-              articleId: articleId || null,
-              commentId: commentId || null,
-              type,
-            },
-          });
-        }
-      }
-    }
 
-    // Get updated counts
-    const likesCount = await prisma.reaction.count({
-      where: {
-        articleId: articleId || undefined,
-        commentId: commentId || undefined,
-        type: 'LIKE',
-      },
-    });
-
-    const dislikesCount = await prisma.reaction.count({
-      where: {
-        articleId: articleId || undefined,
-        commentId: commentId || undefined,
-        type: 'DISLIKE',
-      },
+      dislikesCount = await tx.reaction.count({
+        where: {
+          articleId: articleId || undefined,
+          commentId: commentId || undefined,
+          type: 'DISLIKE',
+        },
+      });
+    }, {
+      // Set a reasonable timeout for the transaction
+      timeout: 10000, // 10 seconds
+      // Use serializable isolation level to prevent race conditions
+      isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
     });
 
     return NextResponse.json({

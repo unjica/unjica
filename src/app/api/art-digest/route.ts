@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { generateDailyArtDigest } from '@/lib/actions/artDigestActions';
 import { Prisma } from '@prisma/client';
 import { supabase } from '@/lib/supabase';
+import { slugify, ensureUniqueSlug } from '@/lib/utils/slugify';
 
 // This helps TypeScript recognize the additional fields
 type GeneratedArticleWithExtras = Prisma.GeneratedArticleGetPayload<{}> & {
@@ -282,25 +283,68 @@ export async function POST(request: Request) {
     
     // Save the article to the database
     console.log('POST /api/art-digest: Article generated, saving to database');
-    await prisma.generatedArticle.create({
-      data: {
-        id: article.id,
-        title: article.title,
-        content: article.content,
-        primaryTopic: article.primaryTopic,
-        summary: article.summary,
-        tags: JSON.stringify(article.tags),
-        publishedAt: new Date(article.publishedAt),
-        sourceNewsIds: JSON.stringify(article.sourceNewsIds),
-        lastUpdated: new Date(article.lastUpdated),
-        // Type assertions to handle optional fields
-        ...(article.imageUrl ? { imageUrl: article.imageUrl } : {}),
-        ...(article.slug ? { slug: article.slug } : {})
-      } as Prisma.GeneratedArticleCreateInput
-    });
-    
-    console.log('POST /api/art-digest: Article saved successfully');
-    return NextResponse.json({ article, success: true });
+    try {
+      await prisma.generatedArticle.create({
+        data: {
+          id: article.id,
+          title: article.title,
+          content: article.content,
+          primaryTopic: article.primaryTopic,
+          summary: article.summary,
+          tags: JSON.stringify(article.tags),
+          publishedAt: new Date(article.publishedAt),
+          sourceNewsIds: JSON.stringify(article.sourceNewsIds),
+          lastUpdated: new Date(article.lastUpdated),
+          // Type assertions to handle optional fields
+          ...(article.imageUrl ? { imageUrl: article.imageUrl } : {}),
+          ...(article.slug ? { slug: article.slug } : {})
+        } as Prisma.GeneratedArticleCreateInput
+      });
+      
+      console.log('POST /api/art-digest: Article saved successfully');
+      return NextResponse.json({ article, success: true });
+    } catch (dbError) {
+      // Check if it's a unique constraint error on the slug field
+      if (dbError instanceof Prisma.PrismaClientKnownRequestError && 
+          dbError.code === 'P2002' && 
+          dbError.meta?.target && 
+          (dbError.meta.target as string[]).includes('slug')) {
+        
+        console.log('POST /api/art-digest: Slug conflict detected, generating a unique slug');
+        
+        // Get a unique slug by adding a timestamp
+        const timestamp = Date.now().toString().slice(-6);
+        const uniqueSlug = article.slug ? `${article.slug}-${timestamp}` : `article-${timestamp}`;
+        
+        // Try again with the unique slug
+        await prisma.generatedArticle.create({
+          data: {
+            id: article.id,
+            title: article.title,
+            content: article.content,
+            primaryTopic: article.primaryTopic,
+            summary: article.summary,
+            tags: JSON.stringify(article.tags),
+            publishedAt: new Date(article.publishedAt),
+            sourceNewsIds: JSON.stringify(article.sourceNewsIds),
+            lastUpdated: new Date(article.lastUpdated),
+            // Type assertions to handle optional fields
+            ...(article.imageUrl ? { imageUrl: article.imageUrl } : {}),
+            slug: uniqueSlug
+          } as Prisma.GeneratedArticleCreateInput
+        });
+        
+        console.log(`POST /api/art-digest: Article saved successfully with unique slug: ${uniqueSlug}`);
+        return NextResponse.json({ 
+          article: { ...article, slug: uniqueSlug }, 
+          success: true,
+          note: 'A unique slug was generated due to a conflict'
+        });
+      }
+      
+      // If it's another type of error, throw it to be caught by the outer catch
+      throw dbError;
+    }
   } catch (error) {
     console.error('Failed to generate article:', error);
     return NextResponse.json(
