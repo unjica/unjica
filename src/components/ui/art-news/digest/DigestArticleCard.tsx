@@ -110,8 +110,18 @@ export const DigestArticleCard = ({
     try {
       setIsDeleting(true);
       
+      // Get the session token for authorization
+      const { data } = await supabase.auth.getSession();
+      
+      if (!data.session) {
+        throw new Error('You must be logged in to delete an article');
+      }
+      
       const response = await fetch(`/api/art-digest?id=${article.id}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${data.session.access_token}`
+        }
       });
       
       if (!response.ok) {
@@ -164,14 +174,17 @@ export const DigestArticleCard = ({
               {article.title}
             </h3>
             <div className="flex flex-wrap gap-1 mt-2">
-              {article.tags.slice(0, 3).map((tag) => (
-                <span 
-                  key={tag} 
-                  className="text-xs px-2 py-1 bg-white/20 rounded-full backdrop-blur-sm"
-                >
-                  {tag}
-                </span>
-              ))}
+              {Array.isArray(article.tags) 
+                ? article.tags.slice(0, 3).map((tag) => (
+                    <span 
+                      key={tag} 
+                      className="text-xs px-2 py-1 bg-white/20 rounded-full backdrop-blur-sm"
+                    >
+                      {tag}
+                    </span>
+                  ))
+                : null
+              }
             </div>
           </div>
         </div>
@@ -194,14 +207,17 @@ export const DigestArticleCard = ({
             </h3>
             
             <div className="flex flex-wrap gap-1 mb-4">
-              {article.tags.map((tag) => (
-                <span 
-                  key={tag} 
-                  className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full"
-                >
-                  {tag}
-                </span>
-              ))}
+              {Array.isArray(article.tags) 
+                ? article.tags.map((tag) => (
+                    <span 
+                      key={tag} 
+                      className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full"
+                    >
+                      {tag}
+                    </span>
+                  ))
+                : null
+              }
             </div>
           </>
         )}

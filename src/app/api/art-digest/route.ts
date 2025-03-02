@@ -104,9 +104,24 @@ export async function GET(request: Request) {
           content: typedArticle.content,
           primaryTopic: typedArticle.primaryTopic,
           summary: typedArticle.summary,
-          tags: JSON.parse(typedArticle.tags),
+          tags: typedArticle.tags ? (
+            typeof typedArticle.tags === 'string' 
+              ? JSON.parse(typedArticle.tags) 
+              : typedArticle.tags
+          ) : [],
           publishedAt: typedArticle.publishedAt.toISOString(),
-          sourceNewsIds: JSON.parse(typedArticle.sourceNewsIds),
+          sourceNewsIds: typedArticle.sourceNewsIds ? (
+            typeof typedArticle.sourceNewsIds === 'string'
+              ? (() => {
+                  try {
+                    return JSON.parse(typedArticle.sourceNewsIds);
+                  } catch (e) {
+                    console.error(`Error parsing sourceNewsIds for article ${typedArticle.id}:`, e);
+                    return [];
+                  }
+                })()
+              : typedArticle.sourceNewsIds
+          ) : [],
           lastUpdated: typedArticle.lastUpdated.toISOString(),
           imageUrl: typedArticle.imageUrl,
           slug: typedArticle.slug
@@ -137,9 +152,24 @@ export async function GET(request: Request) {
             content: typedArticle.content,
             primaryTopic: typedArticle.primaryTopic,
             summary: typedArticle.summary,
-            tags: JSON.parse(typedArticle.tags),
+            tags: typedArticle.tags ? (
+              typeof typedArticle.tags === 'string' 
+                ? JSON.parse(typedArticle.tags) 
+                : typedArticle.tags
+            ) : [],
             publishedAt: typedArticle.publishedAt.toISOString(),
-            sourceNewsIds: JSON.parse(typedArticle.sourceNewsIds),
+            sourceNewsIds: typedArticle.sourceNewsIds ? (
+              typeof typedArticle.sourceNewsIds === 'string'
+                ? (() => {
+                    try {
+                      return JSON.parse(typedArticle.sourceNewsIds);
+                    } catch (e) {
+                      console.error(`Error parsing sourceNewsIds for article ${typedArticle.id}:`, e);
+                      return [];
+                    }
+                  })()
+                : typedArticle.sourceNewsIds
+            ) : [],
             lastUpdated: typedArticle.lastUpdated.toISOString(),
             imageUrl: typedArticle.imageUrl,
             slug: typedArticle.slug
@@ -202,9 +232,12 @@ export async function GET(request: Request) {
 // POST handler to generate a new article
 export async function POST(request: Request) {
   try {
+    console.log('POST /api/art-digest: Request received');
+    
     // Get authorization header
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('POST /api/art-digest: Missing or invalid authorization header');
       return NextResponse.json(
         { error: 'Unauthorized. Admin access required.' },
         { status: 403 }
@@ -212,20 +245,43 @@ export async function POST(request: Request) {
     }
     
     const token = authHeader.split(' ')[1];
+    console.log('POST /api/art-digest: Token extracted, verifying with Supabase');
     
     // Verify the token with Supabase
     const { data: { user }, error } = await supabase.auth.getUser(token);
     
-    if (error || !user || user.email !== 'sanja.malovic2@gmail.com') {
+    if (error) {
+      console.error('POST /api/art-digest: Supabase auth error:', error);
+      return NextResponse.json(
+        { error: 'Authentication error', details: error.message },
+        { status: 401 }
+      );
+    }
+    
+    if (!user) {
+      console.log('POST /api/art-digest: No user found for token');
+      return NextResponse.json(
+        { error: 'Unauthorized. User not found.' },
+        { status: 403 }
+      );
+    }
+    
+    console.log(`POST /api/art-digest: User authenticated: ${user.email}`);
+    
+    // Check if user is admin
+    if (user.email !== 'sanja.malovic2@gmail.com') {
+      console.log(`POST /api/art-digest: User ${user.email} is not an admin`);
       return NextResponse.json(
         { error: 'Unauthorized. Admin access required.' },
         { status: 403 }
       );
     }
     
+    console.log('POST /api/art-digest: Admin access confirmed, generating article');
     const article = await generateDailyArtDigest();
     
     // Save the article to the database
+    console.log('POST /api/art-digest: Article generated, saving to database');
     await prisma.generatedArticle.create({
       data: {
         id: article.id,
@@ -243,11 +299,12 @@ export async function POST(request: Request) {
       } as Prisma.GeneratedArticleCreateInput
     });
     
+    console.log('POST /api/art-digest: Article saved successfully');
     return NextResponse.json({ article, success: true });
   } catch (error) {
     console.error('Failed to generate article:', error);
     return NextResponse.json(
-      { error: 'Failed to generate article' },
+      { error: 'Failed to generate article', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
@@ -256,11 +313,14 @@ export async function POST(request: Request) {
 // DELETE handler to delete an article (admin only)
 export async function DELETE(request: Request) {
   try {
+    console.log('DELETE /api/art-digest: Request received');
+    
     // Get the session from Supabase
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     
     if (!id) {
+      console.log('DELETE /api/art-digest: Missing article ID');
       return NextResponse.json(
         { error: 'Article ID is required' },
         { status: 400 }
@@ -270,6 +330,7 @@ export async function DELETE(request: Request) {
     // Get authorization header
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('DELETE /api/art-digest: Missing or invalid authorization header');
       return NextResponse.json(
         { error: 'Unauthorized. Admin access required.' },
         { status: 403 }
@@ -277,16 +338,39 @@ export async function DELETE(request: Request) {
     }
     
     const token = authHeader.split(' ')[1];
+    console.log('DELETE /api/art-digest: Token extracted, verifying with Supabase');
     
     // Verify the token with Supabase
     const { data: { user }, error } = await supabase.auth.getUser(token);
     
-    if (error || !user || user.email !== 'sanja.malovic2@gmail.com') {
+    if (error) {
+      console.error('DELETE /api/art-digest: Supabase auth error:', error);
+      return NextResponse.json(
+        { error: 'Authentication error', details: error.message },
+        { status: 401 }
+      );
+    }
+    
+    if (!user) {
+      console.log('DELETE /api/art-digest: No user found for token');
+      return NextResponse.json(
+        { error: 'Unauthorized. User not found.' },
+        { status: 403 }
+      );
+    }
+    
+    console.log(`DELETE /api/art-digest: User authenticated: ${user.email}`);
+    
+    // Check if user is admin
+    if (user.email !== 'sanja.malovic2@gmail.com') {
+      console.log(`DELETE /api/art-digest: User ${user.email} is not an admin`);
       return NextResponse.json(
         { error: 'Unauthorized. Admin access required.' },
         { status: 403 }
       );
     }
+    
+    console.log(`DELETE /api/art-digest: Admin access confirmed, deleting article ${id}`);
     
     // First, delete all comments associated with this article
     await (prisma as any).comment.deleteMany({
@@ -309,6 +393,7 @@ export async function DELETE(request: Request) {
       },
     });
     
+    console.log(`DELETE /api/art-digest: Article ${id} deleted successfully`);
     return NextResponse.json({
       success: true,
       message: 'Article and associated data deleted successfully',
@@ -316,7 +401,7 @@ export async function DELETE(request: Request) {
   } catch (error) {
     console.error('Error deleting article:', error);
     return NextResponse.json(
-      { error: 'Failed to delete article' },
+      { error: 'Failed to delete article', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

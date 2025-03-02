@@ -90,8 +90,19 @@ export function AdminControls({ onGenerateDigest }: AdminControlsProps) {
     try {
       setGenerating(true);
       
+      // Get the session token for authorization
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error('You must be logged in to generate a digest');
+      }
+      
       const response = await fetch('/api/art-digest', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        }
       });
       
       if (!response.ok) {
