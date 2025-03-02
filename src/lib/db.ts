@@ -5,7 +5,7 @@ const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
 // Validate and fix DATABASE_URL if needed
 const validateDatabaseUrl = () => {
-  const dbUrl = process.env.TEST || '';
+  const dbUrl = process.env.DATABASE_URL || '';
   
   // Check if DATABASE_URL is properly formatted
   if (!dbUrl.startsWith('postgresql://') && !dbUrl.startsWith('postgres://')) {
