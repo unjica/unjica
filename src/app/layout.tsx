@@ -5,7 +5,7 @@ import type { Viewport } from 'next';
 import { Navbar } from '@/components/ui/Navbar';
 import { SchedulerInitializer } from '@/components/ui/SchedulerInitializer';
 import { Footer } from '@/components/ui/Footer';
-import { SessionProvider } from '@/components/providers/SessionProvider';
+import { AuthProvider } from '@/components/auth/AuthProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -76,14 +76,14 @@ export default function RootLayout({
       </head>
 
       <body className={`${inter.className} min-h-screen flex flex-col bg-white dark:bg-gray-900`}>
-        <SessionProvider>
+        <AuthProvider>
           <SchedulerInitializer />
           <Navbar />
           <main className="flex-grow">
             {children}
           </main>
           <Footer />
-        </SessionProvider>
+        </AuthProvider>
       </body>
     </html>
   );

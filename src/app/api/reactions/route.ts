@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { auth } from 'auth';
 import { prisma } from '@/lib/db';
+import { supabase } from '@/lib/supabase';
 
 // GET handler to fetch a user's reaction to an article
 export async function GET(request: Request) {
@@ -16,8 +16,18 @@ export async function GET(request: Request) {
   }
 
   try {
-    const session = await auth();
-    const userId = session?.user?.id;
+    // Get authorization header for Supabase auth
+    const authHeader = request.headers.get('authorization');
+    let userId = null;
+    
+    // If auth header exists, verify with Supabase
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      const { data, error } = await supabase.auth.getUser(token);
+      if (!error && data.user) {
+        userId = data.user.id;
+      }
+    }
     
     // If user is logged in, get their reaction
     if (userId) {
@@ -119,7 +129,19 @@ export async function GET(request: Request) {
 // POST handler to create or update a reaction
 export async function POST(request: Request) {
   try {
-    const session = await auth();
+    // Get authorization header for Supabase auth
+    const authHeader = request.headers.get('authorization');
+    let userId = null;
+    
+    // If auth header exists, verify with Supabase
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      const { data, error } = await supabase.auth.getUser(token);
+      if (!error && data.user) {
+        userId = data.user.id;
+      }
+    }
+    
     const { articleId, commentId, type, anonymousId } = await request.json();
     
     if (!articleId && !commentId) {
@@ -128,8 +150,6 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    
-    const userId = session?.user?.id;
     
     // Check if we have either a user ID or anonymous ID
     if (!userId && !anonymousId) {
@@ -281,4 +301,5 @@ export async function POST(request: Request) {
 }
 
 // Make this API route dynamic to avoid caching
-export const dynamic = 'force-dynamic'; 
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // 1 minute max execution time (Vercel Hobby plan limit) 

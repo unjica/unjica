@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 
 export async function POST(request: Request) {
   try {
-    const { email, password, name } = await request.json();
+    const { email, password } = await request.json();
     
     if (!email || !password) {
       return NextResponse.json(
@@ -12,34 +12,35 @@ export async function POST(request: Request) {
       );
     }
     
-    // Register the user with Supabase
-    const { data, error } = await supabase.auth.signUp({
+    // Sign in the user with Supabase
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
-      password,
-      options: {
-        data: {
-          name,
-          role: email === 'sanja.malovic2@gmail.com' ? 'ADMIN' : 'USER'
-        }
-      }
+      password
     });
     
     if (error) {
-      console.error('Registration error:', error);
+      console.error('Login error:', error);
       return NextResponse.json(
         { error: error.message },
-        { status: 400 }
+        { status: 401 }
       );
     }
     
+    // Check if user is admin
+    const isAdmin = data.user.email === 'sanja.malovic2@gmail.com';
+    
     return NextResponse.json({
-      user: data.user,
-      message: 'User registered successfully'
+      user: {
+        ...data.user,
+        role: isAdmin ? 'ADMIN' : 'USER'
+      },
+      session: data.session,
+      message: 'Login successful'
     });
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('Login error:', error);
     return NextResponse.json(
-      { error: 'Failed to register user' },
+      { error: 'Failed to login' },
       { status: 500 }
     );
   }

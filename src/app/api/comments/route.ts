@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { auth } from 'auth';
 import { prisma } from '@/lib/db';
+import { supabase } from '@/lib/supabase';
 
 // Comment type definition for TypeScript
 interface CommentWithUser {
@@ -82,7 +82,19 @@ export async function GET(request: Request) {
 // POST handler to create a new comment
 export async function POST(request: Request) {
   try {
-    const session = await auth();
+    // Get authorization header for Supabase auth
+    const authHeader = request.headers.get('authorization');
+    let userId = null;
+    
+    // If auth header exists, verify with Supabase
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      const { data, error } = await supabase.auth.getUser(token);
+      if (!error && data.user) {
+        userId = data.user.id;
+      }
+    }
+    
     const { content, articleId, parentId, anonymousId } = await request.json();
     
     if (!articleId) {
@@ -100,7 +112,6 @@ export async function POST(request: Request) {
     }
 
     // Check if we have either a user ID or anonymous ID
-    const userId = session?.user?.id;
     if (!userId && !anonymousId) {
       return NextResponse.json(
         { error: 'Authentication or anonymous ID required' },
@@ -160,10 +171,22 @@ export async function POST(request: Request) {
 // DELETE handler to delete a comment (admin only)
 export async function DELETE(request: Request) {
   try {
-    const session = await auth();
+    // Get authorization header
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Unauthorized. Admin access required.' },
+        { status: 403 }
+      );
+    }
     
-    // Check if user is authenticated and is an admin
-    if (!session?.user?.id || session.user.role !== 'ADMIN') {
+    const token = authHeader.split(' ')[1];
+    
+    // Verify the token with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    // Check if user is admin
+    if (error || !user || user.email !== 'sanja.malovic2@gmail.com') {
       return NextResponse.json(
         { error: 'Unauthorized. Admin access required.' },
         { status: 403 }
@@ -218,4 +241,5 @@ export async function DELETE(request: Request) {
 }
 
 // Make this API route dynamic to avoid caching
-export const dynamic = 'force-dynamic'; 
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // 1 minute max execution time (Vercel Hobby plan limit) 

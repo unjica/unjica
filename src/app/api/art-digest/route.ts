@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { generateDailyArtDigest } from '@/lib/actions/artDigestActions';
 import { Prisma } from '@prisma/client';
-import { auth } from 'auth';
+import { supabase } from '@/lib/supabase';
 
 // This helps TypeScript recognize the additional fields
 type GeneratedArticleWithExtras = Prisma.GeneratedArticleGetPayload<{}> & {
@@ -135,16 +135,7 @@ export async function POST() {
 // DELETE handler to delete an article (admin only)
 export async function DELETE(request: Request) {
   try {
-    const session = await auth();
-    
-    // Check if user is authenticated and is an admin
-    if (!session?.user?.id || session.user.role !== 'ADMIN') {
-      return NextResponse.json(
-        { error: 'Unauthorized. Admin access required.' },
-        { status: 403 }
-      );
-    }
-    
+    // Get the session from Supabase
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     
@@ -152,6 +143,27 @@ export async function DELETE(request: Request) {
       return NextResponse.json(
         { error: 'Article ID is required' },
         { status: 400 }
+      );
+    }
+    
+    // Get authorization header
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Unauthorized. Admin access required.' },
+        { status: 403 }
+      );
+    }
+    
+    const token = authHeader.split(' ')[1];
+    
+    // Verify the token with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (error || !user || user.email !== 'sanja.malovic2@gmail.com') {
+      return NextResponse.json(
+        { error: 'Unauthorized. Admin access required.' },
+        { status: 403 }
       );
     }
     

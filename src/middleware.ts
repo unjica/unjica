@@ -36,22 +36,7 @@ export async function middleware(request: NextRequest) {
   );
 
   // Refresh session if expired
-  const { data: { session } } = await supabase.auth.getSession();
-  
-  // Check for protected routes
-  const isOnAdminPage = request.nextUrl.pathname.startsWith("/admin");
-  
-  if (isOnAdminPage) {
-    if (!session) {
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
-    
-    const isAdmin = session.user.email === "sanja.malovic2@gmail.com";
-    
-    if (!isAdmin) {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
-  }
+  await supabase.auth.getSession();
 
   return response;
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { auth } from 'auth';
 import { prisma } from '@/lib/db';
+import { supabase } from '@/lib/supabase';
 
 // Type definitions for the data we're exporting
 interface ArticleData {
@@ -49,12 +49,24 @@ interface UserData {
 }
 
 // GET handler to export data
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const session = await auth();
+    // Get authorization header
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Unauthorized. Admin access required.' },
+        { status: 403 }
+      );
+    }
     
-    // Check if user is authenticated and is an admin
-    if (!session?.user?.id || session.user.role !== 'ADMIN') {
+    const token = authHeader.split(' ')[1];
+    
+    // Verify the token with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    // Check if user is admin
+    if (error || !user || user.email !== 'sanja.malovic2@gmail.com') {
       return NextResponse.json(
         { error: 'Unauthorized. Admin access required.' },
         { status: 403 }
@@ -155,4 +167,5 @@ export async function GET() {
 }
 
 // Make this API route dynamic to avoid caching
-export const dynamic = 'force-dynamic'; 
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // 1 minute max execution time (Vercel Hobby plan limit) 
