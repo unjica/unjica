@@ -1,37 +1,8 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
 
 // GET handler to fetch environment variables for debugging
 export async function GET(request: Request) {
   try {
-    // Get authorization header
-    const authHeader = request.headers.get('authorization');
-    
-    // Check if user is authenticated and is admin
-    let isAdmin = false;
-    
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.split(' ')[1];
-      const { data, error } = await supabase.auth.getUser(token);
-      
-      if (!error && data.user && data.user.email === 'sanja.malovic2@gmail.com') {
-        isAdmin = true;
-      }
-    } else {
-      // Try to get session from cookies
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.email === 'sanja.malovic2@gmail.com') {
-        isAdmin = true;
-      }
-    }
-    
-    if (!isAdmin) {
-      return NextResponse.json(
-        { error: 'Unauthorized. Admin access required.' },
-        { status: 403 }
-      );
-    }
-    
     // Safely expose environment variables (redact sensitive values)
     const envVars: Record<string, string> = {
       // Database
