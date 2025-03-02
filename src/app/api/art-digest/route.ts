@@ -10,6 +10,21 @@ type GeneratedArticleWithExtras = Prisma.GeneratedArticleGetPayload<{}> & {
   slug?: string | null;
 };
 
+// Sample fallback article for when the database is unavailable
+const FALLBACK_ARTICLE = {
+  id: 'fallback-article-1',
+  title: 'Connection to Art Database Temporarily Unavailable',
+  content: '<p>We\'re currently experiencing technical difficulties with our database connection. Our team is working to resolve this issue as quickly as possible.</p><p>In the meantime, please check back later to view our latest art news and articles.</p><p>We apologize for any inconvenience this may cause.</p>',
+  primaryTopic: 'System',
+  summary: 'Database connection is temporarily unavailable. Please check back later.',
+  tags: JSON.stringify(['system', 'maintenance']),
+  publishedAt: new Date().toISOString(),
+  sourceNewsIds: JSON.stringify([]),
+  lastUpdated: new Date().toISOString(),
+  imageUrl: null,
+  slug: 'system-maintenance'
+};
+
 // GET handler to fetch all articles
 export async function GET(request: Request) {
   try {
@@ -44,6 +59,26 @@ export async function GET(request: Request) {
       } catch (error) {
         console.error('Database error when fetching article:', error);
         console.error('Error details:', JSON.stringify(error, null, 2));
+        
+        // If the error is related to database connection, return the fallback article
+        if (error instanceof Error && 
+            (error.message.includes('database') || 
+             error.message.includes('connection') || 
+             error.message.includes('DATABASE_URL'))) {
+          console.log('GET /api/art-digest: Using fallback article due to database error');
+          
+          // If the requested ID or slug matches our fallback, return it
+          if (id === FALLBACK_ARTICLE.id || slug === FALLBACK_ARTICLE.slug) {
+            return NextResponse.json({ article: FALLBACK_ARTICLE });
+          }
+          
+          // Otherwise return a 404 with a message
+          return NextResponse.json(
+            { error: 'Article not found. Database connection is currently unavailable.' },
+            { status: 404 }
+          );
+        }
+        
         return NextResponse.json(
           { error: 'Database error when fetching article', details: error instanceof Error ? error.message : String(error) },
           { status: 500 }
@@ -133,6 +168,19 @@ export async function GET(request: Request) {
     } catch (dbError) {
       console.error('Database error when fetching all articles:', dbError);
       console.error('Error details:', JSON.stringify(dbError, null, 2));
+      
+      // If the error is related to database connection, return a fallback article
+      if (dbError instanceof Error && 
+          (dbError.message.includes('database') || 
+           dbError.message.includes('connection') || 
+           dbError.message.includes('DATABASE_URL'))) {
+        console.log('GET /api/art-digest: Using fallback article due to database error');
+        return NextResponse.json({ 
+          articles: [FALLBACK_ARTICLE],
+          _notice: 'Database connection is currently unavailable. Showing fallback content.'
+        });
+      }
+      
       return NextResponse.json(
         { error: 'Database error when fetching all articles', details: dbError instanceof Error ? dbError.message : String(dbError) },
         { status: 500 }
@@ -142,10 +190,12 @@ export async function GET(request: Request) {
     console.error('Failed to fetch articles:', error);
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace available');
     console.error('Error details:', JSON.stringify(error, null, 2));
-    return NextResponse.json(
-      { error: 'Failed to fetch articles', details: error instanceof Error ? error.message : String(error) },
-      { status: 500 }
-    );
+    
+    // Return fallback content for any unhandled error
+    return NextResponse.json({ 
+      articles: [FALLBACK_ARTICLE],
+      _error: error instanceof Error ? error.message : String(error)
+    });
   }
 }
 
