@@ -15,6 +15,15 @@ export async function GET(request: Request) {
     );
   }
 
+  // Special handling for fallback article
+  if (articleId === 'fallback-article-1') {
+    return NextResponse.json({
+      userReaction: null,
+      likesCount: 0,
+      dislikesCount: 0
+    });
+  }
+  
   try {
     // Get authorization header for Supabase auth
     const authHeader = request.headers.get('authorization');
@@ -188,6 +197,16 @@ export async function POST(request: Request) {
     
     const body = await request.json();
     const { articleId, commentId, type, anonymousId: requestAnonymousId } = body;
+    
+    // Special handling for fallback article
+    if (articleId === 'fallback-article-1') {
+      return NextResponse.json({
+        success: true,
+        message: 'Reaction acknowledged but not stored for system article',
+        likesCount: 0,
+        dislikesCount: 0
+      });
+    }
     
     // If we don't have a valid userId but we're authenticated with Supabase,
     // generate a consistent anonymousId based on the Supabase user ID
