@@ -1,22 +1,46 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { signOut, useSession } from 'next-auth/react';
-import { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { Button } from './Button';
+import { supabase } from '@/lib/supabase';
 
 export function Navbar() {
   const pathname = usePathname();
-  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [session, setSession] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
+  useEffect(() => {
+    async function getSession() {
+      const { data, error } = await supabase.auth.getSession();
+      setSession(data.session);
+      setLoading(false);
+      
+      // Set up auth state listener
+      const { data: authListener } = supabase.auth.onAuthStateChange(
+        (_event, session) => {
+          setSession(session);
+        }
+      );
+      
+      return () => {
+        authListener?.subscription.unsubscribe();
+      };
+    }
+    
+    getSession();
+  }, []);
   
   const isActive = (path: string) => {
     return pathname === path;
   };
   
   const handleLogout = async () => {
-    await signOut({ callbackUrl: '/' });
+    await supabase.auth.signOut();
+    router.push('/');
   };
   
   return (
@@ -73,9 +97,9 @@ export function Navbar() {
             </div>
           </div>
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
-            {status === 'loading' ? (
+            {loading ? (
               <div className="w-5 h-5 border-2 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
-            ) : session?.user ? (
+            ) : session ? (
               <div className="ml-3 relative">
                 <div>
                   <button
@@ -223,11 +247,11 @@ export function Navbar() {
           
           {/* Mobile authentication */}
           <div className="pt-4 pb-3 border-t border-gray-200 dark:border-gray-700">
-            {status === 'loading' ? (
+            {loading ? (
               <div className="flex justify-center py-2">
                 <div className="w-5 h-5 border-2 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
               </div>
-            ) : session?.user ? (
+            ) : session ? (
               <div>
                 <div className="flex items-center px-4">
                   {session.user.image ? (

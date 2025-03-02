@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { supabase } from '@/lib/supabase';
 import { Button } from '../Button';
 import { 
   getAnonymousId, 
@@ -26,7 +26,7 @@ export function LikeDislikeButton({
   initialUserReaction = null,
   onReactionChange
 }: LikeDislikeButtonProps) {
-  const { data: session } = useSession();
+  const [session, setSession] = useState<any>(null);
   const [userReaction, setUserReaction] = useState<ReactionType | null>(initialUserReaction);
   const [likes, setLikes] = useState(initialLikes);
   const [dislikes, setDislikes] = useState(initialDislikes);
@@ -36,11 +36,30 @@ export function LikeDislikeButton({
 
   // Initialize state on component mount
   useEffect(() => {
+    // Get session
+    async function getSession() {
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
+      
+      // Set up auth state listener
+      const { data: authListener } = supabase.auth.onAuthStateChange(
+        (_event, session) => {
+          setSession(session);
+        }
+      );
+      
+      return () => {
+        authListener?.subscription.unsubscribe();
+      };
+    }
+    
+    getSession();
+    
     // Get counts regardless of user state
     fetchReactionCounts();
     
     // Initialize anonymous ID if needed
-    if (!session?.user?.id) {
+    if (!session?.user) {
       const anonId = getAnonymousId();
       setAnonymousId(anonId);
       
@@ -50,14 +69,14 @@ export function LikeDislikeButton({
         setUserReaction(existingReaction);
       }
     }
-  }, [session?.user?.id, articleId]);
+  }, [articleId]);
 
   // Fetch user-specific reaction if logged in
   useEffect(() => {
-    if (session?.user?.id && !initialUserReaction) {
+    if (session?.user && !initialUserReaction) {
       fetchUserReaction();
     }
-  }, [session?.user?.id, articleId, initialUserReaction]);
+  }, [session?.user, articleId, initialUserReaction]);
 
   // Fetch reaction counts without user-specific data
   async function fetchReactionCounts() {
@@ -108,7 +127,7 @@ export function LikeDislikeButton({
       // If user clicks the same reaction again, remove it
       const newReactionType = userReaction === type ? null : type;
       
-      if (session?.user?.id) {
+      if (session?.user) {
         // Authenticated user flow
         const response = await fetch('/api/reactions', {
           method: 'POST',

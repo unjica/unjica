@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { supabase } from '@/lib/supabase';
 // Create a simple Avatar component since we don't have access to the actual one
 interface AvatarProps {
   src?: string;
@@ -50,25 +50,43 @@ interface CommentSectionProps {
 }
 
 export function CommentSection({ articleId }: CommentSectionProps) {
-  const { data: session } = useSession();
   const [comments, setComments] = useState<Comment[]>([]);
-  const [newComment, setNewComment] = useState('');
-  const [replyTo, setReplyTo] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [anonymousId, setAnonymousId] = useState<string>('');
+  const [commentText, setCommentText] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [session, setSession] = useState<any>(null);
+  const [anonymousId, setAnonymousId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
 
   // Check if user is an admin
   const isAdmin = session?.user?.role === 'ADMIN';
 
   useEffect(() => {
-    // Initialize anonymous ID if needed
-    if (!session?.user?.id) {
-      const anonId = getAnonymousId();
-      setAnonymousId(anonId);
+    // Get the session
+    async function getSession() {
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
+      
+      // Set up auth state listener
+      const { data: authListener } = supabase.auth.onAuthStateChange(
+        (_event, session) => {
+          setSession(session);
+        }
+      );
+      
+      return () => {
+        authListener?.subscription.unsubscribe();
+      };
     }
     
+    getSession();
+    
+    // Get or create anonymous ID for non-logged in users
+    const storedAnonymousId = getAnonymousId();
+    setAnonymousId(storedAnonymousId);
+    
+    // Fetch comments
     fetchComments();
   }, [articleId]);
 
@@ -107,16 +125,16 @@ export function CommentSection({ articleId }: CommentSectionProps) {
   }
 
   async function handleSubmitComment() {
-    if (!newComment.trim()) return;
+    if (!commentText.trim()) return;
     
     try {
-      setSubmitting(true);
+      setLoading(true);
       
       // Prepare comment data with either user ID or anonymous ID
       const commentData = {
-        content: newComment,
+        content: commentText,
         articleId,
-        parentId: replyTo,
+        parentId: replyingTo,
       };
       
       // Add anonymousId if user is not logged in
@@ -138,8 +156,8 @@ export function CommentSection({ articleId }: CommentSectionProps) {
       }
       
       // Reset form
-      setNewComment('');
-      setReplyTo(null);
+      setCommentText('');
+      setReplyingTo(null);
       
       // Refresh comments
       fetchComments();
@@ -147,18 +165,18 @@ export function CommentSection({ articleId }: CommentSectionProps) {
       console.error('Failed to submit comment:', error);
       alert('Failed to submit your comment. Please try again.');
     } finally {
-      setSubmitting(false);
+      setLoading(false);
     }
   }
 
   function handleReplyClick(commentId: string) {
-    setReplyTo(commentId);
+    setReplyingTo(commentId);
     // Focus on comment input
     document.getElementById('comment-input')?.focus();
   }
 
   function cancelReply() {
-    setReplyTo(null);
+    setReplyingTo(null);
   }
 
   async function handleDeleteComment(commentId: string) {
@@ -194,8 +212,8 @@ export function CommentSection({ articleId }: CommentSectionProps) {
   }
 
   // Find the parent comment being replied to
-  const replyingTo = replyTo
-    ? comments.find((comment) => comment.id === replyTo)
+  const replyingToComment = replyingTo
+    ? comments.find((comment) => comment.id === replyingTo)
     : null;
 
   return (
@@ -213,9 +231,9 @@ export function CommentSection({ articleId }: CommentSectionProps) {
             />
           </div>
           <div className="flex-grow">
-            {replyingTo && (
+            {replyingToComment && (
               <div className="mb-2 text-sm text-blue-600 dark:text-blue-400 flex items-center">
-                <span>Replying to {replyingTo.user.name || 'Anonymous'}</span>
+                <span>Replying to {replyingToComment.user.name || 'Anonymous'}</span>
                 <button
                   onClick={cancelReply}
                   className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
@@ -226,8 +244,8 @@ export function CommentSection({ articleId }: CommentSectionProps) {
             )}
             <textarea
               id="comment-input"
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
               placeholder={session?.user ? "Add a comment..." : "Add a comment as Anonymous..."}
               className="w-full p-3 border rounded-lg dark:bg-gray-800 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               rows={3}
@@ -235,10 +253,10 @@ export function CommentSection({ articleId }: CommentSectionProps) {
             <div className="flex justify-end mt-2">
               <Button
                 onClick={handleSubmitComment}
-                disabled={!newComment.trim() || submitting}
+                disabled={!commentText.trim() || loading}
                 className="px-4"
               >
-                {submitting ? 'Posting...' : 'Post Comment'}
+                {loading ? 'Posting...' : 'Post Comment'}
               </Button>
             </div>
           </div>

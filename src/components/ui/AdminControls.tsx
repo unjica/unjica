@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { supabase } from '@/lib/supabase';
 
 interface AdminControlsProps {
   onGenerateDigest?: () => void;
 }
 
 export function AdminControls({ onGenerateDigest }: AdminControlsProps) {
-  const { data: session } = useSession();
+  const [session, setSession] = useState<any>(null);
   const [stats, setStats] = useState<{
     articles: number;
     comments: number;
@@ -18,7 +18,40 @@ export function AdminControls({ onGenerateDigest }: AdminControlsProps) {
   const [generating, setGenerating] = useState(false);
 
   // Check if user is an admin
-  const isAdmin = session?.user?.role === 'ADMIN';
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    // Get session
+    async function getSession() {
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
+      
+      // Check if user is admin (email is sanja.malovic2@gmail.com)
+      if (data.session?.user?.email === 'sanja.malovic2@gmail.com') {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
+      }
+      
+      // Set up auth state listener
+      const { data: authListener } = supabase.auth.onAuthStateChange(
+        (_event, session) => {
+          setSession(session);
+          if (session?.user?.email === 'sanja.malovic2@gmail.com') {
+            setIsAdmin(true);
+          } else {
+            setIsAdmin(false);
+          }
+        }
+      );
+      
+      return () => {
+        authListener?.subscription.unsubscribe();
+      };
+    }
+    
+    getSession();
+  }, []);
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -27,7 +60,16 @@ export function AdminControls({ onGenerateDigest }: AdminControlsProps) {
     async function fetchStats() {
       try {
         setLoading(true);
-        const response = await fetch('/api/admin/stats');
+        
+        // Get the session token for authorization
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        const response = await fetch('/api/admin/stats', {
+          headers: {
+            Authorization: `Bearer ${session?.access_token}`
+          }
+        });
+        
         if (response.ok) {
           const data = await response.json();
           setStats(data);

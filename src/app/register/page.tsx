@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Container } from '@/components/ui/Container';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
-import { signIn } from 'next-auth/react';
+import { supabase } from '@/lib/supabase';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -34,32 +34,23 @@ export default function RegisterPage() {
     setLoading(true);
     
     try {
-      // Register user
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to register');
-      }
-      
-      // Automatically log in after successful registration
-      const result = await signIn('credentials', {
-        redirect: false,
+      // Register user with Supabase
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            name,
+          },
+        },
       });
       
-      if (result?.error) {
-        setError('Registration successful but failed to log in automatically. Please try logging in.');
-      } else {
-        router.push('/');
-        router.refresh();
+      if (error) {
+        throw new Error(error.message || 'Failed to register');
       }
+      
+      // Redirect to login page after successful registration
+      router.push('/login?registered=true');
     } catch (error: any) {
       setError(error.message || 'An error occurred during registration');
     } finally {

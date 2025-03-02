@@ -9,7 +9,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { LikeDislikeButton } from '../LikeDislikeButton';
 import { CommentSection } from '../CommentSection';
-import { useSession } from 'next-auth/react';
+import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
 interface DigestArticleCardProps {
@@ -30,29 +30,59 @@ export const DigestArticleCard = ({
   const [likesCount, setLikesCount] = useState(0);
   const [dislikesCount, setDislikesCount] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
-  const { data: session } = useSession();
+  const [session, setSession] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
   
-  // Check if user is an admin
-  const isAdmin = session?.user?.role === 'ADMIN';
-  
   useEffect(() => {
-    // Fetch reaction counts when component mounts
-    async function fetchReactionCounts() {
-      try {
-        const response = await fetch(`/api/reactions?articleId=${article.id}`);
-        if (response.ok) {
-          const data = await response.json();
-          setLikesCount(data.likesCount || 0);
-          setDislikesCount(data.dislikesCount || 0);
-        }
-      } catch (error) {
-        console.error('Failed to fetch reaction counts:', error);
+    // Get session
+    async function getSession() {
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
+      
+      // Check if user is admin (email is sanja.malovic2@gmail.com)
+      if (data.session?.user?.email === 'sanja.malovic2@gmail.com') {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
       }
+      
+      // Set up auth state listener
+      const { data: authListener } = supabase.auth.onAuthStateChange(
+        (_event, session) => {
+          setSession(session);
+          if (session?.user?.email === 'sanja.malovic2@gmail.com') {
+            setIsAdmin(true);
+          } else {
+            setIsAdmin(false);
+          }
+        }
+      );
+      
+      return () => {
+        authListener?.subscription.unsubscribe();
+      };
     }
     
+    getSession();
+    
+    // Fetch reaction counts when component mounts
     fetchReactionCounts();
   }, [article.id]);
+  
+  // Fetch reaction counts
+  async function fetchReactionCounts() {
+    try {
+      const response = await fetch(`/api/reactions?articleId=${article.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setLikesCount(data.likesCount || 0);
+        setDislikesCount(data.dislikesCount || 0);
+      }
+    } catch (error) {
+      console.error('Failed to fetch reaction counts:', error);
+    }
+  }
   
   const formattedDate = new Date(article.publishedAt).toLocaleDateString('en-US', {
     year: 'numeric',

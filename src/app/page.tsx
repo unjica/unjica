@@ -6,7 +6,7 @@ import { GradientText } from '@/components/ui/GradientText';
 import { Button } from '@/components/ui/Button';
 import { DigestArticleCard } from '@/components/ui/art-news/digest/DigestArticleCard';
 import { type GeneratedArticle } from '@/lib/agents/models/generatedArticle';
-import { useSession } from 'next-auth/react';
+import { supabase } from '@/lib/supabase';
 import { AdminControls } from '@/components/ui/AdminControls';
 
 const ARTICLES_PER_PAGE = 5;
@@ -18,10 +18,41 @@ export default function Home() {
   const [lastGenTime, setLastGenTime] = useState<Date | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalArticles, setTotalArticles] = useState(0);
-  const { data: session } = useSession();
+  const [session, setSession] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   
-  // Check if user is admin
-  const isAdmin = session?.user?.role === 'ADMIN';
+  // Get session and check if user is admin
+  useEffect(() => {
+    async function getSession() {
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
+      
+      // Check if user is admin (email is sanja.malovic2@gmail.com)
+      if (data.session?.user?.email === 'sanja.malovic2@gmail.com') {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
+      }
+      
+      // Set up auth state listener
+      const { data: authListener } = supabase.auth.onAuthStateChange(
+        (_event, session) => {
+          setSession(session);
+          if (session?.user?.email === 'sanja.malovic2@gmail.com') {
+            setIsAdmin(true);
+          } else {
+            setIsAdmin(false);
+          }
+        }
+      );
+      
+      return () => {
+        authListener?.subscription.unsubscribe();
+      };
+    }
+    
+    getSession();
+  }, []);
   
   // Calculate the total number of pages
   const totalPages = Math.ceil(totalArticles / ARTICLES_PER_PAGE);
