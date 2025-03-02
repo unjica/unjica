@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
   relationMode = "foreignKeys"
 }
 
@@ -64,9 +64,9 @@ model Comment {
   parentId    String?
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
+  article     GeneratedArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
   parent      Comment?         @relation("CommentReplies", fields: [parentId], references: [id])
   replies     Comment[]        @relation("CommentReplies")
-  article     GeneratedArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
   user        User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
   reactions   Reaction[]
 
@@ -81,12 +81,12 @@ model Reaction {
   articleId   String?
   commentId   String?
   createdAt   DateTime          @default(now())
-  comment     Comment?          @relation(fields: [commentId], references: [id], onDelete: Cascade)
   article     GeneratedArticle? @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  comment     Comment?          @relation(fields: [commentId], references: [id], onDelete: Cascade)
   user        User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, articleId, commentId], name: "user_reaction_unique")
-  @@index([anonymousId, articleId, commentId], name: "anonymous_reaction_index")
+  @@index([anonymousId, articleId, commentId], map: "anonymous_reaction_index")
   @@map("reactions")
 }
 
