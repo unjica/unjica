@@ -21,18 +21,26 @@ export async function GET(request: Request) {
     if (id || slug) {
       let article;
       
-      if (id) {
-        article = await prisma.generatedArticle.findUnique({
-          where: { id }
-        });
-      } else if (slug) {
-        // Use findFirst with a more TypeScript-friendly approach
-        article = await prisma.generatedArticle.findFirst({
-          where: {
-            // Using a type assertion to help TypeScript understand our schema
-            slug: slug
-          } as any
-        });
+      try {
+        if (id) {
+          article = await prisma.generatedArticle.findUnique({
+            where: { id }
+          });
+        } else if (slug) {
+          // Use findFirst with a more TypeScript-friendly approach
+          article = await prisma.generatedArticle.findFirst({
+            where: {
+              // Using a type assertion to help TypeScript understand our schema
+              slug: slug
+            } as any
+          });
+        }
+      } catch (error) {
+        console.error('Database error when fetching article:', error);
+        return NextResponse.json(
+          { error: 'Database error when fetching article' },
+          { status: 500 }
+        );
       }
       
       if (!article) {
@@ -63,33 +71,59 @@ export async function GET(request: Request) {
     }
     
     // Otherwise fetch all articles
-    const dbArticles = await prisma.generatedArticle.findMany({
-      orderBy: {
-        publishedAt: 'desc'
-      },
-      take: 50
-    });
-    
-    const articles = dbArticles.map(dbArticle => {
-      // Cast to our extended type to access all fields
-      const typedArticle = dbArticle as GeneratedArticleWithExtras;
+    try {
+      const dbArticles = await prisma.generatedArticle.findMany({
+        orderBy: {
+          publishedAt: 'desc'
+        },
+        take: 50
+      });
       
-      return {
-        id: typedArticle.id,
-        title: typedArticle.title,
-        content: typedArticle.content,
-        primaryTopic: typedArticle.primaryTopic,
-        summary: typedArticle.summary,
-        tags: JSON.parse(typedArticle.tags),
-        publishedAt: typedArticle.publishedAt.toISOString(),
-        sourceNewsIds: JSON.parse(typedArticle.sourceNewsIds),
-        lastUpdated: typedArticle.lastUpdated.toISOString(),
-        imageUrl: typedArticle.imageUrl,
-        slug: typedArticle.slug
-      };
-    });
-    
-    return NextResponse.json({ articles });
+      const articles = dbArticles.map(dbArticle => {
+        // Cast to our extended type to access all fields
+        const typedArticle = dbArticle as GeneratedArticleWithExtras;
+        
+        try {
+          return {
+            id: typedArticle.id,
+            title: typedArticle.title,
+            content: typedArticle.content,
+            primaryTopic: typedArticle.primaryTopic,
+            summary: typedArticle.summary,
+            tags: JSON.parse(typedArticle.tags),
+            publishedAt: typedArticle.publishedAt.toISOString(),
+            sourceNewsIds: JSON.parse(typedArticle.sourceNewsIds),
+            lastUpdated: typedArticle.lastUpdated.toISOString(),
+            imageUrl: typedArticle.imageUrl,
+            slug: typedArticle.slug
+          };
+        } catch (parseError) {
+          console.error('Error parsing article data:', parseError, typedArticle);
+          // Return a simplified version of the article if parsing fails
+          return {
+            id: typedArticle.id,
+            title: typedArticle.title,
+            content: typedArticle.content,
+            primaryTopic: typedArticle.primaryTopic,
+            summary: typedArticle.summary,
+            tags: [],
+            publishedAt: typedArticle.publishedAt.toISOString(),
+            sourceNewsIds: [],
+            lastUpdated: typedArticle.lastUpdated.toISOString(),
+            imageUrl: typedArticle.imageUrl,
+            slug: typedArticle.slug
+          };
+        }
+      });
+      
+      return NextResponse.json({ articles });
+    } catch (dbError) {
+      console.error('Database error when fetching all articles:', dbError);
+      return NextResponse.json(
+        { error: 'Database error when fetching all articles' },
+        { status: 500 }
+      );
+    }
   } catch (error) {
     console.error('Failed to fetch articles:', error);
     return NextResponse.json(
@@ -100,8 +134,29 @@ export async function GET(request: Request) {
 }
 
 // POST handler to generate a new article
-export async function POST() {
+export async function POST(request: Request) {
   try {
+    // Get authorization header
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Unauthorized. Admin access required.' },
+        { status: 403 }
+      );
+    }
+    
+    const token = authHeader.split(' ')[1];
+    
+    // Verify the token with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (error || !user || user.email !== 'sanja.malovic2@gmail.com') {
+      return NextResponse.json(
+        { error: 'Unauthorized. Admin access required.' },
+        { status: 403 }
+      );
+    }
+    
     const article = await generateDailyArtDigest();
     
     // Save the article to the database
