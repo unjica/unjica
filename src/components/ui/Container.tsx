@@ -30,6 +30,7 @@ export function Container({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8 }}
+      className="px-3"
     >
       {content}
     </motion.div>

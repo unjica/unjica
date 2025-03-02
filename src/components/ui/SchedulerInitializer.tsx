@@ -13,7 +13,7 @@ export function SchedulerInitializer() {
       try {
         const response = await fetch('/api/scheduler');
         const data = await response.json();
-        console.log('Scheduler initialized:', data);
+        return data;
       } catch (error) {
         console.error('Failed to initialize scheduler:', error);
       }

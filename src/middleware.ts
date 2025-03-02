@@ -9,62 +9,33 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
-        },
-        set(name: string, value: string, options: any) {
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          });
-        },
-        remove(name: string, options: any) {
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-          });
-        },
-      },
-    }
+  // Skip authentication check for profile page - we'll handle it client-side
+  if (request.nextUrl.pathname.startsWith('/profile')) {
+    return response;
+  }
+
+  // Debug: Log all cookies for troubleshooting
+  const allCookies = request.cookies.getAll();
+  
+  // Check for Authorization header
+  const authHeader = request.headers.get('authorization');
+  const hasAuthHeader = !!authHeader && authHeader.startsWith('Bearer ');
+  
+  // Check if auth cookies exist before creating client
+  const hasAuthCookie = allCookies.some(cookie => 
+    cookie.name.includes('sb-') || cookie.name.includes('supabase-auth')
   );
 
-  try {
-    // Attempt to get the session, which will refresh the token if needed
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    // If no session and trying to access protected routes, redirect to login
-    if (!session && isProtectedRoute(request.nextUrl.pathname)) {
-      return NextResponse.redirect(new URL('/login', request.url));
+  // If this is a protected route and there's no auth header or cookie,
+  // check for a token in the URL (for client-side auth)
+  if (isProtectedRoute(request.nextUrl.pathname) && !hasAuthHeader && !hasAuthCookie) {
+    // For client-side navigation, we'll let the client handle auth
+    // This prevents redirects for client-side authenticated users
+    if (request.headers.get('accept')?.includes('text/html')) {
+      return response;
     }
-  } catch (error) {
-    // Clear all auth cookies to ensure a clean state
-    const cookiesToClear = ['sb-access-token', 'sb-refresh-token', 'supabase-auth-token'];
     
-    cookiesToClear.forEach(cookieName => {
-      response.cookies.set({
-        name: cookieName,
-        value: '',
-        maxAge: 0,
-        path: '/',
-      });
-    });
-    
-    // If there's an error with the token refresh, log it for debugging
-    if (error instanceof Error) {
-      console.error('Auth error in middleware:', error.message);
-      
-      // If trying to access protected routes, redirect to login
-      if (isProtectedRoute(request.nextUrl.pathname)) {
-        return NextResponse.redirect(new URL('/login?error=session_expired', request.url));
-      }
-    }
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
   return response;
@@ -72,7 +43,8 @@ export async function middleware(request: NextRequest) {
 
 // Helper function to check if a route is protected
 function isProtectedRoute(pathname: string): boolean {
-  const protectedPaths = ['/admin', '/profile'];
+  // Profile is handled client-side, so we only check for admin routes here
+  const protectedPaths = ['/admin'];
   return protectedPaths.some(path => pathname.startsWith(path));
 }
 

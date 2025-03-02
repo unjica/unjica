@@ -3,11 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/components/auth/AuthProvider';
+import { Loader } from '@/components/ui/Loader';
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { session, user, isLoading: authLoading, refreshSession } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [session, setSession] = useState<any>(null);
   const [userActivity, setUserActivity] = useState({
     comments: [],
     likes: [],
@@ -24,41 +26,55 @@ export default function ProfilePage() {
   const [name, setName] = useState('');
   const [updateLoading, setUpdateLoading] = useState(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
+  const [authDebug, setAuthDebug] = useState<any>(null);
 
   useEffect(() => {
-    async function getSession() {
-      const { data, error } = await supabase.auth.getSession();
-      
-      if (!data.session) {
-        // Redirect to login if not authenticated
-        router.push('/login');
-        return;
+    async function loadProfileData() {
+      try {
+        // Wait for auth to be ready
+        if (authLoading) return;
+        
+        // If no session after auth is loaded, redirect to login
+        if (!session || !user) {
+          router.push('/login');
+          return;
+        }
+        
+        setName(user.user_metadata?.name || '');
+        
+        // Fetch user activity and interactions
+        await Promise.all([
+          fetchUserActivity(user.id),
+          fetchUserInteractions(user.id)
+        ]);
+        
+        setLoading(false);
+      } catch (error) {
+        console.error('Error loading profile data:', error);
+        setLoading(false);
       }
-      
-      setSession(data.session);
-      setName(data.session.user.user_metadata?.name || '');
-      setLoading(false);
-      
-      // Fetch user activity
-      fetchUserActivity(data.session.user.id);
-      
-      // Fetch user interactions
-      fetchUserInteractions(data.session.user.id);
     }
     
-    getSession();
-  }, [router]);
+    loadProfileData();
+  }, [session, user, authLoading, router]);
 
   async function fetchUserActivity(userId: string) {
     try {
-      setLoading(true);
+      // Get a fresh token directly from Supabase
+      const { data, error } = await supabase.auth.getSession();
       
-      // Get the session token for authentication
-      const { data: sessionData } = await supabase.auth.getSession();
+      if (error) {
+        console.error('Error getting session:', error);
+        return;
+      }
+      
       const headers: HeadersInit = {};
       
-      if (sessionData.session) {
-        headers['Authorization'] = `Bearer ${sessionData.session.access_token}`;
+      if (data.session) {
+        headers['Authorization'] = `Bearer ${data.session.access_token}`;
+      } else {
+        console.error('No session available for API calls');
+        return;
       }
       
       // Fetch user's comments
@@ -80,22 +96,35 @@ export default function ProfilePage() {
           likes: reactionsData.likes || [],
           dislikes: reactionsData.dislikes || [],
         });
+      } else {
+        // Handle API errors
+        if (commentsResponse.status === 401 || reactionsResponse.status === 401) {
+          // Try to refresh the session
+          await refreshSession();
+        }
       }
     } catch (error) {
       console.error('Failed to fetch user activity:', error);
-    } finally {
-      setLoading(false);
     }
   }
   
   async function fetchUserInteractions(userId: string) {
     try {
-      // Get the session token for authentication
-      const { data: sessionData } = await supabase.auth.getSession();
+      // Get a fresh token directly from Supabase
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('Error getting session for interactions:', error);
+        return;
+      }
+      
       const headers: HeadersInit = {};
       
-      if (sessionData.session) {
-        headers['Authorization'] = `Bearer ${sessionData.session.access_token}`;
+      if (data.session) {
+        headers['Authorization'] = `Bearer ${data.session.access_token}`;
+      } else {
+        console.error('No session available for interactions API call');
+        return;
       }
       
       // Fetch interactions with user's comments
@@ -111,6 +140,9 @@ export default function ProfilePage() {
           commentDislikes: interactionsData.commentDislikes || [],
           commentReplies: interactionsData.commentReplies || [],
         });
+      } else if (interactionsResponse.status === 401) {
+        // Try to refresh the session
+        await refreshSession();
       }
     } catch (error) {
       console.error('Failed to fetch user interactions:', error);
@@ -129,14 +161,21 @@ export default function ProfilePage() {
       setUpdateLoading(true);
       setUpdateError(null);
       
-      // Get the session token for authentication
-      const { data: sessionData } = await supabase.auth.getSession();
+      // Get a fresh token directly from Supabase
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        throw new Error('Failed to get authentication token');
+      }
+      
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
       };
       
-      if (sessionData.session) {
-        headers['Authorization'] = `Bearer ${sessionData.session.access_token}`;
+      if (data.session) {
+        headers['Authorization'] = `Bearer ${data.session.access_token}`;
+      } else {
+        throw new Error('You must be logged in to update your profile');
       }
       
       const response = await fetch('/api/profile/update', {
@@ -151,8 +190,7 @@ export default function ProfilePage() {
       }
       
       // Refresh the session to get updated user data
-      const { data } = await supabase.auth.getSession();
-      setSession(data.session);
+      await refreshSession();
       setShowEditForm(false);
       
     } catch (error) {
@@ -163,11 +201,33 @@ export default function ProfilePage() {
     }
   }
 
-  if (loading) {
+  // If still loading auth or data, show a loading state
+  if (authLoading || loading) {
     return (
-      <div className="max-w-2xl mx-auto text-center z-10 px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-center items-center min-h-[60vh]">
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <Loader fullScreen text="Loading your profile..." />
+    );
+  }
+
+  // If no session, show a message (this shouldn't happen due to the redirect in useEffect)
+  if (!session || !user) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Authentication Required</h1>
+          <p>You need to be logged in to view this page.</p>
+          <button 
+            onClick={() => router.push('/login')}
+            className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+          >
+            Go to Login
+          </button>
+          
+          {authDebug && (
+            <div className="mt-4 p-4 bg-gray-100 rounded text-left text-sm">
+              <h3 className="font-bold mb-2">Auth Debug Info:</h3>
+              <pre>{JSON.stringify(authDebug, null, 2)}</pre>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -180,24 +240,24 @@ export default function ProfilePage() {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              {session?.user?.user_metadata?.avatar_url ? (
+              {user?.user_metadata?.avatar_url ? (
                 <img
-                  src={session.user.user_metadata.avatar_url}
+                  src={user.user_metadata.avatar_url}
                   alt="Profile"
                   className="h-24 w-24 rounded-full object-cover border-4 border-blue-100 dark:border-blue-900"
                 />
               ) : (
                 <div className="h-24 w-24 rounded-full bg-blue-600 dark:bg-blue-500 text-white flex items-center justify-center text-3xl font-bold border-4 border-blue-100 dark:border-blue-900">
-                  {session?.user?.user_metadata?.name?.charAt(0).toUpperCase() || 
-                   session?.user?.email?.charAt(0).toUpperCase() || 'U'}
+                  {user?.user_metadata?.name?.charAt(0).toUpperCase() || 
+                   user?.email?.charAt(0).toUpperCase() || 'U'}
                 </div>
               )}
             </div>
             <div className="ml-6">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {session?.user?.user_metadata?.name || session?.user?.email?.split('@')[0] || 'User'}
+                {user?.user_metadata?.name || user?.email?.split('@')[0] || 'User'}
               </h1>
-              <p className="text-gray-600 dark:text-gray-300">{session?.user?.email}</p>
+              <p className="text-gray-600 dark:text-gray-300">{user?.email}</p>
               <div className="mt-2 flex space-x-2">
                 <button 
                   className="inline-flex items-center px-3 py-1.5 text-sm rounded-md border border-purple-500 hover:bg-purple-500/10 transition-colors text-purple-500 dark:text-purple-400"

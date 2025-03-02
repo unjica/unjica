@@ -11,9 +11,7 @@ export default function ArtNewsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(3); // Always show 3 pages
   const [pageSize, setPageSize] = useState(9); // Approximately 8-9 items per page (25/3)
-  const [debugInfo, setDebugInfo] = useState<any>(null);
   const initialLoadDone = useRef(false);
   
   // Use a ref to track if we're in the middle of a page redirect to avoid loops
@@ -38,20 +36,6 @@ export default function ArtNewsPage() {
         
         const data = await response.json();
         console.log('API response:', data);
-        
-        // Add debug info
-        const newDebugInfo = {
-          apiUrl,
-          totalItems: data.totalItems,
-          page: data.page,
-          pageSize: data.pageSize,
-          totalPages: data.totalPages,
-          newsCount: data.news?.length,
-          responseUrl: response.url,
-          timestamp: new Date().toISOString()
-        };
-        
-        setDebugInfo(newDebugInfo);
         
         if (isMounted) {
           setNews(data.news || []);
@@ -146,14 +130,6 @@ export default function ArtNewsPage() {
         ) : error ? (
           <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
             <p className="text-red-500">{error}</p>
-            {debugInfo && (
-              <details className="mt-4 text-left text-xs">
-                <summary className="cursor-pointer">Debug info</summary>
-                <pre className="p-2 bg-gray-100 dark:bg-gray-900 mt-2 overflow-auto">
-                  {JSON.stringify(debugInfo, null, 2)}
-                </pre>
-              </details>
-            )}
             <Button
               onClick={() => {
                 setError(null);
@@ -178,14 +154,6 @@ export default function ArtNewsPage() {
               >
                 Go to First Page
               </Button>
-            )}
-            {debugInfo && (
-              <details className="mt-4 text-left text-xs">
-                <summary className="cursor-pointer">Debug info</summary>
-                <pre className="p-2 bg-gray-100 dark:bg-gray-900 mt-2 overflow-auto">
-                  {JSON.stringify(debugInfo, null, 2)}
-                </pre>
-              </details>
             )}
           </div>
         ) : (
@@ -238,7 +206,6 @@ export default function ArtNewsPage() {
             {/* Pagination indicators */}
             <div className="text-center text-sm text-gray-500 mt-6">
               Page {currentPage} of {actualPageCount} • Showing {news.length} items
-              {debugInfo?.totalItems ? ` • Total items: ${debugInfo.totalItems}` : ''}
             </div>
             
             {/* Pagination */}
@@ -279,16 +246,6 @@ export default function ArtNewsPage() {
                   </Button>
                 </nav>
               </div>
-            )}
-            
-            {/* Debug info */}
-            {debugInfo && (
-              <details className="mt-8 text-left text-xs">
-                <summary className="cursor-pointer">Debug info</summary>
-                <pre className="p-2 bg-gray-100 dark:bg-gray-900 mt-2 overflow-auto">
-                  {JSON.stringify(debugInfo, null, 2)}
-                </pre>
-              </details>
             )}
           </>
         )}

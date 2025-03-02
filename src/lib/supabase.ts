@@ -7,7 +7,17 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Supabase URL or Anon Key is missing. Authentication will not work properly.');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Create the Supabase client with localStorage for session storage
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    storageKey: 'supabase-auth',
+    storage: typeof window !== 'undefined' ? localStorage : undefined,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    flowType: 'pkce'
+  }
+});
 
 // Helper function to check if a user is an admin
 export async function isAdmin(userId: string | undefined): Promise<boolean> {

@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setIsAdmin(session?.user?.email === 'sanja.malovic2@gmail.com');
