@@ -8,7 +8,6 @@ import { DigestArticleCard } from '@/components/ui/art-news/digest/DigestArticle
 import { type GeneratedArticle } from '@/lib/agents/models/generatedArticle';
 import { supabase } from '@/lib/supabase';
 import { AdminControls } from '@/components/ui/AdminControls';
-import { EnvDebugger } from '@/components/ui/EnvDebugger';
 
 const ARTICLES_PER_PAGE = 5;
 
@@ -65,8 +64,7 @@ export default function Home() {
       try {
         const response = await fetch('/api/art-digest');
         if (!response.ok) {
-          console.error('API error:', await response.text());
-          throw new Error(`Failed to load articles: ${response.status} ${response.statusText}`);
+          throw new Error(`Failed to load articles: ${response.status}`);
         }
         
         const data = await response.json();
@@ -80,7 +78,6 @@ export default function Home() {
           setLastGenTime(new Date(fetchedArticles[0].publishedAt));
         }
       } catch (error) {
-        console.error('Failed to load articles:', error);
         // Set empty articles but don't block the UI
         setArticles([]);
         setTotalArticles(0);
@@ -96,7 +93,6 @@ export default function Home() {
       try {
         const response = await fetch('/api/art-digest');
         if (!response.ok) {
-          console.error('API polling error:', await response.text());
           return; // Skip this polling cycle
         }
         
@@ -113,7 +109,6 @@ export default function Home() {
           }
         }
       } catch (error) {
-        console.error('Failed to poll for new articles:', error);
         // Don't update state on polling errors
       }
     }, 60000); // Poll every minute
@@ -140,7 +135,7 @@ export default function Home() {
         setArticles(fetchedArticles.slice(startIndex, endIndex));
         setTotalArticles(fetchedArticles.length);
       } catch (error) {
-        console.error('Failed to fetch page data:', error);
+        // Silent error handling
       } finally {
         setIsLoading(false);
       }
@@ -174,8 +169,6 @@ export default function Home() {
         throw new Error('Failed to generate digest');
       }
       
-      const data = await response.json();
-      
       // Go to the first page to show the new article
       setCurrentPage(1);
       
@@ -194,7 +187,7 @@ export default function Home() {
       // Set the last generation time
       setLastGenTime(new Date());
     } catch (error) {
-      console.error('Failed to generate digest:', error);
+      // Silent error handling
     } finally {
       setIsGenerating(false);
     }
@@ -235,7 +228,6 @@ export default function Home() {
         minute: '2-digit'
       }).format(date);
     } catch (error) {
-      console.error('Date formatting error:', error);
       return 'Invalid date';
     }
   };
@@ -245,9 +237,6 @@ export default function Home() {
       <Container>
         {/* Admin Controls - only visible to admins */}
         {isAdmin && <AdminControls onGenerateDigest={handleGenerateDigest} />}
-        
-        {/* Environment Variables Debugger - only visible to admins */}
-        {isAdmin && <EnvDebugger />}
         
         <div className="text-center mb-10">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">

@@ -139,7 +139,6 @@ export const DigestArticleCard = ({
         }
       }
     } catch (error) {
-      console.error('Failed to delete article:', error);
       alert('Failed to delete article. Please try again.');
       setIsDeleting(false);
     }

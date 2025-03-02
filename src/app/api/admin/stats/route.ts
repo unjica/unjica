@@ -5,14 +5,10 @@ import { supabase } from '@/lib/supabase';
 // GET handler to fetch admin statistics
 export async function GET(request: Request) {
   try {
-    console.log('GET /api/admin/stats: Request received');
-    
     // Get authorization header
     const authHeader = request.headers.get('authorization');
-    console.log('Authorization header present:', !!authHeader);
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.log('GET /api/admin/stats: Unauthorized - no valid auth header');
       return NextResponse.json(
         { error: 'Unauthorized. Admin access required.' },
         { status: 401 }
@@ -20,7 +16,6 @@ export async function GET(request: Request) {
     }
     
     const token = authHeader.split(' ')[1];
-    console.log('Token extracted from header, length:', token.length);
     
     // Try both methods of authentication
     let isAdmin = false;
@@ -30,44 +25,35 @@ export async function GET(request: Request) {
     try {
       const { data, error } = await supabase.auth.getUser(token);
       
-      if (error) {
-        console.error('Supabase auth error with getUser:', error);
-      } else if (data.user) {
+      if (!error && data.user) {
         userEmail = data.user.email;
         isAdmin = data.user.email === 'sanja.malovic2@gmail.com';
-        console.log('User authenticated with getUser:', userEmail, 'isAdmin:', isAdmin);
       }
     } catch (authError) {
-      console.error('Error with getUser auth:', authError);
+      // Silent error handling
     }
     
     // Method 2: Try to get session directly
     if (!isAdmin) {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (error) {
-          console.error('Supabase auth error with getSession:', error);
-        } else if (session?.user) {
+        if (session?.user) {
           userEmail = session.user.email;
           isAdmin = session.user.email === 'sanja.malovic2@gmail.com';
-          console.log('User authenticated with getSession:', userEmail, 'isAdmin:', isAdmin);
         }
       } catch (sessionError) {
-        console.error('Error with getSession auth:', sessionError);
+        // Silent error handling
       }
     }
     
     // Check if user is admin
     if (!isAdmin) {
-      console.log('User is not an admin:', userEmail);
       return NextResponse.json(
         { error: 'Forbidden. Admin access required.' },
         { status: 403 }
       );
     }
-    
-    console.log('User is admin, fetching statistics');
     
     // Fetch statistics in parallel for better performance
     try {
@@ -82,46 +68,20 @@ export async function GET(request: Request) {
         prisma.user.count(),
       ]);
       
-      console.log('Statistics fetched successfully');
       return NextResponse.json({
         articles: articlesCount,
         comments: commentsCount,
         users: usersCount,
       });
     } catch (dbError) {
-      console.error('Database error:', dbError);
-      
-      // If the error is related to database connection, return fallback stats
-      if (dbError instanceof Error && 
-          (dbError.message.includes('database') || 
-           dbError.message.includes('connection') || 
-           dbError.message.includes('DATABASE_URL'))) {
-        console.log('Using fallback stats due to database error');
-        return NextResponse.json({
-          articles: 0,
-          comments: 0,
-          users: 0,
-          _notice: 'Database connection is currently unavailable. Showing fallback statistics.'
-        });
-      }
-      
       return NextResponse.json(
-        { error: 'Database error when fetching statistics', details: dbError instanceof Error ? dbError.message : String(dbError) },
+        { error: 'Database error when fetching statistics' },
         { status: 500 }
       );
     }
   } catch (error) {
-    console.error('Error fetching admin stats:', error);
-    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace available');
-    
     return NextResponse.json(
-      { 
-        error: 'Failed to fetch admin statistics',
-        details: error instanceof Error ? error.message : String(error),
-        articles: 0,
-        comments: 0,
-        users: 0
-      },
+      { error: 'Failed to fetch admin statistics' },
       { status: 500 }
     );
   }
