@@ -6,8 +6,8 @@
     }
   ],
   "env": {
-    "CRON_SECRET": "@cron_secret",
-    "DATABASE_URL": "@database_url"
+    "CRON_SECRET": "${CRON_SECRET}",
+    "DATABASE_URL": "${DATABASE_URL}"
   },
   "buildCommand": "prisma generate && next build",
   "functions": {
