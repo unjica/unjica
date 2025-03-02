@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Unjica
+
+A modern web application built with Next.js 15, React 19, and TypeScript.
+
+## Overview
+
+Unjica is a clean, modern web application that serves as a foundation for building dynamic web experiences. It features responsive design, interactive UI components with smooth animations, and email subscription functionality.
+
+## Key Technologies
+
+- **Next.js 15** - React framework with server-side rendering
+- **React 19** - UI library for building component-based interfaces
+- **TypeScript** - Type-safe JavaScript superset
+- **Tailwind CSS** - Utility-first CSS framework
+- **Framer Motion** - Animation library for React
+- **Nodemailer** - For email functionality
 
 ## Getting Started
 
-First, run the development server:
+First, install the dependencies:
+
+```bash
+npm install
+# or
+yarn install
+```
+
+Create a `.env.local` file based on the `.env.local.example`:
+
+```bash
+cp .env.local.example .env.local
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Documentation
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+For comprehensive documentation about the project, please refer to the [documentation](./documentation) folder, which includes:
 
-## Learn More
+- [Project Overview](./documentation/project-overview.md)
+- [Architecture](./documentation/architecture.md)
+- [Setup Guide](./documentation/setup-guide.md)
+- [Component Documentation](./documentation/components.md)
+- [API Reference](./documentation/api-reference.md)
 
-To learn more about Next.js, take a look at the following resources:
+## Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `npm run dev` - Start the development server
+- `npm run build` - Build the application for production
+- `npm run start` - Start the production server
+- `npm run lint` - Run ESLint for code linting
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deployment
 
-## Deploy on Vercel
+The easiest way to deploy the application is to use the [Vercel Platform](https://vercel.com) from the creators of Next.js.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+For more information on deployment options, see the [Setup Guide](./documentation/setup-guide.md#deployment).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## License
+
+This project is private and intended for internal use only.
