@@ -9,7 +9,7 @@ interface AdminControlsProps {
 }
 
 export function AdminControls({ onGenerateDigest }: AdminControlsProps) {
-  const { session, isAdmin } = useAuth();
+  const { session, isAdmin, clearAuthData } = useAuth();
   const [stats, setStats] = useState<{
     articles: number;
     comments: number;
@@ -27,23 +27,45 @@ export function AdminControls({ onGenerateDigest }: AdminControlsProps) {
         setLoading(true);
         
         // Get a fresh token directly from Supabase
-        const { data } = await supabase.auth.getSession();
-        const token = data.session?.access_token;
-        
-        if (!token) {
-          setLoading(false);
-          return;
-        }
-        
-        const response = await fetch('/api/admin/stats', {
-          headers: {
-            Authorization: `Bearer ${token}`
+        try {
+          const { data, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            throw error;
           }
-        });
-        
-        if (response.ok) {
-          const responseData = await response.json();
-          setStats(responseData);
+          
+          const token = data.session?.access_token;
+          
+          if (!token) {
+            setLoading(false);
+            return;
+          }
+          
+          const response = await fetch('/api/admin/stats', {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+          
+          if (response.ok) {
+            const responseData = await response.json();
+            setStats(responseData);
+          } else if (response.status === 401 || response.status === 403) {
+            // Handle unauthorized access
+            throw new Error('Unauthorized access to admin stats');
+          }
+        } catch (error) {
+          // Handle token errors
+          console.error('Error fetching admin stats:', error);
+          
+          // If there's an error with the token, sign out and clear data
+          if (error instanceof Error && 
+              (error.message.includes('Refresh Token') || 
+               error.message.includes('Unauthorized'))) {
+            clearAuthData();
+            await supabase.auth.signOut();
+            window.location.href = '/login?error=session_expired';
+          }
         }
       } catch (error) {
         // Error handling is silent
@@ -53,7 +75,7 @@ export function AdminControls({ onGenerateDigest }: AdminControlsProps) {
     }
     
     fetchStats();
-  }, [isAdmin, session]);
+  }, [isAdmin, session, clearAuthData]);
 
   async function handleGenerateDigest() {
     if (!isAdmin || !session) return;
@@ -62,33 +84,52 @@ export function AdminControls({ onGenerateDigest }: AdminControlsProps) {
       setGenerating(true);
       
       // Get a fresh token directly from Supabase
-      const { data } = await supabase.auth.getSession();
-      const token = data.session?.access_token;
-      
-      if (!token) {
-        throw new Error('You must be logged in to generate a digest');
-      }
-      
-      const response = await fetch('/api/art-digest', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          throw error;
         }
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate digest');
+        
+        const token = data.session?.access_token;
+        
+        if (!token) {
+          throw new Error('You must be logged in to generate a digest');
+        }
+        
+        const response = await fetch('/api/art-digest', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to generate digest');
+        }
+        
+        // Call the callback function if provided
+        if (onGenerateDigest) {
+          onGenerateDigest();
+        }
+        
+        // Reload the page to show the new digest
+        window.location.reload();
+      } catch (error) {
+        // Handle token errors
+        console.error('Error generating digest:', error);
+        
+        // If there's an error with the token, sign out and clear data
+        if (error instanceof Error && error.message.includes('Refresh Token')) {
+          clearAuthData();
+          await supabase.auth.signOut();
+          window.location.href = '/login?error=session_expired';
+        } else {
+          alert('Failed to generate digest. Please try again.');
+        }
       }
-      
-      // Call the callback function if provided
-      if (onGenerateDigest) {
-        onGenerateDigest();
-      }
-      
-      // Reload the page to show the new digest
-      window.location.reload();
     } catch (error) {
       alert('Failed to generate digest. Please try again.');
     } finally {

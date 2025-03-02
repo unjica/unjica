@@ -33,9 +33,6 @@ export class ImageGenerationService {
       // By changing the seed for each article, we get different images
       const imageUrl = `https://picsum.photos/seed/${seed}/1200/630`;
       
-      console.log('Generated image URL:', imageUrl);
-      console.log('Image seed generated from:', uniqueIdentifier);
-      
       // For a proper implementation, here you would call an API like DALL-E or Stable Diffusion
       // const response = await fetch('https://api.openai.com/v1/images/generations', {
       //   method: 'POST',

@@ -12,6 +12,8 @@ type AuthContextType = {
   signUp: (email: string, password: string) => Promise<{ error: any, data: any }>;
   signOut: () => Promise<void>;
   isAdmin: boolean;
+  refreshSession: () => Promise<void>;
+  clearAuthData: () => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,18 +24,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // Function to clear all auth data
+  const clearAuthData = () => {
+    setSession(null);
+    setUser(null);
+    setIsAdmin(false);
+  };
+
+  // Function to safely get the session and handle errors
+  const refreshSession = async () => {
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('Session refresh error:', error.message);
+        clearAuthData();
+        return;
+      }
+      
+      setSession(data.session);
+      setUser(data.session?.user ?? null);
+      setIsAdmin(data.session?.user?.email === 'sanja.malovic2@gmail.com');
+    } catch (error) {
+      // Handle any unexpected errors
+      console.error('Error refreshing session:', error);
+      clearAuthData();
+      
+      // If it's a refresh token error, sign out completely
+      if (error instanceof Error && error.message.includes('Refresh Token')) {
+        await supabase.auth.signOut();
+      }
+    }
+  };
+
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsAdmin(session?.user?.email === 'sanja.malovic2@gmail.com');
+    (async () => {
+      setIsLoading(true);
+      await refreshSession();
       setIsLoading(false);
-    });
+    })();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setIsAdmin(session?.user?.email === 'sanja.malovic2@gmail.com');
@@ -48,6 +82,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (!error) {
+      await refreshSession();
+    }
     return { error };
   };
 
@@ -66,6 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    clearAuthData();
   };
 
   const value = {
@@ -75,7 +113,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signIn,
     signUp,
     signOut,
-    isAdmin
+    isAdmin,
+    refreshSession,
+    clearAuthData
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

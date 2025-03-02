@@ -11,6 +11,7 @@ import { LikeDislikeButton } from '../LikeDislikeButton';
 import { CommentSection } from '../CommentSection';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 interface DigestArticleCardProps {
   article: GeneratedArticle;
@@ -30,42 +31,10 @@ export const DigestArticleCard = ({
   const [likesCount, setLikesCount] = useState(0);
   const [dislikesCount, setDislikesCount] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [session, setSession] = useState<any>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { session, isAdmin, clearAuthData } = useAuth();
   const router = useRouter();
   
   useEffect(() => {
-    // Get session
-    async function getSession() {
-      const { data } = await supabase.auth.getSession();
-      setSession(data.session);
-      
-      // Check if user is admin (email is sanja.malovic2@gmail.com)
-      if (data.session?.user?.email === 'sanja.malovic2@gmail.com') {
-        setIsAdmin(true);
-      } else {
-        setIsAdmin(false);
-      }
-      
-      // Set up auth state listener
-      const { data: authListener } = supabase.auth.onAuthStateChange(
-        (_event, session) => {
-          setSession(session);
-          if (session?.user?.email === 'sanja.malovic2@gmail.com') {
-            setIsAdmin(true);
-          } else {
-            setIsAdmin(false);
-          }
-        }
-      );
-      
-      return () => {
-        authListener?.subscription.unsubscribe();
-      };
-    }
-    
-    getSession();
-    
     // Fetch reaction counts when component mounts
     fetchReactionCounts();
   }, [article.id]);
@@ -111,31 +80,50 @@ export const DigestArticleCard = ({
       setIsDeleting(true);
       
       // Get the session token for authorization
-      const { data } = await supabase.auth.getSession();
-      
-      if (!data.session) {
-        throw new Error('You must be logged in to delete an article');
-      }
-      
-      const response = await fetch(`/api/art-digest?id=${article.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${data.session.access_token}`
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          throw error;
         }
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to delete article');
-      }
-      
-      // If we've successfully deleted the article, redirect to digest homepage if on article page
-      if (isFullPage) {
-        router.push('/art-news/digest');
-      } else {
-        // For articles on the main digest page, we could trigger a refresh but the parent will handle that
-        if (window.location.pathname === '/art-news/digest') {
-          window.location.reload();
+        
+        if (!data.session) {
+          throw new Error('You must be logged in to delete an article');
+        }
+        
+        const response = await fetch(`/api/art-digest?id=${article.id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${data.session.access_token}`
+          }
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to delete article');
+        }
+        
+        // If we've successfully deleted the article, redirect to digest homepage if on article page
+        if (isFullPage) {
+          router.push('/art-news/digest');
+        } else {
+          // For articles on the main digest page, we could trigger a refresh but the parent will handle that
+          if (window.location.pathname === '/art-news/digest') {
+            window.location.reload();
+          }
+        }
+      } catch (error) {
+        // Handle token errors
+        console.error('Error deleting article:', error);
+        
+        // If there's an error with the token, sign out and clear data
+        if (error instanceof Error && error.message.includes('Refresh Token')) {
+          clearAuthData();
+          await supabase.auth.signOut();
+          window.location.href = '/login?error=session_expired';
+        } else {
+          alert('Failed to delete article. Please try again.');
+          setIsDeleting(false);
         }
       }
     } catch (error) {
