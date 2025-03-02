@@ -8,6 +8,7 @@ import { DigestArticleCard } from '@/components/ui/art-news/digest/DigestArticle
 import { type GeneratedArticle } from '@/lib/agents/models/generatedArticle';
 import { supabase } from '@/lib/supabase';
 import { AdminControls } from '@/components/ui/AdminControls';
+import { EnvDebugger } from '@/components/ui/EnvDebugger';
 
 const ARTICLES_PER_PAGE = 5;
 
@@ -244,6 +245,9 @@ export default function Home() {
       <Container>
         {/* Admin Controls - only visible to admins */}
         {isAdmin && <AdminControls onGenerateDigest={handleGenerateDigest} />}
+        
+        {/* Environment Variables Debugger - only visible to admins */}
+        {isAdmin && <EnvDebugger />}
         
         <div className="text-center mb-10">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">

@@ -9,67 +9,94 @@ export async function GET(request: Request) {
     
     // Get authorization header
     const authHeader = request.headers.get('authorization');
+    console.log('Authorization header present:', !!authHeader);
+    
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       console.log('GET /api/admin/stats: Unauthorized - no valid auth header');
       return NextResponse.json(
         { error: 'Unauthorized. Admin access required.' },
-        { status: 403 }
+        { status: 401 }
       );
     }
     
     const token = authHeader.split(' ')[1];
+    console.log('Token extracted from header, length:', token.length);
     
-    // Verify the token with Supabase
+    // Try both methods of authentication
+    let isAdmin = false;
+    let userEmail = null;
+    
+    // Method 1: Use getUser with the token
     try {
-      const { data: { user }, error } = await supabase.auth.getUser(token);
+      const { data, error } = await supabase.auth.getUser(token);
       
-      // Check if user is admin
-      if (error || !user || user.email !== 'sanja.malovic2@gmail.com') {
-        console.log('GET /api/admin/stats: Unauthorized - not an admin user');
-        return NextResponse.json(
-          { error: 'Unauthorized. Admin access required.' },
-          { status: 403 }
-        );
+      if (error) {
+        console.error('Supabase auth error with getUser:', error);
+      } else if (data.user) {
+        userEmail = data.user.email;
+        isAdmin = data.user.email === 'sanja.malovic2@gmail.com';
+        console.log('User authenticated with getUser:', userEmail, 'isAdmin:', isAdmin);
       }
-      
-      console.log('GET /api/admin/stats: User authenticated as admin');
     } catch (authError) {
-      console.error('GET /api/admin/stats: Auth error:', authError);
+      console.error('Error with getUser auth:', authError);
+    }
+    
+    // Method 2: Try to get session directly
+    if (!isAdmin) {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Supabase auth error with getSession:', error);
+        } else if (session?.user) {
+          userEmail = session.user.email;
+          isAdmin = session.user.email === 'sanja.malovic2@gmail.com';
+          console.log('User authenticated with getSession:', userEmail, 'isAdmin:', isAdmin);
+        }
+      } catch (sessionError) {
+        console.error('Error with getSession auth:', sessionError);
+      }
+    }
+    
+    // Check if user is admin
+    if (!isAdmin) {
+      console.log('User is not an admin:', userEmail);
       return NextResponse.json(
-        { error: 'Authentication error', details: authError instanceof Error ? authError.message : String(authError) },
-        { status: 500 }
+        { error: 'Forbidden. Admin access required.' },
+        { status: 403 }
       );
     }
     
+    console.log('User is admin, fetching statistics');
+    
+    // Fetch statistics in parallel for better performance
     try {
-      console.log('GET /api/admin/stats: Fetching statistics');
-      // Fetch statistics in parallel for better performance
       const [articlesCount, commentsCount, usersCount] = await Promise.all([
         // Count all articles
-        (prisma as any).generatedArticle.count(),
+        prisma.generatedArticle.count(),
         
         // Count all comments
-        (prisma as any).comment.count(),
+        prisma.comment.count(),
         
         // Count all users
-        (prisma as any).user.count(),
+        prisma.user.count(),
       ]);
       
-      console.log('GET /api/admin/stats: Statistics fetched successfully');
+      console.log('Statistics fetched successfully');
       return NextResponse.json({
         articles: articlesCount,
         comments: commentsCount,
         users: usersCount,
       });
     } catch (dbError) {
-      console.error('GET /api/admin/stats: Database error:', dbError);
+      console.error('Database error:', dbError);
       
       // If the error is related to database connection, return fallback stats
       if (dbError instanceof Error && 
           (dbError.message.includes('database') || 
            dbError.message.includes('connection') || 
            dbError.message.includes('DATABASE_URL'))) {
-        console.log('GET /api/admin/stats: Using fallback stats due to database error');
+        console.log('Using fallback stats due to database error');
         return NextResponse.json({
           articles: 0,
           comments: 0,

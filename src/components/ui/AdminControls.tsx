@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/lib/supabase';
 
 interface AdminControlsProps {
@@ -8,7 +9,7 @@ interface AdminControlsProps {
 }
 
 export function AdminControls({ onGenerateDigest }: AdminControlsProps) {
-  const [session, setSession] = useState<any>(null);
+  const { session, isAdmin } = useAuth();
   const [stats, setStats] = useState<{
     articles: number;
     comments: number;
@@ -16,63 +17,85 @@ export function AdminControls({ onGenerateDigest }: AdminControlsProps) {
   } | null>(null);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [showDebug, setShowDebug] = useState(false);
 
-  // Check if user is an admin
-  const [isAdmin, setIsAdmin] = useState(false);
-
+  // Fetch debug info
   useEffect(() => {
-    // Get session
-    async function getSession() {
-      const { data } = await supabase.auth.getSession();
-      setSession(data.session);
-      
-      // Check if user is admin (email is sanja.malovic2@gmail.com)
-      if (data.session?.user?.email === 'sanja.malovic2@gmail.com') {
-        setIsAdmin(true);
-      } else {
-        setIsAdmin(false);
+    async function fetchDebugInfo() {
+      try {
+        const { data } = await supabase.auth.getSession();
+        const sessionInfo = data.session ? {
+          access_token: data.session.access_token ? `${data.session.access_token.substring(0, 10)}...` : null,
+          refresh_token: data.session.refresh_token ? `${data.session.refresh_token.substring(0, 10)}...` : null,
+          user: data.session.user ? {
+            id: data.session.user.id,
+            email: data.session.user.email,
+            role: data.session.user.user_metadata?.role || 'not set',
+          } : null,
+          expires_at: data.session.expires_at,
+        } : null;
+        
+        setDebugInfo({
+          sessionFromAuth: session ? {
+            access_token: session.access_token ? `${session.access_token.substring(0, 10)}...` : null,
+            user: session.user ? {
+              id: session.user.id,
+              email: session.user.email,
+            } : null,
+          } : null,
+          sessionFromSupabase: sessionInfo,
+          isAdmin,
+        });
+      } catch (error) {
+        console.error('Failed to fetch debug info:', error);
       }
-      
-      // Set up auth state listener
-      const { data: authListener } = supabase.auth.onAuthStateChange(
-        (_event, session) => {
-          setSession(session);
-          if (session?.user?.email === 'sanja.malovic2@gmail.com') {
-            setIsAdmin(true);
-          } else {
-            setIsAdmin(false);
-          }
-        }
-      );
-      
-      return () => {
-        authListener?.subscription.unsubscribe();
-      };
     }
     
-    getSession();
-  }, []);
+    fetchDebugInfo();
+  }, [session, isAdmin]);
 
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!isAdmin || !session) return;
     
     // Fetch admin stats
     async function fetchStats() {
       try {
         setLoading(true);
         
-        // Get the session token for authorization
-        const { data: { session } } = await supabase.auth.getSession();
+        console.log('Session data:', JSON.stringify({
+          hasSession: !!session,
+          hasAccessToken: !!session?.access_token,
+          userEmail: session?.user?.email,
+        }));
+        
+        // Get a fresh token directly from Supabase
+        const { data } = await supabase.auth.getSession();
+        const token = data.session?.access_token;
+        
+        if (!token) {
+          console.error('No access token available');
+          setLoading(false);
+          return;
+        }
+        
+        console.log('Making request to /api/admin/stats with token');
         
         const response = await fetch('/api/admin/stats', {
           headers: {
-            Authorization: `Bearer ${session?.access_token}`
+            Authorization: `Bearer ${token}`
           }
         });
         
+        console.log('Response status:', response.status);
+        
         if (response.ok) {
-          const data = await response.json();
-          setStats(data);
+          const responseData = await response.json();
+          console.log('Response data:', responseData);
+          setStats(responseData);
+        } else {
+          const errorText = await response.text();
+          console.error('Failed to fetch admin stats:', response.status, response.statusText, errorText);
         }
       } catch (error) {
         console.error('Failed to fetch admin stats:', error);
@@ -82,18 +105,19 @@ export function AdminControls({ onGenerateDigest }: AdminControlsProps) {
     }
     
     fetchStats();
-  }, [isAdmin]);
+  }, [isAdmin, session]);
 
   async function handleGenerateDigest() {
-    if (!isAdmin) return;
+    if (!isAdmin || !session) return;
     
     try {
       setGenerating(true);
       
-      // Get the session token for authorization
-      const { data: { session } } = await supabase.auth.getSession();
+      // Get a fresh token directly from Supabase
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
       
-      if (!session) {
+      if (!token) {
         throw new Error('You must be logged in to generate a digest');
       }
       
@@ -101,7 +125,7 @@ export function AdminControls({ onGenerateDigest }: AdminControlsProps) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${token}`
         }
       });
       
@@ -110,7 +134,7 @@ export function AdminControls({ onGenerateDigest }: AdminControlsProps) {
         throw new Error(errorData.error || 'Failed to generate digest');
       }
       
-      const data = await response.json();
+      const responseData = await response.json();
       
       // Call the callback function if provided
       if (onGenerateDigest) {
@@ -132,7 +156,21 @@ export function AdminControls({ onGenerateDigest }: AdminControlsProps) {
 
   return (
     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 p-4 rounded-lg shadow mb-6">
-      <h2 className="text-lg font-bold mb-3">Admin Controls</h2>
+      <div className="flex justify-between items-center mb-3">
+        <h2 className="text-lg font-bold">Admin Controls</h2>
+        <button 
+          onClick={() => setShowDebug(!showDebug)}
+          className="text-xs bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 px-2 py-1 rounded"
+        >
+          {showDebug ? 'Hide Debug' : 'Show Debug'}
+        </button>
+      </div>
+      
+      {showDebug && debugInfo && (
+        <div className="mb-4 p-3 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono overflow-auto max-h-60">
+          <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+        </div>
+      )}
       
       {loading ? (
         <div className="text-center py-4">
