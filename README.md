@@ -16,7 +16,7 @@ Unjica is a clean, modern web application that serves as a platform for modern a
 - **Prisma** - Type-safe ORM for database access
 - **SQLite/PostgreSQL** - Database for storing generated articles
 - **News API** - External API for fetching art news
-- **Vercel Cron** - For scheduled tasks that run hourly even when no users are active
+- **Vercel Cron** - For scheduled tasks that run daily even when no users are active
 
 ## Getting Started
 
@@ -60,7 +60,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 - **Modern Art News** - View the latest news from the art world
 - **AI-Generated Digests** - Read AI-generated analysis of art trends and news
-- **Hourly Updates** - New digest articles are automatically generated hourly
+- **Daily Updates** - New digest articles are automatically generated daily
 - **Central Database** - All generated articles are stored in a database for all users to access
 
 ## Documentation
@@ -94,7 +94,7 @@ For deployment with the scheduler functionality, make sure to:
 
 2. **IMPORTANT: Setting up the Scheduler**
 
-   The application relies on hourly article generation, which requires a proper cron job setup. Due to the serverless nature of Next.js API routes, the built-in scheduler won't run continuously.
+   The application relies on daily article generation, which requires a proper cron job setup. Due to the serverless nature of Next.js API routes, the built-in scheduler won't run continuously.
 
    **Option 1: Vercel Cron (Recommended)**
    
@@ -112,7 +112,7 @@ For deployment with the scheduler functionality, make sure to:
 
    **Option 2: External cron service**
    
-   Use a service like cron-job.org, Upstash, or GitHub Actions to call your `/api/scheduler` endpoint hourly.
+   Use a service like cron-job.org, Upstash, or GitHub Actions to call your `/api/scheduler` endpoint daily.
 
    **Option 3: Local development**
    
@@ -125,9 +125,9 @@ For deployment with the scheduler functionality, make sure to:
    ./scripts/generate-digest-cron.js
    ```
 
-   You can add this to your local crontab to run hourly:
+   You can add this to your local crontab to run daily at midnight:
    ```
-   0 * * * * /path/to/your/project/scripts/generate-digest-cron.js
+   0 0 * * * /path/to/your/project/scripts/generate-digest-cron.js
    ```
 
 For more information on deployment options, see the [Setup Guide](./documentation/setup-guide.md#deployment).

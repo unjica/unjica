@@ -81,7 +81,7 @@ The application uses one of several methods to trigger scheduled tasks:
 
 1. **Vercel Cron Jobs (Production)**
    - Configured via `vercel.json`
-   - Runs on a specified schedule (hourly)
+   - Runs on a specified schedule (daily)
    - Calls the scheduler API endpoint automatically
 
 2. **Node.js Script (Development)**
@@ -108,7 +108,7 @@ The application uses one of several methods to trigger scheduled tasks:
 4. **Analysis**: The `ArtContentGeneratorAgent` analyzes the news to identify trends
 5. **Generation**: Digest articles are generated using the analyzed data
 6. **Storage**: Generated articles are stored in the database (SQLite/PostgreSQL)
-7. **Scheduling**: The external scheduler triggers the generation process hourly
+7. **Scheduling**: The external scheduler triggers the generation process daily
 
 ## Application Flow
 
@@ -116,7 +116,7 @@ The application uses one of several methods to trigger scheduled tasks:
 2. Page components in the `src/app` directory define the routes using Next.js App Router conventions
 3. UI components in `src/components/ui` are imported and used by page components
 4. Utility functions in `src/lib` provide reusable functionality across the application
-5. The scheduler API handles periodic tasks like hourly digest generation
+5. The scheduler API handles periodic tasks like daily digest generation
 
 ## Component Architecture
 

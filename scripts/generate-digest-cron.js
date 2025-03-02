@@ -5,10 +5,10 @@
  * 
  * To use this script:
  * 1. Make it executable: chmod +x scripts/generate-digest-cron.js
- * 2. Set up a cron job to run it hourly.
+ * 2. Set up a cron job to run it daily at midnight.
  * 
  * Example crontab entry:
- * 0 * * * * /path/to/your/project/scripts/generate-digest-cron.js
+ * 0 0 * * * /path/to/your/project/scripts/generate-digest-cron.js
  * 
  * For cloud deployment, set up a cron service that calls:
  * - Vercel Cron Jobs (preferred)

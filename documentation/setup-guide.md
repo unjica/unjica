@@ -79,7 +79,7 @@ The application will be available at [http://localhost:3000](http://localhost:30
 
 ## Setting Up the Scheduler
 
-The application includes an hourly art digest generation feature that requires proper scheduling configuration. Since Next.js API routes are serverless functions that don't maintain state between requests, we need to set up external scheduling.
+The application includes a daily art digest generation feature that requires proper scheduling configuration. Since Next.js API routes are serverless functions that don't maintain state between requests, we need to set up external scheduling.
 
 ### Option 1: Development Testing
 
@@ -95,16 +95,16 @@ chmod +x scripts/generate-digest-cron.js
 
 ### Option 2: Local Cron Job
 
-To set up a local cron job for hourly generation:
+To set up a local cron job for daily generation:
 
 1. Open your crontab file:
    ```bash
    crontab -e
    ```
 
-2. Add the following line to run the script every hour:
+2. Add the following line to run the script every day at midnight:
    ```
-   0 * * * * /absolute/path/to/your/project/scripts/generate-digest-cron.js
+   0 0 * * * /absolute/path/to/your/project/scripts/generate-digest-cron.js
    ```
 
 3. Save and exit.
@@ -119,7 +119,7 @@ For production deployment on Vercel:
      "crons": [
        {
          "path": "/api/scheduler",
-         "schedule": "0 * * * *"
+         "schedule": "0 0 * * *"
        }
      ]
    }
@@ -132,7 +132,7 @@ For production deployment on Vercel:
 
 ### Option 4: External Cron Service
 
-You can also use external cron services like cron-job.org, Upstash Qstash, or GitHub Actions to call your scheduler endpoint:
+You can also use external cron services like cron-job.org, Upstash Qstash, or GitHub Actions to call your scheduler endpoint daily:
 
 ```
 https://your-domain.com/api/scheduler?secret=your_cron_secret
@@ -221,4 +221,4 @@ For other hosting providers:
    yarn start
    ```
 
-3. Set up an external cron service to call your scheduler endpoint hourly. 
+3. Set up an external cron service to call your scheduler endpoint daily. 

@@ -36,23 +36,23 @@ export async function GET(request: Request) {
     
     const data = await schedulerResponse.json();
     
-    // Force run the hourly art digest task if it's been more than 70 minutes
+    // Force run the daily art digest task if it's been more than 24 hours
     const tasks = data.tasks || {};
-    const digestTask = tasks['hourly-art-digest'];
+    const digestTask = tasks['daily-art-digest'];
     
     if (digestTask && digestTask.lastRun) {
       const lastRun = new Date(digestTask.lastRun);
       const now = new Date();
       const minutesSinceLastRun = (now.getTime() - lastRun.getTime()) / 60000;
       
-      // If it's been more than 70 minutes, force a run
-      if (minutesSinceLastRun > 70) {
+      // If it's been more than 24 hours, force a run
+      if (minutesSinceLastRun > 1440) {
         await fetch(new URL('/api/scheduler', request.url), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ taskId: 'hourly-art-digest' }),
+          body: JSON.stringify({ taskId: 'daily-art-digest' }),
         });
       }
     }

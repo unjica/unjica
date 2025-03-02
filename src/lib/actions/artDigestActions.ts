@@ -12,7 +12,7 @@ import { slugify } from '@/lib/utils/slugify';
 /**
  * Fetches fresh news from the last hour and generates a new article
  */
-export async function generateHourlyArtDigest(): Promise<GeneratedArticle> {
+export async function generateDailyArtDigest(): Promise<GeneratedArticle> {
   // Get current time and time from 1 hour ago
   const now = new Date();
   const oneHourAgo = new Date(now.getTime() - 3600 * 1000);

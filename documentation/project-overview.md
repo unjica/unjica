@@ -8,7 +8,7 @@ Unjica is a modern web application built using Next.js 15, React 19, and TypeScr
 
 - **Modern Frontend Stack**: Built with Next.js 15 and React 19
 - **TypeScript Integration**: Full TypeScript support for enhanced developer experience and code quality
-- **AI-Generated Art Digests**: Hourly generated articles analyzing current art news and trends
+- **AI-Generated Art Digests**: Daily generated articles analyzing current art news and trends
 - **Database Integration**: Prisma ORM with SQLite/PostgreSQL for storing generated content
 - **Scheduling System**: Reliable cron-based scheduling for automatic content generation
 - **Responsive Design**: Mobile-friendly layout with Tailwind CSS
@@ -22,7 +22,7 @@ The application features an intelligent content generation system:
 
 ### Art News Digests
 
-- **Automated Generation**: New digests are created hourly
+- **Automated Generation**: New digests are created daily
 - **Art News Analysis**: Identifies trends and patterns in recent art news
 - **Rich Content**: Includes titles, summaries, detailed content, and tags
 - **Database Storage**: All generated articles are stored for future access
@@ -30,7 +30,7 @@ The application features an intelligent content generation system:
 ### Scheduling System
 
 - **External Cron Triggering**: Uses Vercel Cron or other external services
-- **Configurable Schedule**: Default hourly generation with customizable timing
+- **Configurable Schedule**: Default daily generation with customizable timing
 - **Manual Generation**: Admin users can trigger generation on demand
 - **Stateless Architecture**: Compatible with serverless deployment models
 

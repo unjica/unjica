@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { generateHourlyArtDigest } from '@/lib/actions/artDigestActions';
+import { generateDailyArtDigest } from '@/lib/actions/artDigestActions';
 import { Prisma } from '@prisma/client';
 import { auth } from 'auth';
 
@@ -102,7 +102,7 @@ export async function GET(request: Request) {
 // POST handler to generate a new article
 export async function POST() {
   try {
-    const article = await generateHourlyArtDigest();
+    const article = await generateDailyArtDigest();
     
     // Save the article to the database
     await prisma.generatedArticle.create({
