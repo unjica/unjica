@@ -254,6 +254,105 @@ Planned API enhancements include:
 3. Rate limiting implementation
 4. API versioning
 
+### Reactions API
+
+**Endpoint:** `GET /api/reactions`
+
+**Description:** Retrieves reaction counts (likes/dislikes) for an article and the user's reaction if authenticated.
+
+**Query Parameters:**
+- `articleId` (required): The ID of the article to get reactions for
+- `anonymousId` (optional): Anonymous user identifier for tracking reactions from non-authenticated users
+
+**Response:**
+- **200 OK**: Successfully retrieved reactions
+  ```json
+  {
+    "userReaction": {
+      "id": "abc123",
+      "type": "LIKE",
+      "userId": "user123",
+      "articleId": "article123",
+      "createdAt": "2023-05-01T12:00:00Z"
+    },
+    "likesCount": 10,
+    "dislikesCount": 2
+  }
+  ```
+- **400 Bad Request**: Missing article ID
+  ```json
+  {
+    "error": "Article ID is required"
+  }
+  ```
+- **500 Internal Server Error**: Server error
+  ```json
+  {
+    "error": "Failed to fetch reaction"
+  }
+  ```
+
+**Special Cases:**
+- For the fallback article (`articleId=fallback-article-1`), the API returns empty reaction data without querying the database:
+  ```json
+  {
+    "userReaction": null,
+    "likesCount": 0,
+    "dislikesCount": 0
+  }
+  ```
+
+**Endpoint:** `POST /api/reactions`
+
+**Description:** Creates or updates a reaction (like/dislike) for an article.
+
+**Request Body:**
+```json
+{
+  "articleId": "article123",
+  "type": "LIKE",
+  "anonymousId": "anon123"
+}
+```
+
+**Response:**
+- **200 OK**: Successfully updated reaction
+  ```json
+  {
+    "success": true,
+    "likesCount": 11,
+    "dislikesCount": 2
+  }
+  ```
+- **400 Bad Request**: Missing required fields
+  ```json
+  {
+    "error": "Article ID or Comment ID is required"
+  }
+  ```
+- **500 Internal Server Error**: Server error
+  ```json
+  {
+    "error": "Failed to update reaction"
+  }
+  ```
+
+**Special Cases:**
+- For the fallback article (`articleId=fallback-article-1`), the API acknowledges the reaction but doesn't store it:
+  ```json
+  {
+    "success": true,
+    "message": "Reaction acknowledged but not stored for system article",
+    "likesCount": 0,
+    "dislikesCount": 0
+  }
+  ```
+
+**Authentication:**
+- The endpoint supports both authenticated and anonymous users
+- For authenticated users, include a Bearer token in the Authorization header
+- For anonymous users, include an anonymousId in the request body
+
 ## Environment Configuration
 
 The API relies on environment variables for configuration. These are defined in the `.env.local` file. Required variables include:

@@ -171,6 +171,30 @@ The application uses Prisma ORM to interact with the database:
 4. SQL injection protection via Prisma ORM
 5. XSS protection via React's built-in escaping
 
+## Error Handling and Fallback Mechanisms
+
+The application implements several fallback mechanisms to ensure graceful degradation when errors occur:
+
+### Fallback Article
+
+- When database connection issues occur, the system serves a fallback article
+- The fallback article has ID `fallback-article-1` and informs users of the temporary unavailability
+- API endpoints that interact with articles (like `/api/reactions`) include special handling for this fallback article
+- This prevents cascading errors in the UI when the database is unavailable
+
+### API Error Handling
+
+- All API endpoints include comprehensive try/catch blocks
+- Errors are logged to the console for debugging
+- User-friendly error messages are returned to the client
+- HTTP status codes are used appropriately to indicate error types
+
+### Database Connection Handling
+
+- The Prisma client implementation includes connection validation and error handling
+- Failed database connections are logged with detailed error information
+- The application can continue functioning with limited capabilities when the database is unavailable
+
 ## Future Architecture Considerations
 
 - State management solutions for more complex state
