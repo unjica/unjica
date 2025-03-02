@@ -85,17 +85,80 @@ export async function POST(request: Request) {
     // Get authorization header for Supabase auth
     const authHeader = request.headers.get('authorization');
     let userId = null;
+    let supabaseUserId = null;
     
     // If auth header exists, verify with Supabase
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
       const { data, error } = await supabase.auth.getUser(token);
-      if (!error && data.user) {
-        userId = data.user.id;
+      if (error) {
+        console.error('Supabase auth error:', error);
+        return NextResponse.json(
+          { error: 'Authentication error', details: error.message },
+          { status: 401 }
+        );
+      }
+      if (data.user) {
+        supabaseUserId = data.user.id;
+        console.log('Authenticated with Supabase user ID:', supabaseUserId);
+        
+        // Check if this user exists in our database
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: supabaseUserId }
+          });
+          
+          if (dbUser) {
+            userId = dbUser.id;
+            console.log('User found in database:', userId);
+          } else {
+            console.log('User not found in database, creating user record');
+            
+            // Create a user record for this Supabase user
+            try {
+              const newUser = await prisma.user.create({
+                data: {
+                  id: supabaseUserId,
+                  name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'User',
+                  email: data.user.email || `${supabaseUserId}@placeholder.com`,
+                  image: data.user.user_metadata?.avatar_url || null,
+                  role: data.user.email === 'sanja.malovic2@gmail.com' ? 'ADMIN' : 'USER',
+                }
+              });
+              
+              userId = newUser.id;
+              console.log('Created new user record:', userId);
+            } catch (createError) {
+              console.error('Failed to create user record:', createError);
+              // Continue with anonymous flow if user creation fails
+            }
+          }
+        } catch (userError) {
+          console.error('Error checking user in database:', userError);
+          // Continue with anonymous flow
+        }
       }
     }
     
-    const { content, articleId, parentId, anonymousId } = await request.json();
+    const body = await request.json();
+    const { content, articleId, parentId, anonymousId: requestAnonymousId } = body;
+    
+    // If we don't have a valid userId but we're authenticated with Supabase,
+    // generate a consistent anonymousId based on the Supabase user ID
+    let anonymousId = requestAnonymousId;
+    if (!userId && supabaseUserId) {
+      anonymousId = `supabase-${supabaseUserId}`;
+      console.log('Generated anonymousId from Supabase user:', anonymousId);
+    }
+    
+    console.log('Comment request body:', { 
+      content: content.substring(0, 50) + (content.length > 50 ? '...' : ''), 
+      articleId, 
+      parentId, 
+      userId,
+      anonymousId,
+      supabaseAuth: !!supabaseUserId 
+    });
     
     if (!articleId) {
       return NextResponse.json(
@@ -127,6 +190,11 @@ export async function POST(request: Request) {
       anonymousId: !userId ? anonymousId : null,
       parentId: parentId || null,
     };
+
+    console.log('Creating comment with data:', {
+      ...commentData,
+      content: commentData.content.substring(0, 50) + (commentData.content.length > 50 ? '...' : '')
+    });
 
     const comment = await (prisma as any).comment.create({
       data: commentData,
@@ -161,8 +229,22 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error('Error creating comment:', error);
+    
+    // Add more detailed error information
+    let errorMessage = 'Failed to create comment';
+    let errorDetails = null;
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      errorDetails = error.stack;
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to create comment' },
+      { 
+        error: errorMessage, 
+        details: errorDetails,
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     );
   }
@@ -185,13 +267,24 @@ export async function DELETE(request: Request) {
     // Verify the token with Supabase
     const { data: { user }, error } = await supabase.auth.getUser(token);
     
+    if (error) {
+      console.error('Supabase auth error:', error);
+      return NextResponse.json(
+        { error: 'Authentication error', details: error.message },
+        { status: 401 }
+      );
+    }
+    
     // Check if user is admin
-    if (error || !user || user.email !== 'sanja.malovic2@gmail.com') {
+    if (!user || user.email !== 'sanja.malovic2@gmail.com') {
+      console.log(`User ${user?.email || 'unknown'} is not an admin`);
       return NextResponse.json(
         { error: 'Unauthorized. Admin access required.' },
         { status: 403 }
       );
     }
+    
+    console.log(`Admin access confirmed for user: ${user.email}`);
     
     const { searchParams } = new URL(request.url);
     const commentId = searchParams.get('id');
@@ -213,6 +306,7 @@ export async function DELETE(request: Request) {
     
     // Delete all replies first
     if (replies.length > 0) {
+      console.log(`Deleting ${replies.length} replies to comment ${commentId}`);
       await (prisma as any).comment.deleteMany({
         where: {
           parentId: commentId,
@@ -221,6 +315,7 @@ export async function DELETE(request: Request) {
     }
     
     // Delete the main comment
+    console.log(`Deleting comment ${commentId}`);
     await (prisma as any).comment.delete({
       where: {
         id: commentId,
@@ -233,8 +328,22 @@ export async function DELETE(request: Request) {
     });
   } catch (error) {
     console.error('Error deleting comment:', error);
+    
+    // Add more detailed error information
+    let errorMessage = 'Failed to delete comment';
+    let errorDetails = null;
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      errorDetails = error.stack;
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to delete comment' },
+      { 
+        error: errorMessage, 
+        details: errorDetails,
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     );
   }

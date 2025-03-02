@@ -111,15 +111,16 @@ export function Navbar() {
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
                   >
                     <span className="sr-only">Open user menu</span>
-                    {session.user.image ? (
+                    {session.user.user_metadata?.avatar_url ? (
                       <img
                         className="h-8 w-8 rounded-full"
-                        src={session.user.image}
-                        alt={session.user.name || 'User'}
+                        src={session.user.user_metadata.avatar_url}
+                        alt={session.user.user_metadata?.name || session.user.email || 'User'}
                       />
                     ) : (
                       <div className="h-8 w-8 rounded-full bg-blue-600 dark:bg-blue-500 text-white flex items-center justify-center">
-                        {session.user.name?.charAt(0).toUpperCase() || 'U'}
+                        {session.user.user_metadata?.name?.charAt(0).toUpperCase() || 
+                         session.user.email?.charAt(0).toUpperCase() || 'U'}
                       </div>
                     )}
                   </button>
@@ -134,18 +135,27 @@ export function Navbar() {
                     tabIndex={-1}
                   >
                     <div className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200 border-b border-gray-100 dark:border-gray-700">
-                      <div className="font-medium">{session.user.name}</div>
+                      <div className="font-medium">{session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User'}</div>
                       <div className="text-gray-500 dark:text-gray-400 text-xs">{session.user.email}</div>
-                      {session.user.role === 'ADMIN' && (
+                      {(session.user.user_metadata?.role === 'ADMIN' || session.user.email === 'sanja.malovic2@gmail.com') && (
                         <div className="text-xs font-medium text-blue-600 dark:text-blue-400 mt-1">Administrator</div>
                       )}
                     </div>
+                    <Link
+                      href="/profile"
+                      className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      role="menuitem"
+                      tabIndex={-1}
+                      id="user-menu-item-0"
+                    >
+                      Profile
+                    </Link>
                     <a
                       href="#"
                       className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
                       role="menuitem"
                       tabIndex={-1}
-                      id="user-menu-item-0"
+                      id="user-menu-item-1"
                       onClick={handleLogout}
                     >
                       Sign out
@@ -254,27 +264,36 @@ export function Navbar() {
             ) : session ? (
               <div>
                 <div className="flex items-center px-4">
-                  {session.user.image ? (
+                  {session.user.user_metadata?.avatar_url ? (
                     <div className="flex-shrink-0">
                       <img
                         className="h-10 w-10 rounded-full"
-                        src={session.user.image}
-                        alt={session.user.name || 'User'}
+                        src={session.user.user_metadata.avatar_url}
+                        alt={session.user.user_metadata?.name || session.user.email || 'User'}
                       />
                     </div>
                   ) : (
                     <div className="flex-shrink-0">
                       <div className="h-10 w-10 rounded-full bg-blue-600 dark:bg-blue-500 text-white flex items-center justify-center">
-                        {session.user.name?.charAt(0).toUpperCase() || 'U'}
+                        {session.user.user_metadata?.name?.charAt(0).toUpperCase() || 
+                         session.user.email?.charAt(0).toUpperCase() || 'U'}
                       </div>
                     </div>
                   )}
                   <div className="ml-3">
-                    <div className="text-base font-medium text-gray-800 dark:text-gray-200">{session.user.name}</div>
+                    <div className="text-base font-medium text-gray-800 dark:text-gray-200">
+                      {session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User'}
+                    </div>
                     <div className="text-sm font-medium text-gray-500 dark:text-gray-400">{session.user.email}</div>
                   </div>
                 </div>
                 <div className="mt-3 space-y-1">
+                  <Link
+                    href="/profile"
+                    className="block w-full text-left px-4 py-2 text-base font-medium text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    Profile
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="block w-full text-left px-4 py-2 text-base font-medium text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"

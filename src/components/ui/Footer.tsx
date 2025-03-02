@@ -59,7 +59,7 @@ export function Footer() {
           {/* Column 2: Social Links */}
           <div className="flex flex-col space-y-4">
             <div className="text-sm font-medium text-gray-900 dark:text-white">Follow Us</div>
-            <div className="flex flex-col space-y-2">
+            <div className="flex flex-col items-center space-y-2">
               <a 
                 href="https://twitter.com/sanjaUnjica" 
                 target="_blank" 
@@ -99,7 +99,7 @@ export function Footer() {
           {/* Column 3: Newsletter Form */}
           <div className="flex flex-col space-y-4">
             <div className="text-sm font-medium text-gray-900 dark:text-white">Subscribe to our newsletter</div>
-            <form onSubmit={handleSubscribe} className="flex flex-col space-y-2">
+            <form onSubmit={handleSubscribe} className="flex flex-col space-y-2 px-3">
               {!subscribed ? (
                 <>
                   <input

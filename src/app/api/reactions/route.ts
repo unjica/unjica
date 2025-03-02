@@ -132,17 +132,79 @@ export async function POST(request: Request) {
     // Get authorization header for Supabase auth
     const authHeader = request.headers.get('authorization');
     let userId = null;
+    let supabaseUserId = null;
     
     // If auth header exists, verify with Supabase
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
       const { data, error } = await supabase.auth.getUser(token);
-      if (!error && data.user) {
-        userId = data.user.id;
+      if (error) {
+        console.error('Supabase auth error:', error);
+        return NextResponse.json(
+          { error: 'Authentication error', details: error.message },
+          { status: 401 }
+        );
+      }
+      if (data.user) {
+        supabaseUserId = data.user.id;
+        console.log('Authenticated with Supabase user ID:', supabaseUserId);
+        
+        // Check if this user exists in our database
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: supabaseUserId }
+          });
+          
+          if (dbUser) {
+            userId = dbUser.id;
+            console.log('User found in database:', userId);
+          } else {
+            console.log('User not found in database, creating user record');
+            
+            // Create a user record for this Supabase user
+            try {
+              const newUser = await prisma.user.create({
+                data: {
+                  id: supabaseUserId,
+                  name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'User',
+                  email: data.user.email || `${supabaseUserId}@placeholder.com`,
+                  image: data.user.user_metadata?.avatar_url || null,
+                  role: data.user.email === 'sanja.malovic2@gmail.com' ? 'ADMIN' : 'USER',
+                }
+              });
+              
+              userId = newUser.id;
+              console.log('Created new user record:', userId);
+            } catch (createError) {
+              console.error('Failed to create user record:', createError);
+              // Continue with anonymous flow if user creation fails
+            }
+          }
+        } catch (userError) {
+          console.error('Error checking user in database:', userError);
+        }
       }
     }
     
-    const { articleId, commentId, type, anonymousId } = await request.json();
+    const body = await request.json();
+    const { articleId, commentId, type, anonymousId: requestAnonymousId } = body;
+    
+    // If we don't have a valid userId but we're authenticated with Supabase,
+    // generate a consistent anonymousId based on the Supabase user ID
+    let anonymousId = requestAnonymousId;
+    if (!userId && supabaseUserId) {
+      anonymousId = `supabase-${supabaseUserId}`;
+      console.log('Generated anonymousId from Supabase user:', anonymousId);
+    }
+    
+    console.log('Reaction request body:', { 
+      articleId, 
+      commentId, 
+      type, 
+      userId,
+      anonymousId,
+      supabaseAuth: !!supabaseUserId 
+    });
     
     if (!articleId && !commentId) {
       return NextResponse.json(
@@ -159,11 +221,12 @@ export async function POST(request: Request) {
       );
     }
 
-    // Handle anonymous or authenticated user
+    // Handle authenticated user with valid database user
     if (userId) {
       // Authenticated user flow
       // Delete existing reaction if removing or changing type
       if (type === null) {
+        console.log('Deleting reaction for user:', userId);
         await prisma.reaction.deleteMany({
           where: {
             userId: userId,
@@ -172,6 +235,7 @@ export async function POST(request: Request) {
           },
         });
       } else if (commentId) {
+        console.log('Upserting comment reaction for user:', userId);
         // Upsert reaction for comments (with commentId)
         await prisma.reaction.upsert({
           where: {
@@ -192,38 +256,48 @@ export async function POST(request: Request) {
           },
         });
       } else {
+        console.log('Processing article reaction for user:', userId);
         // For article reactions (without commentId), use findFirst/delete+create pattern
-        const existingReaction = await prisma.reaction.findFirst({
-          where: {
-            userId: userId,
-            articleId: articleId,
-            commentId: null,
-          },
-        });
-        
-        if (existingReaction) {
-          await prisma.reaction.update({
+        try {
+          const existingReaction = await prisma.reaction.findFirst({
             where: {
-              id: existingReaction.id,
-            },
-            data: {
-              type,
-            },
-          });
-        } else {
-          await prisma.reaction.create({
-            data: {
               userId: userId,
               articleId: articleId,
               commentId: null,
-              type,
             },
           });
+          
+          console.log('Existing reaction found:', existingReaction);
+          
+          if (existingReaction) {
+            console.log('Updating existing reaction');
+            await prisma.reaction.update({
+              where: {
+                id: existingReaction.id,
+              },
+              data: {
+                type,
+              },
+            });
+          } else {
+            console.log('Creating new reaction');
+            await prisma.reaction.create({
+              data: {
+                userId: userId,
+                articleId: articleId,
+                commentId: null,
+                type,
+              },
+            });
+          }
+        } catch (err) {
+          console.error('Error processing article reaction:', err);
+          throw err;
         }
       }
     } else if (anonymousId) {
-      // Anonymous user flow
-      // For anonymous users, we need to handle the case differently since we can't use null in unique constraints
+      // Anonymous user flow (including authenticated users without database records)
+      console.log('Using anonymous flow with ID:', anonymousId);
       
       // First, check if a reaction already exists
       const existingReaction = await prisma.reaction.findFirst({
@@ -237,6 +311,7 @@ export async function POST(request: Request) {
       // Delete existing reaction if removing
       if (type === null) {
         if (existingReaction) {
+          console.log('Deleting anonymous reaction');
           await prisma.reaction.delete({
             where: {
               id: existingReaction.id,
@@ -247,6 +322,7 @@ export async function POST(request: Request) {
         // Update existing or create new
         if (existingReaction) {
           // Update existing reaction
+          console.log('Updating anonymous reaction');
           await prisma.reaction.update({
             where: {
               id: existingReaction.id,
@@ -257,6 +333,7 @@ export async function POST(request: Request) {
           });
         } else {
           // Create new reaction
+          console.log('Creating new anonymous reaction');
           await prisma.reaction.create({
             data: {
               anonymousId: anonymousId,
@@ -293,8 +370,22 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error('Error updating reaction:', error);
+    
+    // Add more detailed error information
+    let errorMessage = 'Failed to update reaction';
+    let errorDetails = null;
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      errorDetails = error.stack;
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to update reaction' },
+      { 
+        error: errorMessage, 
+        details: errorDetails,
+        timestamp: new Date().toISOString()
+      },
       { status: 500 }
     );
   }

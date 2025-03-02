@@ -82,7 +82,18 @@ export function LikeDislikeButton({
   async function fetchReactionCounts() {
     try {
       setApiError(null);
-      const response = await fetch(`/api/reactions?articleId=${articleId}`);
+      
+      // Get the session token if available
+      const { data } = await supabase.auth.getSession();
+      const headers: HeadersInit = {};
+      if (data.session) {
+        headers['Authorization'] = `Bearer ${data.session.access_token}`;
+      }
+      
+      const response = await fetch(`/api/reactions?articleId=${articleId}`, {
+        headers
+      });
+      
       if (response.ok) {
         const data = await response.json();
         setLikes(data.likesCount || 0);
@@ -102,7 +113,21 @@ export function LikeDislikeButton({
   async function fetchUserReaction() {
     try {
       setApiError(null);
-      const response = await fetch(`/api/reactions?articleId=${articleId}`);
+      
+      // Get the session token
+      const { data } = await supabase.auth.getSession();
+      
+      if (!data.session) {
+        console.log('No session available for fetching user reaction');
+        return;
+      }
+      
+      const response = await fetch(`/api/reactions?articleId=${articleId}`, {
+        headers: {
+          'Authorization': `Bearer ${data.session.access_token}`
+        }
+      });
+      
       if (response.ok) {
         const data = await response.json();
         setUserReaction(data.userReaction?.type || null);
@@ -128,15 +153,32 @@ export function LikeDislikeButton({
       const newReactionType = userReaction === type ? null : type;
       
       if (session?.user) {
+        // Get the session token
+        const { data } = await supabase.auth.getSession();
+        
+        if (!data.session) {
+          setApiError('Authentication required. Please log in again.');
+          return;
+        }
+        
+        console.log('Sending authenticated reaction:', {
+          articleId,
+          type: newReactionType,
+          userId: session.user.id
+        });
+        
         // Authenticated user flow
         const response = await fetch('/api/reactions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${data.session.access_token}`
           },
           body: JSON.stringify({
             articleId,
             type: newReactionType,
+            // Include anonymousId as fallback in case user doesn't exist in database
+            anonymousId: anonymousId || getAnonymousId(),
           }),
         });
 
@@ -155,6 +197,7 @@ export function LikeDislikeButton({
         } else {
           // Handle error response
           const errorData = await response.json();
+          console.error('Error response from reactions API:', response.status, errorData);
           setApiError(errorData.error || 'Failed to update reaction');
         }
       } else if (anonymousId) {
@@ -191,13 +234,27 @@ export function LikeDislikeButton({
           return count;
         });
         
+        console.log('Sending anonymous reaction:', {
+          articleId,
+          type: newReactionType,
+          anonymousId
+        });
+        
         // Then perform API call to persist the change
         try {
+          // Get the session token if available (for anonymous users with session)
+          const { data } = await supabase.auth.getSession();
+          const headers: HeadersInit = {
+            'Content-Type': 'application/json',
+          };
+          
+          if (data.session) {
+            headers['Authorization'] = `Bearer ${data.session.access_token}`;
+          }
+          
           const response = await fetch('/api/reactions', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers,
             body: JSON.stringify({
               articleId,
               type: newReactionType,
@@ -219,7 +276,7 @@ export function LikeDislikeButton({
           } else {
             // Handle error response
             const errorData = await response.json();
-            console.error('Error updating reaction:', errorData);
+            console.error('Error response from reactions API:', response.status, errorData);
             setApiError(errorData.error || 'Failed to update reaction');
             
             // Since API call failed, revert to local storage state
