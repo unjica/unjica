@@ -253,18 +253,6 @@ export default function Home() {
             Stay updated with the latest trends and developments in the contemporary art world.
           </p>
           
-          <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            {lastGenTime ? (
-              <>
-                <span>Last digest generated: {formatDate(lastGenTime)}</span>
-                <br />
-                <span>Next digest due in: {getTimeUntilNextGen()}</span>
-              </>
-            ) : (
-              <span>No digests generated yet</span>
-            )}
-          </div>
-          
           {isAdmin && (
             <div className="flex justify-center">
               <Button 
