@@ -4,7 +4,7 @@
  */
 
 // Get the current DATABASE_URL from environment
-const currentUrl = process.env.SUPABASE_DATABASE_URL || '';
+const currentUrl = process.env.API_URL || '';
 
 console.log('Current DATABASE_URL:', currentUrl.replace(/:[^:]*@/, ':****@'));
 
