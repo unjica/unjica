@@ -64,7 +64,8 @@ export default function Home() {
       try {
         const response = await fetch('/api/art-digest');
         if (!response.ok) {
-          throw new Error('Failed to load articles');
+          console.error('API error:', await response.text());
+          throw new Error(`Failed to load articles: ${response.status} ${response.statusText}`);
         }
         
         const data = await response.json();
@@ -79,6 +80,9 @@ export default function Home() {
         }
       } catch (error) {
         console.error('Failed to load articles:', error);
+        // Set empty articles but don't block the UI
+        setArticles([]);
+        setTotalArticles(0);
       } finally {
         setIsLoading(false);
       }
@@ -91,31 +95,30 @@ export default function Home() {
       try {
         const response = await fetch('/api/art-digest');
         if (!response.ok) {
-          throw new Error('Failed to poll for new articles');
+          console.error('API polling error:', await response.text());
+          return; // Skip this polling cycle
         }
         
         const data = await response.json();
         const fetchedArticles = data.articles || [];
         
         if (fetchedArticles.length !== totalArticles) {
-          // If we're on the first page, update the displayed articles
-          if (currentPage === 1) {
-            setArticles(fetchedArticles.slice(0, ARTICLES_PER_PAGE));
-          }
+          // Only update if the count has changed
+          setArticles(fetchedArticles.slice(0, ARTICLES_PER_PAGE));
           setTotalArticles(fetchedArticles.length);
           
-          // Update last generation time
           if (fetchedArticles.length > 0) {
             setLastGenTime(new Date(fetchedArticles[0].publishedAt));
           }
         }
       } catch (error) {
-        console.error('Error polling for articles:', error);
+        console.error('Failed to poll for new articles:', error);
+        // Don't update state on polling errors
       }
-    }, 30000); // Check every 30 seconds
+    }, 60000); // Poll every minute
     
     return () => clearInterval(interval);
-  }, [currentPage, totalArticles]);
+  }, [totalArticles]);
   
   // Handle page change
   useEffect(() => {

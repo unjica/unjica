@@ -13,19 +13,24 @@ type GeneratedArticleWithExtras = Prisma.GeneratedArticleGetPayload<{}> & {
 // GET handler to fetch all articles
 export async function GET(request: Request) {
   try {
+    console.log('GET /api/art-digest: Request received');
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     const slug = searchParams.get('slug');
+    
+    console.log(`GET /api/art-digest: Params - id: ${id}, slug: ${slug}`);
     
     // If ID or slug is provided, fetch a specific article
     if (id || slug) {
       let article;
       
       try {
+        console.log('GET /api/art-digest: Attempting to fetch specific article');
         if (id) {
           article = await prisma.generatedArticle.findUnique({
             where: { id }
           });
+          console.log(`GET /api/art-digest: Article lookup by id ${id} complete`);
         } else if (slug) {
           // Use findFirst with a more TypeScript-friendly approach
           article = await prisma.generatedArticle.findFirst({
@@ -34,16 +39,19 @@ export async function GET(request: Request) {
               slug: slug
             } as any
           });
+          console.log(`GET /api/art-digest: Article lookup by slug ${slug} complete`);
         }
       } catch (error) {
         console.error('Database error when fetching article:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
         return NextResponse.json(
-          { error: 'Database error when fetching article' },
+          { error: 'Database error when fetching article', details: error instanceof Error ? error.message : String(error) },
           { status: 500 }
         );
       }
       
       if (!article) {
+        console.log('GET /api/art-digest: Article not found');
         return NextResponse.json(
           { error: 'Article not found' },
           { status: 404 }
@@ -52,6 +60,7 @@ export async function GET(request: Request) {
       
       // Cast to our extended type to access all fields
       const typedArticle = article as GeneratedArticleWithExtras;
+      console.log('GET /api/art-digest: Article found, preparing response');
       
       return NextResponse.json({
         article: {
@@ -72,12 +81,15 @@ export async function GET(request: Request) {
     
     // Otherwise fetch all articles
     try {
+      console.log('GET /api/art-digest: Attempting to fetch all articles');
       const dbArticles = await prisma.generatedArticle.findMany({
         orderBy: {
           publishedAt: 'desc'
         },
         take: 50
       });
+      
+      console.log(`GET /api/art-digest: Found ${dbArticles.length} articles`);
       
       const articles = dbArticles.map(dbArticle => {
         // Cast to our extended type to access all fields
@@ -98,7 +110,7 @@ export async function GET(request: Request) {
             slug: typedArticle.slug
           };
         } catch (parseError) {
-          console.error('Error parsing article data:', parseError, typedArticle);
+          console.error(`Error parsing article data for article ${typedArticle.id}:`, parseError);
           // Return a simplified version of the article if parsing fails
           return {
             id: typedArticle.id,
@@ -116,18 +128,22 @@ export async function GET(request: Request) {
         }
       });
       
+      console.log('GET /api/art-digest: Successfully processed all articles, returning response');
       return NextResponse.json({ articles });
     } catch (dbError) {
       console.error('Database error when fetching all articles:', dbError);
+      console.error('Error details:', JSON.stringify(dbError, null, 2));
       return NextResponse.json(
-        { error: 'Database error when fetching all articles' },
+        { error: 'Database error when fetching all articles', details: dbError instanceof Error ? dbError.message : String(dbError) },
         { status: 500 }
       );
     }
   } catch (error) {
     console.error('Failed to fetch articles:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace available');
+    console.error('Error details:', JSON.stringify(error, null, 2));
     return NextResponse.json(
-      { error: 'Failed to fetch articles' },
+      { error: 'Failed to fetch articles', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

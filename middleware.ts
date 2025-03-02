@@ -15,7 +15,8 @@ export async function middleware(request: NextRequest) {
     path === '/site.webmanifest' ||
     path.startsWith('/android-chrome-') ||
     path.startsWith('/apple-touch-icon') ||
-    path.includes('/api/art-digest') // Skip auth for art-digest API
+    path.includes('/api/art-digest') || // Skip auth for art-digest API
+    path === '/api/health' // Skip auth for health check API
   ) {
     return NextResponse.next();
   }
