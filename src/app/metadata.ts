@@ -4,7 +4,7 @@ const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
 const defaultMetadata: Metadata = {
   metadataBase: new URL(baseUrl),
-  title: 'Modern Art News - Coming Soon | Contemporary Art Insights',
+  title: 'Modern Art News | Contemporary Art Insights',
   description: 'Stay updated with the latest in contemporary art. Modern Art News brings you curated insights, trends, and stories from the world of modern art. Join our waitlist for exclusive access.',
   keywords: 'modern art, contemporary art, art news, art insights, art trends, art community, art newsletter',
   openGraph: {
