@@ -16,6 +16,12 @@ src/
         │   └── route.ts
         ├── art-digest/
         │   └── route.ts
+        ├── debug-db/
+        │   └── route.ts
+        ├── cron/
+        │   └── route.ts
+        ├── auth/
+        │   └── route.ts
         └── ...
 ```
 
@@ -57,13 +63,19 @@ src/
 **Implementation:**
 The endpoint uses Nodemailer to send email notifications about new subscriptions. Configuration for the email service is set in environment variables.
 
-### Art Digest Generation
+### Art Digest API
+
+#### Retrieve Art Digest Articles
 
 **Endpoint:** `GET /api/art-digest`
 
-**Description:** Retrieves all generated art digest articles.
+**Description:** Retrieves all generated art digest articles or a specific article by ID or slug.
 
-**Response:**
+**Query Parameters:**
+- `id` (optional): The ID of a specific article to retrieve
+- `slug` (optional): The slug of a specific article to retrieve
+
+**Response for All Articles (no ID or slug):**
 - **200 OK**: Successfully retrieved articles
   ```json
   {
@@ -78,24 +90,67 @@ The endpoint uses Nodemailer to send email notifications about new subscriptions
         "publishedAt": "2023-05-01T12:00:00Z",
         "lastUpdated": "2023-05-01T12:00:00Z",
         "imageUrl": "https://example.com/image.jpg",
-        "slug": "modern-art-trends-weekly-digest"
+        "slug": "modern-art-trends-weekly-digest",
+        "sourceNewsIds": ["news1", "news2"]
       }
     ]
   }
   ```
-- **500 Internal Server Error**: Server error
+
+**Response for Single Article (by ID or slug):**
+- **200 OK**: Successfully retrieved article
   ```json
   {
-    "error": "Failed to fetch articles"
+    "article": {
+      "id": "abc123",
+      "title": "Modern Art Trends: Weekly Digest",
+      "content": "...",
+      "primaryTopic": "Modern Art",
+      "summary": "...",
+      "tags": ["modern art", "art digest", "contemporary"],
+      "publishedAt": "2023-05-01T12:00:00Z",
+      "lastUpdated": "2023-05-01T12:00:00Z",
+      "imageUrl": "https://example.com/image.jpg", 
+      "slug": "modern-art-trends-weekly-digest",
+      "sourceNewsIds": ["news1", "news2"]
+    }
+  }
+  ```
+- **404 Not Found**: Article not found
+  ```json
+  {
+    "error": "Article not found"
+  }
+  ```
+- **500 Internal Server Error**: Database error
+  ```json
+  {
+    "error": "Database error when fetching article",
+    "details": "Error details..."
   }
   ```
 
+**Error Handling:**
+- The API includes fallback article functionality if the database is unavailable
+- Detailed error logging helps diagnose issues with database connections
+- Appropriate HTTP status codes are returned based on the type of error
+
+#### Generate Art Digest Article
+
 **Endpoint:** `POST /api/art-digest`
 
-**Description:** Generates a new art digest article based on recent news.
+**Description:** Generates a new art digest article based on recent news. Requires authentication.
+
+**Authentication:**
+- **Bearer Token**: The request must include an `Authorization: Bearer <token>` header
+- **Vercel Cron Jobs**: Automatically authorized in production when the user-agent identifies as `vercel-cron`
+
+**Authentication Methods:**
+1. **CRON_SECRET**: The token can match the `CRON_SECRET` environment variable
+2. **Supabase Auth**: The token can be a valid Supabase authentication token for an admin user
 
 **Response:**
-- **200 OK**: Successfully generated article
+- **200 OK**: Successfully generated article (or returned existing article if one was already generated today)
   ```json
   {
     "article": {
@@ -110,17 +165,91 @@ The endpoint uses Nodemailer to send email notifications about new subscriptions
       "imageUrl": "https://example.com/image.jpg",
       "slug": "modern-art-trends-weekly-digest"
     },
-    "success": true
+    "success": true,
+    "note": "Returned existing article instead of generating a new one" // Optional field
+  }
+  ```
+- **401 Unauthorized**: Authentication failed
+  ```json
+  {
+    "error": "Authentication error",
+    "details": "Error details..."
+  }
+  ```
+- **403 Forbidden**: User not authorized
+  ```json
+  {
+    "error": "Unauthorized. Admin access required."
   }
   ```
 - **500 Internal Server Error**: Server error
   ```json
   {
-    "error": "Failed to generate article"
+    "error": "Database error when saving article",
+    "details": "Error details..."
   }
   ```
 
-### Scheduler
+**Implementation Details:**
+- Checks if an article was already generated today to prevent duplicates
+- Uses the `generateDailyArtDigest()` function from artDigestActions.ts
+- Handles slug conflicts by appending a timestamp to ensure uniqueness
+- Saves generated articles to the database with appropriate metadata
+
+#### Delete Art Digest Article
+
+**Endpoint:** `DELETE /api/art-digest`
+
+**Description:** Deletes a specific art digest article. Requires authentication.
+
+**Query Parameters:**
+- `id`: The ID of the article to delete
+
+**Authentication:**
+- Same authentication methods as the POST endpoint
+
+**Response:**
+- **200 OK**: Successfully deleted article
+  ```json
+  {
+    "success": true,
+    "message": "Article deleted successfully"
+  }
+  ```
+- **400 Bad Request**: Missing ID parameter
+  ```json
+  {
+    "error": "Missing article ID"
+  }
+  ```
+- **401 Unauthorized**: Authentication failed
+  ```json
+  {
+    "error": "Authentication error",
+    "details": "Error details..."
+  }
+  ```
+- **403 Forbidden**: User not authorized
+  ```json
+  {
+    "error": "Unauthorized. Admin access required."
+  }
+  ```
+- **404 Not Found**: Article not found
+  ```json
+  {
+    "error": "Article not found"
+  }
+  ```
+- **500 Internal Server Error**: Server error
+  ```json
+  {
+    "error": "Database error when deleting article",
+    "details": "Error details..."
+  }
+  ```
+
+### Scheduler API
 
 **Endpoint:** `GET /api/scheduler`
 
@@ -167,22 +296,43 @@ The scheduler endpoint can be secured with a secret key provided in the `CRON_SE
 
 ## Authentication
 
-Currently, the API does not implement authentication. Future iterations of the project may include authentication mechanisms.
+The project uses two primary authentication methods:
+
+1. **API Key Authentication**: Used for scheduler and admin endpoints
+   - Uses the `CRON_SECRET` environment variable as a bearer token
+   - Format: `Authorization: Bearer <CRON_SECRET>`
+
+2. **Supabase Authentication**: Used for user accounts and admin access
+   - Uses Supabase's JWT tokens for authentication
+   - Admin access is restricted to specific email addresses
+   - Format: `Authorization: Bearer <supabase_jwt_token>`
+
+3. **Vercel Cron Detection**: Auto-authorizes requests in production mode
+   - Checks the User-Agent header for "vercel-cron"
+   - Only works in production environment
 
 ## Error Handling
 
-API errors follow a consistent format:
+The API incorporates comprehensive error handling mechanisms:
 
-```json
-{
-  "error": "Error message description"
-}
-```
+1. **Database Connection Errors**
+   - Fallback content is provided when the database is unavailable
+   - Fallback article with ID `fallback-article-1` is returned for article requests
+   - Detailed error logging helps with troubleshooting
 
-Common error scenarios:
-- Missing required fields
-- Invalid input formats
-- Server-side processing errors
+2. **Error Response Format**
+   - All error responses follow a consistent format:
+     ```json
+     {
+       "error": "Error message description",
+       "details": "Optional detailed error information"
+     }
+     ```
+   - Appropriate HTTP status codes are returned based on the error type
+
+3. **Validation Errors**
+   - Input validation is performed on all request parameters and bodies
+   - Clear error messages indicate validation issues
 
 ## API Usage Examples
 
