@@ -142,7 +142,6 @@ export const DigestArticleCard = ({
             className="w-full h-full object-cover"
             onError={() => setImageError(true)}
             priority
-            unoptimized={true}
             placeholder="blur"
             blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
           />
