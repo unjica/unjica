@@ -7,7 +7,7 @@ let lastRunTime: Date | null = null;
 
 // Track deployment time to prevent generating digests during deployment
 const deploymentTime = Date.now();
-const DEPLOYMENT_COOLDOWN = 5 * 60 * 1000; // 5 minutes cooldown after deployment
+const DEPLOYMENT_COOLDOWN = 60 * 1000; // 1 minute cooldown after deployment
 
 // Handle GET requests from Vercel cron job
 export async function GET(request: Request) {
