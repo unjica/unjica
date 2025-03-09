@@ -3,7 +3,6 @@ import { prisma } from '@/lib/db';
 import { generateDailyArtDigest } from '@/lib/actions/artDigestActions';
 import { Prisma } from '@prisma/client';
 import { supabase } from '@/lib/supabase';
-import { slugify, ensureUniqueSlug } from '@/lib/utils/slugify';
 
 // This helps TypeScript recognize the additional fields
 type GeneratedArticleWithExtras = Prisma.GeneratedArticleGetPayload<{}> & {
@@ -246,39 +245,47 @@ export async function POST(request: Request) {
     }
     
     const token = authHeader.split(' ')[1];
-    console.log('POST /api/art-digest: Token extracted, verifying with Supabase');
+    console.log('POST /api/art-digest: Token extracted');
     
-    // Verify the token with Supabase
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    
-    if (error) {
-      console.error('POST /api/art-digest: Supabase auth error:', error);
-      return NextResponse.json(
-        { error: 'Authentication error', details: error.message },
-        { status: 401 }
-      );
+    // Check if token matches CRON_SECRET (for cron job access)
+    if (process.env.CRON_SECRET && token === process.env.CRON_SECRET) {
+      console.log('POST /api/art-digest: Cron job authenticated with CRON_SECRET');
+    } else {
+      // If not using CRON_SECRET, verify with Supabase
+      console.log('POST /api/art-digest: Verifying with Supabase');
+      
+      // Verify the token with Supabase
+      const { data: { user }, error } = await supabase.auth.getUser(token);
+      
+      if (error) {
+        console.error('POST /api/art-digest: Supabase auth error:', error);
+        return NextResponse.json(
+          { error: 'Authentication error', details: error.message },
+          { status: 401 }
+        );
+      }
+      
+      if (!user) {
+        console.log('POST /api/art-digest: No user found for token');
+        return NextResponse.json(
+          { error: 'Unauthorized. User not found.' },
+          { status: 403 }
+        );
+      }
+      
+      console.log(`POST /api/art-digest: User authenticated: ${user.email}`);
+      
+      // Check if user is admin
+      if (user.email !== 'sanja.malovic2@gmail.com') {
+        console.log(`POST /api/art-digest: User ${user.email} is not an admin`);
+        return NextResponse.json(
+          { error: 'Unauthorized. Admin access required.' },
+          { status: 403 }
+        );
+      }
     }
     
-    if (!user) {
-      console.log('POST /api/art-digest: No user found for token');
-      return NextResponse.json(
-        { error: 'Unauthorized. User not found.' },
-        { status: 403 }
-      );
-    }
-    
-    console.log(`POST /api/art-digest: User authenticated: ${user.email}`);
-    
-    // Check if user is admin
-    if (user.email !== 'sanja.malovic2@gmail.com') {
-      console.log(`POST /api/art-digest: User ${user.email} is not an admin`);
-      return NextResponse.json(
-        { error: 'Unauthorized. Admin access required.' },
-        { status: 403 }
-      );
-    }
-    
-    console.log('POST /api/art-digest: Admin access confirmed, generating article');
+    console.log('POST /api/art-digest: Access confirmed, generating article');
     const article = await generateDailyArtDigest();
     
     // Save the article to the database

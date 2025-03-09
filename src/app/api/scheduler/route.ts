@@ -13,12 +13,17 @@ const tasks = {
         const response = await fetch(new URL('/api/art-digest', process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'), {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            // Add authorization header if CRON_SECRET is defined
+            ...(process.env.CRON_SECRET && {
+              'Authorization': `Bearer ${process.env.CRON_SECRET}`
+            })
           }
         });
         
         if (!response.ok) {
-          throw new Error(`Failed to generate article: ${response.statusText}`);
+          const errorText = await response.text();
+          throw new Error(`Failed to generate article: ${response.status} ${response.statusText} - ${errorText}`);
         }
         
         const data = await response.json();
@@ -26,6 +31,11 @@ const tasks = {
         return true;
       } catch (error) {
         console.error('Failed to generate art digest:', error);
+        // More detailed error logging
+        if (error instanceof Error) {
+          console.error('Error message:', error.message);
+          console.error('Error stack:', error.stack);
+        }
         return false;
       }
     }
