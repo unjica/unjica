@@ -1,6 +1,8 @@
 /**
  * Service for generating or retrieving images for articles
  */
+import { put } from '@vercel/blob';
+
 export class ImageGenerationService {
   /**
    * Gets an image URL for an article based on its topics and tags
@@ -59,7 +61,29 @@ export class ImageGenerationService {
       }
       
       const data = await response.json();
-      return data.data[0].url;
+      const dalleImageUrl = data.data[0].url;
+      
+      // Store the image permanently in Vercel Blob
+      try {
+        // Download the image from DALL-E (which expires)
+        const imageResponse = await fetch(dalleImageUrl);
+        const imageBlob = await imageResponse.blob();
+        
+        // Generate unique filename
+        const fileName = `article-images/${articleId || Date.now()}-${topic.replace(/\s+/g, '-').toLowerCase()}.jpg`;
+        
+        // Upload to Vercel Blob
+        const blob = await put(fileName, imageBlob, {
+          access: 'public',
+          contentType: 'image/jpeg'
+        });
+        
+        return blob.url;
+      } catch (storageError) {
+        console.error('Failed to store image:', storageError);
+        // Fallback to the temporary DALL-E URL
+        return dalleImageUrl;
+      }
     } catch (error) {
       console.error('Failed to generate image:', error);
       return undefined;

@@ -137,11 +137,12 @@ export const DigestArticleCard = ({
           <Image 
             src={article.imageUrl}
             alt={article.title}
-            width={1200}
-            height={630}
+            fill
             className="w-full h-full object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             onError={() => setImageError(true)}
             priority
+            unoptimized
             placeholder="blur"
             blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
           />
