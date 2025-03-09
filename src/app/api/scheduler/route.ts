@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
 
 // Define the scheduled tasks
 const tasks = {
@@ -9,6 +10,31 @@ const tasks = {
     handler: async () => {
       console.log('Running scheduled art digest generation...');
       try {
+        // Check if an art digest has already been generated today
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set to beginning of day
+        
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        // Check if there's already an article published today
+        const existingArticle = await prisma.generatedArticle.findFirst({
+          where: {
+            publishedAt: {
+              gte: today,
+              lt: tomorrow
+            }
+          },
+          orderBy: {
+            publishedAt: 'desc'
+          }
+        });
+        
+        if (existingArticle) {
+          console.log(`Art digest already generated today (${existingArticle.id}): ${existingArticle.title}`);
+          return true;
+        }
+        
         // Check if CRON_SECRET is defined
         if (!process.env.CRON_SECRET) {
           console.error('CRON_SECRET is not defined in environment variables');
