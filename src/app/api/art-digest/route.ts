@@ -236,6 +236,8 @@ export async function POST(request: Request) {
     
     // Get authorization header
     const authHeader = request.headers.get('authorization');
+    console.log(`POST /api/art-digest: Authorization header present: ${!!authHeader}`);
+    
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       console.log('POST /api/art-digest: Missing or invalid authorization header');
       return NextResponse.json(
@@ -247,10 +249,15 @@ export async function POST(request: Request) {
     const token = authHeader.split(' ')[1];
     console.log('POST /api/art-digest: Token extracted');
     
+    // Check if CRON_SECRET is defined
+    console.log(`POST /api/art-digest: CRON_SECRET defined: ${!!process.env.CRON_SECRET}`);
+    
     // Check if token matches CRON_SECRET (for cron job access)
     if (process.env.CRON_SECRET && token === process.env.CRON_SECRET) {
       console.log('POST /api/art-digest: Cron job authenticated with CRON_SECRET');
     } else {
+      console.log('POST /api/art-digest: CRON_SECRET authentication failed, trying Supabase');
+      
       // If not using CRON_SECRET, verify with Supabase
       console.log('POST /api/art-digest: Verifying with Supabase');
       

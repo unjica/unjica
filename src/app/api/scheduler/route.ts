@@ -9,15 +9,20 @@ const tasks = {
     handler: async () => {
       console.log('Running scheduled art digest generation...');
       try {
+        // Check if CRON_SECRET is defined
+        if (!process.env.CRON_SECRET) {
+          console.error('CRON_SECRET is not defined in environment variables');
+          throw new Error('CRON_SECRET is not defined');
+        }
+        
+        console.log('CRON_SECRET is defined, proceeding with request');
+        
         // Use the dedicated endpoint for article generation
         const response = await fetch(new URL('/api/art-digest', process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            // Add authorization header if CRON_SECRET is defined
-            ...(process.env.CRON_SECRET && {
-              'Authorization': `Bearer ${process.env.CRON_SECRET}`
-            })
+            'Authorization': `Bearer ${process.env.CRON_SECRET}`
           }
         });
         
