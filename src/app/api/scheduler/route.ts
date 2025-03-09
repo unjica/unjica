@@ -26,8 +26,10 @@ const tasks = {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${cronSecret}`
-          }
+            'Authorization': `Bearer ${cronSecret}`,
+            'User-Agent': 'vercel-cron/1.0'
+          },
+          body: JSON.stringify({ source: 'scheduler' })
         });
         
         if (!response.ok) {

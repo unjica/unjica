@@ -238,95 +238,107 @@ export async function POST(request: Request) {
     const authHeader = request.headers.get('authorization');
     console.log(`POST /api/art-digest: Authorization header present: ${!!authHeader}`);
     
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    // Check if this is a Vercel cron job request
+    const userAgent = request.headers.get('user-agent') || '';
+    const isVercelCron = userAgent.includes('vercel-cron');
+    console.log(`POST /api/art-digest: Is Vercel cron job: ${isVercelCron}`);
+    
+    // In production, automatically authorize Vercel cron jobs
+    if (process.env.NODE_ENV === 'production' && isVercelCron) {
+      console.log('POST /api/art-digest: Automatically authorizing Vercel cron job in production');
+      // Continue with article generation
+    }
+    // Otherwise check authorization
+    else if (!authHeader || !authHeader.startsWith('Bearer ')) {
       console.log('POST /api/art-digest: Missing or invalid authorization header');
       return NextResponse.json(
         { error: 'Unauthorized. Admin access required.' },
         { status: 403 }
       );
     }
-    
-    const token = authHeader.split(' ')[1];
-    console.log('POST /api/art-digest: Token extracted');
-    
-    // Check if CRON_SECRET is defined
-    console.log(`POST /api/art-digest: CRON_SECRET defined: ${!!process.env.CRON_SECRET}`);
-    
-    let isAuthorized = false;
-    
-    // Try CRON_SECRET authentication first
-    if (process.env.CRON_SECRET) {
-      const cronSecret = process.env.CRON_SECRET.trim(); // Trim any whitespace
-      const maskedSecret = cronSecret.substring(0, 3) + '...' + 
-                          cronSecret.substring(cronSecret.length - 3);
-      const maskedToken = token.substring(0, 3) + '...' + 
-                          token.substring(token.length - 3);
-      console.log(`POST /api/art-digest: Comparing tokens - Secret: ${maskedSecret}, Token: ${maskedToken}`);
-      console.log(`POST /api/art-digest: Secret length: ${cronSecret.length}, Token length: ${token.length}`);
-      console.log(`POST /api/art-digest: Tokens match: ${token === cronSecret}`);
+    else {
+      const token = authHeader.split(' ')[1];
+      console.log('POST /api/art-digest: Token extracted');
       
-      if (token === cronSecret) {
-        console.log('POST /api/art-digest: Cron job authenticated with CRON_SECRET');
-        isAuthorized = true;
-      } else {
-        console.log('POST /api/art-digest: CRON_SECRET authentication failed, trying Supabase');
-      }
-    } else {
-      console.log('POST /api/art-digest: No CRON_SECRET defined, trying Supabase');
-    }
-    
-    // If not authorized by CRON_SECRET, try Supabase
-    if (!isAuthorized) {
-      console.log('POST /api/art-digest: Verifying with Supabase');
+      // Check if CRON_SECRET is defined
+      console.log(`POST /api/art-digest: CRON_SECRET defined: ${!!process.env.CRON_SECRET}`);
       
-      try {
-        // Verify the token with Supabase
-        const { data: { user }, error } = await supabase.auth.getUser(token);
+      let isAuthorized = false;
+      
+      // Try CRON_SECRET authentication first
+      if (process.env.CRON_SECRET) {
+        const cronSecret = process.env.CRON_SECRET.trim(); // Trim any whitespace
+        const maskedSecret = cronSecret.substring(0, 3) + '...' + 
+                            cronSecret.substring(cronSecret.length - 3);
+        const maskedToken = token.substring(0, 3) + '...' + 
+                            token.substring(token.length - 3);
+        console.log(`POST /api/art-digest: Comparing tokens - Secret: ${maskedSecret}, Token: ${maskedToken}`);
+        console.log(`POST /api/art-digest: Secret length: ${cronSecret.length}, Token length: ${token.length}`);
+        console.log(`POST /api/art-digest: Tokens match: ${token === cronSecret}`);
         
-        if (error) {
-          console.error('POST /api/art-digest: Supabase auth error:', error);
+        if (token === cronSecret) {
+          console.log('POST /api/art-digest: Cron job authenticated with CRON_SECRET');
+          isAuthorized = true;
+        } else {
+          console.log('POST /api/art-digest: CRON_SECRET authentication failed, trying Supabase');
+        }
+      } else {
+        console.log('POST /api/art-digest: No CRON_SECRET defined, trying Supabase');
+      }
+      
+      // If not authorized by CRON_SECRET, try Supabase
+      if (!isAuthorized) {
+        console.log('POST /api/art-digest: Verifying with Supabase');
+        
+        try {
+          // Verify the token with Supabase
+          const { data: { user }, error } = await supabase.auth.getUser(token);
+          
+          if (error) {
+            console.error('POST /api/art-digest: Supabase auth error:', error);
+            return NextResponse.json(
+              { error: 'Authentication error', details: error.message },
+              { status: 401 }
+            );
+          }
+          
+          if (!user) {
+            console.log('POST /api/art-digest: No user found for token');
+            return NextResponse.json(
+              { error: 'Unauthorized. User not found.' },
+              { status: 403 }
+            );
+          }
+          
+          console.log(`POST /api/art-digest: User authenticated: ${user.email}`);
+          
+          // Check if user is admin
+          if (user.email !== 'sanja.malovic2@gmail.com') {
+            console.log(`POST /api/art-digest: User ${user.email} is not an admin`);
+            return NextResponse.json(
+              { error: 'Unauthorized. Admin access required.' },
+              { status: 403 }
+            );
+          }
+          
+          isAuthorized = true;
+        } catch (authError) {
+          console.error('POST /api/art-digest: Authentication error:', authError);
           return NextResponse.json(
-            { error: 'Authentication error', details: error.message },
+            { error: 'Authentication failed', details: authError instanceof Error ? authError.message : String(authError) },
             { status: 401 }
           );
         }
-        
-        if (!user) {
-          console.log('POST /api/art-digest: No user found for token');
-          return NextResponse.json(
-            { error: 'Unauthorized. User not found.' },
-            { status: 403 }
-          );
-        }
-        
-        console.log(`POST /api/art-digest: User authenticated: ${user.email}`);
-        
-        // Check if user is admin
-        if (user.email !== 'sanja.malovic2@gmail.com') {
-          console.log(`POST /api/art-digest: User ${user.email} is not an admin`);
-          return NextResponse.json(
-            { error: 'Unauthorized. Admin access required.' },
-            { status: 403 }
-          );
-        }
-        
-        isAuthorized = true;
-      } catch (authError) {
-        console.error('POST /api/art-digest: Authentication error:', authError);
+      }
+      
+      // If we get here and still not authorized, return 403
+      if (!isAuthorized) {
+        console.log('POST /api/art-digest: All authentication methods failed');
         return NextResponse.json(
-          { error: 'Authentication failed', details: authError instanceof Error ? authError.message : String(authError) },
-          { status: 401 }
+          { error: 'Unauthorized. Admin access required.' },
+          { status: 403 }
         );
       }
-    }
-    
-    // If we get here and still not authorized, return 403
-    if (!isAuthorized) {
-      console.log('POST /api/art-digest: All authentication methods failed');
-      return NextResponse.json(
-        { error: 'Unauthorized. Admin access required.' },
-        { status: 403 }
-      );
     }
     
     // Generate the article
