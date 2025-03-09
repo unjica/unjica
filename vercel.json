@@ -21,10 +21,6 @@
     "app/api/art-digest/route.ts": {
       "memory": 1024,
       "maxDuration": 60
-    },
-    "app/api/cron/route.ts": {
-      "memory": 512,
-      "maxDuration": 60
     }
   },
   "headers": [
