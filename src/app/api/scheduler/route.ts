@@ -64,12 +64,22 @@ export async function GET() {
   // Run the task immediately if requested
   const canRunNow = !lastRunTime || (new Date().getTime() - lastRunTime.getTime() > 30 * 60 * 1000); // 30 minutes
   
+  // When called by Vercel cron job, run the task immediately
+  try {
+    console.log('GET /api/scheduler: Cron job triggered, running art digest generation...');
+    lastRunTime = new Date();
+    await tasks.artDigestGeneration.handler();
+    console.log('GET /api/scheduler: Art digest generation completed successfully');
+  } catch (error) {
+    console.error('GET /api/scheduler: Error running art digest generation:', error);
+  }
+  
   return NextResponse.json({
     status: 'OK',
     message: 'Scheduler API is working',
     lastRun: lastRunTime?.toISOString() || null,
     canRunNow: canRunNow,
-    note: "This API doesn't provide actual scheduling. Set up an external cron job to call this API with POST to generate articles."
+    note: "Art digest generation has been triggered by this GET request."
   });
 }
 
