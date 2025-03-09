@@ -5,9 +5,49 @@ import { generateDailyArtDigest } from '@/lib/actions/artDigestActions';
 // Track last run time in memory (note: this will reset when the app is redeployed)
 let lastRunTime: Date | null = null;
 
+// Track deployment time to prevent generating digests during deployment
+const deploymentTime = Date.now();
+const DEPLOYMENT_COOLDOWN = 5 * 60 * 1000; // 5 minutes cooldown after deployment
+
 // Handle GET requests from Vercel cron job
-export async function GET() {
+export async function GET(request: Request) {
   console.log('GET /api/scheduler: Cron job triggered');
+  
+  // Check if this is a deployment-related request
+  const currentTime = Date.now();
+  const timeSinceDeployment = currentTime - deploymentTime;
+  
+  // If this request is within the deployment cooldown period, don't generate a digest
+  if (timeSinceDeployment < DEPLOYMENT_COOLDOWN) {
+    console.log(`GET /api/scheduler: Request received during deployment cooldown period (${Math.round(timeSinceDeployment / 1000)} seconds since deployment). Skipping digest generation.`);
+    
+    return NextResponse.json({
+      status: 'SKIPPED',
+      message: 'Skipping digest generation during deployment cooldown period',
+      deploymentTime: new Date(deploymentTime).toISOString(),
+      currentTime: new Date(currentTime).toISOString(),
+      cooldownPeriod: `${DEPLOYMENT_COOLDOWN / 1000} seconds`,
+      timeRemaining: `${Math.round((DEPLOYMENT_COOLDOWN - timeSinceDeployment) / 1000)} seconds`
+    });
+  }
+  
+  // Check if this is a Vercel cron job or a manual test
+  const userAgent = request.headers.get('user-agent') || '';
+  const isVercelCron = userAgent.includes('vercel-cron');
+  const isManualTest = new URL(request.url).searchParams.has('test');
+  
+  console.log(`GET /api/scheduler: Request type - Vercel cron: ${isVercelCron}, Manual test: ${isManualTest}`);
+  
+  // Only proceed if this is a Vercel cron job or an explicit test request
+  if (!isVercelCron && !isManualTest) {
+    console.log('GET /api/scheduler: Request is not from Vercel cron job or manual test. Skipping digest generation.');
+    
+    return NextResponse.json({
+      status: 'SKIPPED',
+      message: 'Skipping digest generation for non-cron requests',
+      userAgent
+    });
+  }
   
   try {
     // Check if an art digest has already been generated today
