@@ -5,41 +5,20 @@ import { generateDailyArtDigest } from '@/lib/actions/artDigestActions';
 // Track last run time in memory (note: this will reset when the app is redeployed)
 let lastRunTime: Date | null = null;
 
-// Track deployment time to prevent generating digests during deployment
-const deploymentTime = Date.now();
-const DEPLOYMENT_COOLDOWN = 60 * 1000; // 1 minute cooldown after deployment
-
 // Handle GET requests from Vercel cron job
 export async function GET(request: Request) {
   console.log('GET /api/scheduler: Cron job triggered');
-  
-  // Check if this is a deployment-related request
-  const currentTime = Date.now();
-  const timeSinceDeployment = currentTime - deploymentTime;
-  
-  // If this request is within the deployment cooldown period, don't generate a digest
-  if (timeSinceDeployment < DEPLOYMENT_COOLDOWN) {
-    console.log(`GET /api/scheduler: Request received during deployment cooldown period (${Math.round(timeSinceDeployment / 1000)} seconds since deployment). Skipping digest generation.`);
-    
-    return NextResponse.json({
-      status: 'SKIPPED',
-      message: 'Skipping digest generation during deployment cooldown period',
-      deploymentTime: new Date(deploymentTime).toISOString(),
-      currentTime: new Date(currentTime).toISOString(),
-      cooldownPeriod: `${DEPLOYMENT_COOLDOWN / 1000} seconds`,
-      timeRemaining: `${Math.round((DEPLOYMENT_COOLDOWN - timeSinceDeployment) / 1000)} seconds`
-    });
-  }
   
   // Check if this is a Vercel cron job or a manual test
   const userAgent = request.headers.get('user-agent') || '';
   const isVercelCron = userAgent.includes('vercel-cron');
   const isManualTest = new URL(request.url).searchParams.has('test');
+  const isForceRun = new URL(request.url).searchParams.has('force');
   
-  console.log(`GET /api/scheduler: Request type - Vercel cron: ${isVercelCron}, Manual test: ${isManualTest}`);
+  console.log(`GET /api/scheduler: Request type - Vercel cron: ${isVercelCron}, Manual test: ${isManualTest}, Force run: ${isForceRun}`);
   
   // Only proceed if this is a Vercel cron job or an explicit test request
-  if (!isVercelCron && !isManualTest) {
+  if (!isVercelCron && !isManualTest && !isForceRun) {
     console.log('GET /api/scheduler: Request is not from Vercel cron job or manual test. Skipping digest generation.');
     
     return NextResponse.json({
@@ -70,7 +49,8 @@ export async function GET(request: Request) {
       }
     });
     
-    if (existingArticles.length > 0) {
+    // If there are existing articles and this is not a force run, skip generation
+    if (existingArticles.length > 0 && !isForceRun) {
       console.log(`GET /api/scheduler: Art digest already generated today. Found ${existingArticles.length} articles.`);
       console.log(`GET /api/scheduler: Latest article: (${existingArticles[0].id}): ${existingArticles[0].title}`);
       
@@ -85,8 +65,37 @@ export async function GET(request: Request) {
       });
     }
     
-    // No article for today, generate one
-    console.log('GET /api/scheduler: No article for today, generating one');
+    // Check if there was a recent generation (within the last minute)
+    // This helps prevent duplicate generations during deployment
+    const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
+    const recentArticles = await prisma.generatedArticle.findMany({
+      where: {
+        createdAt: {
+          gte: oneMinuteAgo
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+    
+    if (recentArticles.length > 0 && !isForceRun) {
+      console.log(`GET /api/scheduler: Recent article generation detected (within last 5 minutes). Found ${recentArticles.length} articles.`);
+      console.log(`GET /api/scheduler: Most recent article: (${recentArticles[0].id}): ${recentArticles[0].title}`);
+      
+      return NextResponse.json({
+        status: 'SKIPPED',
+        message: 'Skipping generation due to recent article creation',
+        recentArticle: {
+          id: recentArticles[0].id,
+          title: recentArticles[0].title,
+          createdAt: recentArticles[0].createdAt.toISOString()
+        }
+      });
+    }
+    
+    // No article for today or force run requested, generate one
+    console.log(`GET /api/scheduler: ${isForceRun ? 'Force run requested' : 'No article for today'}, generating one`);
     lastRunTime = new Date();
     
     // Generate the article directly instead of calling the API
