@@ -13,7 +13,6 @@ export class ImageGenerationService {
     title?: string
   ): Promise<string | undefined> {
     try {
-      // Create a unique seed based on multiple article attributes to ensure uniqueness
       // Combine article ID, title, topic, and multiple tags to create a more unique seed
       const uniqueIdentifier = [
         articleId || '',
@@ -29,27 +28,38 @@ export class ImageGenerationService {
         )
       );
       
-      // Use Lorem Picsum with a seed and randomize the image category
-      // By changing the seed for each article, we get different images
-      const imageUrl = `https://picsum.photos/seed/${seed}/1200/630`;
+      // Fallback to Lorem Picsum if OpenAI API key is not available
+      if (!process.env.OPENAI_API_KEY) {
+        console.warn('OPENAI_API_KEY not found, using fallback image service');
+        return `https://picsum.photos/seed/${seed}/1200/630`;
+      }
       
-      // For a proper implementation, here you would call an API like DALL-E or Stable Diffusion
-      // const response = await fetch('https://api.openai.com/v1/images/generations', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-      //   },
-      //   body: JSON.stringify({
-      //     prompt: `A modern art piece about ${topic} and ${tags.join(', ')}. ${title}`,
-      //     n: 1,
-      //     size: '1024x1024'
-      //   })
-      // });
-      // const data = await response.json();
-      // return data.data[0].url;
+      // Use OpenAI's DALL-E 3 API to generate an image based on the article content
+      const response = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "dall-e-3",
+          prompt: `A high-quality, professional image representing: ${title || topic}. Include visual elements related to: ${tags.join(', ')}. Style: modern, clean, suitable for article header.`,
+          n: 1,
+          size: '1024x1024',
+          quality: "standard",
+          response_format: "url"
+        })
+      });
       
-      return imageUrl;
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('OpenAI API error:', errorData);
+        // Fall back to Lorem Picsum if OpenAI API fails
+        return `https://picsum.photos/seed/${seed}/1200/630`;
+      }
+      
+      const data = await response.json();
+      return data.data[0].url;
     } catch (error) {
       console.error('Failed to generate image:', error);
       return undefined;

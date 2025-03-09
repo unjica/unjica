@@ -18,9 +18,14 @@ const nextConfig: NextConfig = {
         hostname: 'picsum.photos',
         pathname: '**',
       },
+      {
+        protocol: 'https',
+        hostname: 'oaidalleapiprodscus.blob.core.windows.net',
+        pathname: '**',
+      },
     ],
     unoptimized: false,
-    domains: ['source.unsplash.com', 'images.unsplash.com', 'picsum.photos'],
+    domains: ['source.unsplash.com', 'images.unsplash.com', 'picsum.photos', 'oaidalleapiprodscus.blob.core.windows.net'],
   },
   typescript: {
     // Disable TypeScript errors during build
