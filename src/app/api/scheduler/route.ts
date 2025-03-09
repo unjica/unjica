@@ -15,14 +15,18 @@ const tasks = {
           throw new Error('CRON_SECRET is not defined');
         }
         
-        console.log('CRON_SECRET is defined, proceeding with request');
+        const cronSecret = process.env.CRON_SECRET.trim(); // Trim any whitespace
+        const maskedSecret = cronSecret.substring(0, 3) + '...' + 
+                            cronSecret.substring(cronSecret.length - 3);
+        
+        console.log(`CRON_SECRET is defined (length: ${cronSecret.length}, masked: ${maskedSecret}), proceeding with request`);
         
         // Use the dedicated endpoint for article generation
         const response = await fetch(new URL('/api/art-digest', process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.CRON_SECRET}`
+            'Authorization': `Bearer ${cronSecret}`
           }
         });
         
