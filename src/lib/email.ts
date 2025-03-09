@@ -86,8 +86,8 @@ export async function sendNotificationEmail(subscriberEmail: string, formData?: 
             </p>
             <div style="margin: 30px 0;">
               <p style="color: #888; font-size: 14px;">Follow us on social media:</p>
-              <a href="https://x.com/sanjaUnjica" style="color: #6366f1; text-decoration: none; margin-right: 15px;">Twitter</a>
-              <a href="https://www.instagram.com/theunjica/" style="color: #6366f1; text-decoration: none; margin-right: 15px;">Instagram</a>
+              <a href="https://www.facebook.com/share/18DXtaouUG/?mibextid=wwXIfr" style="color: #6366f1; text-decoration: none; margin-right: 15px;">Facebook</a>
+              <a href="https://www.instagram.com/unjica_art/" style="color: #6366f1; text-decoration: none; margin-right: 15px;">Instagram</a>
               <a href="https://www.linkedin.com/company/unjica" style="color: #6366f1; text-decoration: none;">LinkedIn</a>
             </div>
           </div>
@@ -130,8 +130,8 @@ export async function sendNotificationEmail(subscriberEmail: string, formData?: 
             </p>
             <div style="margin: 30px 0; border-top: 1px solid #eee; padding-top: 20px;">
               <p style="color: #888; font-size: 14px;">Follow us on social media:</p>
-              <a href="https://x.com/sanjaUnjica" style="color: #6366f1; text-decoration: none; margin-right: 15px;">Twitter</a>
-              <a href="https://www.instagram.com/theunjica/" style="color: #6366f1; text-decoration: none; margin-right: 15px;">Instagram</a>
+              <a href="https://www.facebook.com/share/18DXtaouUG/?mibextid=wwXIfr" style="color: #6366f1; text-decoration: none; margin-right: 15px;">Facebook</a>
+              <a href="https://www.instagram.com/unjica_art/" style="color: #6366f1; text-decoration: none; margin-right: 15px;">Instagram</a>
               <a href="https://www.linkedin.com/company/unjica" style="color: #6366f1; text-decoration: none;">LinkedIn</a>
             </div>
           </div>
