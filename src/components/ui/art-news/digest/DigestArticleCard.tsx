@@ -103,15 +103,8 @@ export const DigestArticleCard = ({
           throw new Error(errorData.error || 'Failed to delete article');
         }
         
-        // If we've successfully deleted the article, redirect to digest homepage if on article page
-        if (isFullPage) {
-          router.push('/art-news/digest');
-        } else {
-          // For articles on the main digest page, we could trigger a refresh but the parent will handle that
-          if (window.location.pathname === '/art-news/digest') {
-            window.location.reload();
-          }
-        }
+        // If we've successfully deleted the article, redirect to digest homepage
+        window.location.href = '/';
       } catch (error) {
         // Handle token errors
         console.error('Error deleting article:', error);

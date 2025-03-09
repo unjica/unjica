@@ -85,7 +85,7 @@ export async function generateDailyArtDigest(): Promise<GeneratedArticle> {
       };
       
       // Revalidate the digest page to show the new content
-      revalidatePath('/art-news/digest');
+      revalidatePath('/');
       
       return article;
     } catch (dbError) {
@@ -120,7 +120,7 @@ export async function generateDailyArtDigest(): Promise<GeneratedArticle> {
       };
       
       // Revalidate the digest page to show the new content
-      revalidatePath('/art-news/digest');
+      revalidatePath('/');
       
       return article;
     }

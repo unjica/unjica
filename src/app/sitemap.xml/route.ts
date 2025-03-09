@@ -30,7 +30,7 @@ export async function GET() {
         priority: 1.0
       },
       {
-        url: `${baseUrl}/art-news/digest`,
+        url: `${baseUrl}/`,
         lastModified: new Date().toISOString(),
         changeFrequency: 'hourly',
         priority: 0.9
