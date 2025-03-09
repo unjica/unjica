@@ -13,13 +13,17 @@ const ARTICLES_PER_PAGE = 5;
 
 export default function Home() {
   const [articles, setArticles] = useState<GeneratedArticle[]>([]);
+  const [allArticles, setAllArticles] = useState<GeneratedArticle[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [lastGenTime, setLastGenTime] = useState<Date | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalArticles, setTotalArticles] = useState(0);
   const [session, setSession] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+  const [availableTopics, setAvailableTopics] = useState<string[]>([]);
   
   // Get session and check if user is admin
   useEffect(() => {
@@ -57,6 +61,15 @@ export default function Home() {
   // Calculate the total number of pages
   const totalPages = Math.ceil(totalArticles / ARTICLES_PER_PAGE);
   
+  // Extract unique topics from articles
+  useEffect(() => {
+    if (allArticles.length > 0) {
+      const topics = Array.from(new Set(allArticles.map((article: GeneratedArticle) => article.primaryTopic)))
+        .filter(topic => topic && topic.trim() !== '');
+      setAvailableTopics(topics);
+    }
+  }, [allArticles]);
+  
   // Load saved articles from API
   useEffect(() => {
     async function loadArticles() {
@@ -70,8 +83,14 @@ export default function Home() {
         const data = await response.json();
         const fetchedArticles = data.articles || [];
         
-        setArticles(fetchedArticles.slice(0, ARTICLES_PER_PAGE));
-        setTotalArticles(fetchedArticles.length);
+        setAllArticles(fetchedArticles);
+        
+        // Filter articles based on selected topic
+        const filteredArticles = selectedTopic 
+          ? fetchedArticles.filter((article: GeneratedArticle) => article.primaryTopic === selectedTopic)
+          : fetchedArticles;
+        
+        setTotalArticles(filteredArticles.length);
         
         // Set the last generation time if we have articles
         if (fetchedArticles.length > 0) {
@@ -79,10 +98,11 @@ export default function Home() {
         }
       } catch (error) {
         // Set empty articles but don't block the UI
-        setArticles([]);
+        setAllArticles([]);
         setTotalArticles(0);
       } finally {
         setIsLoading(false);
+        setInitialLoadComplete(true);
       }
     }
     
@@ -99,10 +119,16 @@ export default function Home() {
         const data = await response.json();
         const fetchedArticles = data.articles || [];
         
-        if (fetchedArticles.length !== totalArticles) {
+        if (fetchedArticles.length !== allArticles.length) {
           // Only update if the count has changed
-          setArticles(fetchedArticles.slice(0, ARTICLES_PER_PAGE));
-          setTotalArticles(fetchedArticles.length);
+          setAllArticles(fetchedArticles);
+          
+          // Filter articles based on selected topic
+          const filteredArticles = selectedTopic 
+            ? fetchedArticles.filter((article: GeneratedArticle) => article.primaryTopic === selectedTopic)
+            : fetchedArticles;
+          
+          setTotalArticles(filteredArticles.length);
           
           if (fetchedArticles.length > 0) {
             setLastGenTime(new Date(fetchedArticles[0].publishedAt));
@@ -114,26 +140,35 @@ export default function Home() {
     }, 60000); // Poll every minute
     
     return () => clearInterval(interval);
-  }, [totalArticles]);
+  }, [selectedTopic, allArticles.length]);
   
-  // Handle page change
+  // Handle page change and topic filter
   useEffect(() => {
-    async function fetchPageData() {
+    function updateDisplayedArticles() {
+      if (!initialLoadComplete) return; // Skip if initial load is not complete
+      
       setIsLoading(true);
       try {
-        const response = await fetch('/api/art-digest');
-        if (!response.ok) {
-          throw new Error('Failed to fetch page data');
+        // Filter articles based on selected topic
+        const filteredArticles = selectedTopic 
+          ? allArticles.filter((article: GeneratedArticle) => article.primaryTopic === selectedTopic)
+          : allArticles;
+        
+        setTotalArticles(filteredArticles.length);
+        
+        // Reset to first page when changing filters
+        const pageToUse = currentPage > Math.ceil(filteredArticles.length / ARTICLES_PER_PAGE) 
+          ? 1 
+          : currentPage;
+        
+        if (pageToUse !== currentPage) {
+          setCurrentPage(pageToUse);
         }
         
-        const data = await response.json();
-        const fetchedArticles = data.articles || [];
-        
-        const startIndex = (currentPage - 1) * ARTICLES_PER_PAGE;
+        const startIndex = (pageToUse - 1) * ARTICLES_PER_PAGE;
         const endIndex = startIndex + ARTICLES_PER_PAGE;
         
-        setArticles(fetchedArticles.slice(startIndex, endIndex));
-        setTotalArticles(fetchedArticles.length);
+        setArticles(filteredArticles.slice(startIndex, endIndex));
       } catch (error) {
         // Silent error handling
       } finally {
@@ -141,8 +176,8 @@ export default function Home() {
       }
     }
     
-    fetchPageData();
-  }, [currentPage]);
+    updateDisplayedArticles();
+  }, [currentPage, selectedTopic, allArticles, initialLoadComplete]);
   
   // Function to manually generate a new digest
   const handleGenerateDigest = async () => {
@@ -181,8 +216,15 @@ export default function Home() {
       const articlesData = await articlesResponse.json();
       const fetchedArticles = articlesData.articles || [];
       
-      setArticles(fetchedArticles.slice(0, ARTICLES_PER_PAGE));
-      setTotalArticles(fetchedArticles.length);
+      setAllArticles(fetchedArticles);
+      
+      // Filter articles based on selected topic
+      const filteredArticles = selectedTopic 
+        ? fetchedArticles.filter((article: GeneratedArticle) => article.primaryTopic === selectedTopic)
+        : fetchedArticles;
+      
+      setArticles(filteredArticles.slice(0, ARTICLES_PER_PAGE));
+      setTotalArticles(filteredArticles.length);
       
       // Set the last generation time
       setLastGenTime(new Date());
@@ -191,6 +233,12 @@ export default function Home() {
     } finally {
       setIsGenerating(false);
     }
+  };
+  
+  // Handle topic filter change
+  const handleTopicChange = (topic: string | null) => {
+    setSelectedTopic(topic);
+    setCurrentPage(1); // Reset to first page when changing filters
   };
   
   // Calculate time until next automatic generation
@@ -266,18 +314,61 @@ export default function Home() {
           )}
         </div>
         
-        {isLoading ? (
+        {/* Topic Filter */}
+        {availableTopics.length > 0 && (
+          <div className="mb-8">
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button
+                variant={selectedTopic === null ? "gradient" : "outline"}
+                onClick={() => handleTopicChange(null)}
+                className="px-4 py-2"
+              >
+                All Topics
+              </Button>
+              
+              {availableTopics.map(topic => (
+                <Button
+                  key={topic}
+                  variant={selectedTopic === topic ? "gradient" : "outline"}
+                  onClick={() => handleTopicChange(topic)}
+                  className="px-4 py-2"
+                >
+                  {topic}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {isLoading && !initialLoadComplete ? (
           <div className="flex justify-center py-20">
             <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
-        ) : articles.length === 0 ? (
+        ) : isLoading ? (
+          <div className="flex justify-center py-20">
+            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : articles.length === 0 && initialLoadComplete ? (
           <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
             <p className="text-gray-600 dark:text-gray-300 mb-4">
-              No digest articles have been generated yet.
+              {selectedTopic 
+                ? `No articles found for the topic "${selectedTopic}".` 
+                : "No digest articles have been generated yet."}
             </p>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">
-              Click the button above to generate your first AI art digest.
-            </p>
+            {!selectedTopic && (
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
+                Click the button above to generate your first AI art digest.
+              </p>
+            )}
+            {selectedTopic && (
+              <Button
+                variant="outline"
+                onClick={() => setSelectedTopic(null)}
+                className="mt-4"
+              >
+                Show All Topics
+              </Button>
+            )}
           </div>
         ) : (
           <>
