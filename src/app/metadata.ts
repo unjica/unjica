@@ -15,7 +15,7 @@ const defaultMetadata: Metadata = {
     siteName: 'Modern Art News',
     images: [
       {
-        url: '/transparent_logo/logo.png',
+        url: '/Unjica LOGO.jpeg',
         width: 1200,
         height: 630,
         alt: 'Modern Art News - Contemporary Art Insights',
@@ -26,7 +26,7 @@ const defaultMetadata: Metadata = {
     card: 'summary_large_image',
     title: 'Modern Art News - Contemporary Art Insights',
     description: 'Your curated source for modern art news and insights. Join our community today.',
-    images: ['/transparent_logo/logo.png'],
+    images: ['/Unjica LOGO.jpeg'],
   },
   robots: {
     index: true,
