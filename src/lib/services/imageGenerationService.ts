@@ -77,6 +77,13 @@ export class ImageGenerationService {
         
         // Generate unique filename
         const fileName = `article-images/${articleId || Date.now()}-${topic.replace(/\s+/g, '-').toLowerCase()}.jpg`;
+        console.log(`[ImageGeneration] Uploading to Vercel Blob as: ${fileName}`);
+        
+        // Check if Vercel Blob environment variables are set
+        if (!process.env.BLOB_READ_WRITE_TOKEN) {
+          console.error('BLOB_READ_WRITE_TOKEN is not set. Cannot upload to Vercel Blob.');
+          return `https://picsum.photos/seed/${seed}/1200/630`;
+        }
         
         // Upload to Vercel Blob
         const blob = await put(fileName, imageBlob, {
