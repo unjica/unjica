@@ -7,17 +7,31 @@ import { GradientText } from '@/components/ui/GradientText';
 export default function AboutPage() {
   // Calculate time until next automatic generation
   const getTimeUntilNextGen = () => {
-    const lastGenTime = new Date(); // Default to current time
-    
     const now = new Date();
-    const nextGen = new Date(lastGenTime);
-    nextGen.setHours(nextGen.getHours() + 1);
+    let nextGen = new Date();
+    
+    // Set to today at 3 PM (15:00)
+    nextGen.setHours(15, 0, 0, 0);
+    
+    // If it's already past 6 PM today, set to tomorrow at 3 PM
+    if (now.getHours() >= 18) {
+      nextGen.setDate(nextGen.getDate() + 1);
+    } 
+    // If it's between 3-6 PM, show "Due now"
+    else if (now.getHours() >= 15 && now.getHours() < 18) {
+      return 'Due now';
+    }
     
     const diffMs = nextGen.getTime() - now.getTime();
     if (diffMs <= 0) return 'Due now';
     
-    const diffMins = Math.floor(diffMs / 60000);
-    return `${diffMins} minute${diffMins !== 1 ? 's' : ''}`;
+    const diffHours = Math.floor(diffMs / (3600000));
+    if (diffHours > 23) {
+      const diffDays = Math.floor(diffHours / 24);
+      return `${diffDays} day${diffDays !== 1 ? 's' : ''} and ${diffHours % 24} hour${(diffHours % 24) !== 1 ? 's' : ''}`;
+    }
+    
+    return `${diffHours} hour${diffHours !== 1 ? 's' : ''}`;
   };
 
   return (
@@ -33,7 +47,7 @@ export default function AboutPage() {
               <GradientText>AI Generated Art Digest</GradientText>
             </h2>
             <p className="text-gray-600 dark:text-gray-300 mb-6 text-center">
-              Our AI agent analyzes the latest art news every hour and generates insightful 
+              Our AI agent analyzes the latest art news daily and generates insightful 
               digests highlighting trends and developments in the contemporary art world.
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 text-center">
@@ -63,11 +77,12 @@ export default function AboutPage() {
               artist statements, and exhibition reviews from around the world.
             </p>
             <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Every hour, the AI processes this information and generates a comprehensive digest that 
-              highlights key trends, notable exhibitions, and significant developments in the art world.
+              Once daily, between 3 PM and 6 PM, our system processes this information using OpenAI technology 
+              to generate a comprehensive digest that highlights key trends, notable exhibitions, 
+              and significant developments in the art world.
             </p>
             <p className="text-gray-600 dark:text-gray-300">
-              Each digest is crafted to provide valuable context and insights, making it easier for 
+              Each digest is crafted with human-like perspective and insights, making it easier for 
               you to stay connected with the contemporary art scene without having to sift through 
               countless sources on your own.
             </p>

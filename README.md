@@ -104,7 +104,7 @@ For deployment with the scheduler functionality, make sure to:
      "crons": [
        {
          "path": "/api/scheduler",
-         "schedule": "0 * * * *"
+         "schedule": "0 15-18 * * *"
        }
      ]
    }
@@ -125,9 +125,9 @@ For deployment with the scheduler functionality, make sure to:
    ./scripts/generate-digest-cron.js
    ```
 
-   You can add this to your local crontab to run daily at midnight:
+   You can add this to your local crontab to run daily at 3-6 PM:
    ```
-   0 0 * * * /path/to/your/project/scripts/generate-digest-cron.js
+   0 15-18 * * * /path/to/your/project/scripts/generate-digest-cron.js
    ```
 
 For more information on deployment options, see the [Setup Guide](./documentation/setup-guide.md#deployment).

@@ -74,7 +74,7 @@ The ArtNewsAgent is responsible for fetching modern art news from external sourc
 
 ### ArtContentGeneratorAgent
 
-The ArtContentGeneratorAgent creates structured art digest articles from news items:
+The ArtContentGeneratorAgent creates human-like art digest articles from news items using OpenAI:
 
 - **Content Generation Process**:
   1. **Analysis Phase**:
@@ -84,12 +84,14 @@ The ArtContentGeneratorAgent creates structured art digest articles from news it
      - Extracts information about recent events and exhibitions
      - Identifies reliable news sources for citation
 
-  2. **Structure Creation**:
-     - Selects a title template and fills it with the primary topic
-     - Chooses an introduction template that sets context
-     - Generates a summary paragraph with key insights
-     - Creates detailed sections based on the most substantial news items
-     - Adds a conclusion that looks forward to upcoming trends
+  2. **OpenAI-Powered Generation**:
+     - Prepares news context data for the OpenAI prompt
+     - Sends a carefully crafted prompt to OpenAI that includes:
+       - Primary topic and key themes identified in the analysis phase
+       - Recent news article data as context
+       - Instructions to create a human-like article with personal opinions
+     - Processes the AI-generated response to extract title and content
+     - Adds attribution footer citing news sources
 
   3. **Metadata Generation**:
      - Compiles relevant tags for categorization
@@ -99,15 +101,14 @@ The ArtContentGeneratorAgent creates structured art digest articles from news it
 
 - **Key Methods**:
   - `analyzeNews(newsItems)`: Identifies patterns and topics in the news data
-  - `generateSummaryParagraph(newsItems, analysis)`: Creates a concise overview
-  - `generateDetailSection(newsItems)`: Produces in-depth content based on news
-  - `generateConclusion(analysis)`: Creates a forward-looking closing section
+  - `prepareNewsContext(newsItems)`: Creates formatted context for OpenAI
+  - `generateArticleWithOpenAI(newsItems, analysis)`: Produces human-like content using OpenAI
   - `generateArticle(newsItems)`: Main method that orchestrates the entire process
 
-- **Content Templates**:
-  - Uses predefined templates for titles and introductions
-  - Dynamically fills templates with analyzed content
-  - Ensures consistent structure while maintaining uniqueness
+- **Error Handling**:
+  - Provides fallback content generation if OpenAI API fails
+  - Creates simple structured articles from news items as backup
+  - Ensures content is always generated, even in error conditions
 
 ### ImageGenerationService
 
@@ -179,7 +180,7 @@ The application uses one of several methods to trigger scheduled tasks:
 
 1. **Vercel Cron Jobs (Production)**
    - Configured via `vercel.json`
-   - Runs on a specified schedule (daily)
+   - Runs daily between 3 PM and 6 PM (15:00-18:00)
    - Calls the scheduler API endpoint automatically
 
 2. **Node.js Script (Development)**

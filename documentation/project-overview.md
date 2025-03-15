@@ -35,13 +35,13 @@ The application features a sophisticated content generation system that works as
   - Notable artists and institutions mentioned
 
 ### 3. Article Generation
-- Creates structured content using a template-based system with dynamic elements:
-  - Engaging titles that feature the identified primary topic
-  - Introductory paragraphs that provide context
-  - Summary sections that highlight key trends
-  - Detailed analysis of the most substantial news items
-  - Concluding paragraphs with forward-looking insights
-  - Properly tagged content for categorization
+- Creates engaging content using OpenAI:
+  - Sends analyzed news data to OpenAI with a carefully crafted prompt
+  - Generates human-like articles with personal opinions and perspectives
+  - Creates natural, conversational content that reads like a human art journalist wrote it
+  - Maintains professional insights while being approachable and engaging
+  - Properly attributes sources and provides context to news items
+  - Adds appropriate tagging for categorization
 
 ### 4. Image Generation
 - Creates visual elements for each article using:
@@ -58,7 +58,7 @@ The application features a sophisticated content generation system that works as
 ## Scheduling System
 
 - **Automated Generation**: New digests are created daily through scheduled triggers
-- **External Cron Triggering**: Uses Vercel Cron or other external services
+- **External Cron Triggering**: Uses Vercel Cron running between 3 PM and 6 PM daily
 - **Manual Generation**: Admin users can trigger generation on demand
 - **Security**: Protected endpoints with secret key authentication
 
@@ -91,7 +91,7 @@ This project is intended for:
 - **Authentication**: Supabase Auth
 - **Deployment**: Vercel with Cron Jobs
 - **Scheduling**: External cron services, Vercel Cron
-- **AI Services**: OpenAI API for image generation, custom algorithms for content generation
+- **AI Services**: OpenAI API for content and image generation
 - **Email**: Nodemailer for email services
 
 ## Error Handling and Resilience
