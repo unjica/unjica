@@ -17,5 +17,12 @@
   "background_color": "#000000",
   "start_url": "/",
   "display": "standalone",
-  "orientation": "portrait"
+  "orientation": "portrait",
+  "images": [
+    {
+      "src": "/Unjica LOGO.jpeg",
+      "sizes": "1200x630",
+      "type": "image/jpeg"
+    }
+  ]
 } 
