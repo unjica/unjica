@@ -10,19 +10,15 @@ import Link from 'next/link';
 
 interface ArticleClientProps {
   slug: string;
-  initialArticle?: GeneratedArticle | null;
 }
 
-export default function ArticleClient({ slug, initialArticle }: ArticleClientProps) {
-  const [article, setArticle] = useState<GeneratedArticle | null>(initialArticle || null);
-  const [isLoading, setIsLoading] = useState(!initialArticle);
+export default function ArticleClient({ slug }: ArticleClientProps) {
+  const [article, setArticle] = useState<GeneratedArticle | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   
   useEffect(() => {
-    // If we already have the article from SSR, no need to fetch again
-    if (initialArticle) return;
-    
     async function loadArticle() {
       setIsLoading(true);
       try {
@@ -41,7 +37,7 @@ export default function ArticleClient({ slug, initialArticle }: ArticleClientPro
     }
     
     loadArticle();
-  }, [slug, initialArticle]);
+  }, [slug]);
 
   return (
     <Container className="py-8">
