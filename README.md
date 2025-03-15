@@ -139,6 +139,30 @@ For more information on deployment options, see the [Setup Guide](./documentatio
   - Update the `provider` in `prisma/schema.prisma` to `postgresql`
   - Update your `DATABASE_URL` environment variable
 
+## Facebook Integration
+
+The application can automatically post new art digests to a Facebook page. To set up Facebook integration:
+
+1. Create a Facebook App in the [Facebook Developer Portal](https://developers.facebook.com/)
+2. Generate a Page Access Token with the `pages_manage_posts` and `pages_read_engagement` permissions
+3. Add the following environment variables to your `.env.local` file:
+   ```
+   FACEBOOK_ACCESS_TOKEN=your_facebook_page_access_token
+   FACEBOOK_PAGE_ID=your_facebook_page_id
+   ```
+
+### Manual Facebook Posting
+
+You can manually post an existing article to Facebook using the provided script:
+
+```bash
+# Build the project first
+npm run build
+
+# Post an article to Facebook
+node scripts/post-to-facebook.js <article-id>
+```
+
 ## License
 
 This project is private and intended for internal use only.

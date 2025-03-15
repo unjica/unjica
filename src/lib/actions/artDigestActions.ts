@@ -9,6 +9,7 @@ import { revalidatePath } from 'next/cache';
 import crypto from 'crypto';
 import { slugify, ensureUniqueSlug } from '@/lib/utils/slugify';
 import { prisma } from '@/lib/db';
+import { FacebookService } from '@/lib/services/facebookService';
 
 /**
  * Fetches fresh news from the last hour and generates a new article
@@ -87,6 +88,14 @@ export async function generateDailyArtDigest(): Promise<GeneratedArticle> {
       // Revalidate the digest page to show the new content
       revalidatePath('/');
       
+      // Post to Facebook page
+      try {
+        await FacebookService.postToFacebookPage(article);
+      } catch (facebookError) {
+        console.error('Error posting to Facebook:', facebookError);
+        // Continue even if Facebook posting fails
+      }
+      
       return article;
     } catch (dbError) {
       console.error('Error checking for existing slugs:', dbError);
@@ -121,6 +130,14 @@ export async function generateDailyArtDigest(): Promise<GeneratedArticle> {
       
       // Revalidate the digest page to show the new content
       revalidatePath('/');
+      
+      // Post to Facebook page
+      try {
+        await FacebookService.postToFacebookPage(article);
+      } catch (facebookError) {
+        console.error('Error posting to Facebook:', facebookError);
+        // Continue even if Facebook posting fails
+      }
       
       return article;
     }

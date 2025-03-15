@@ -17,6 +17,7 @@
     "@vercel/blob": "^0.27.2",
     "bcryptjs": "^3.0.2",
     "clsx": "^2.1.1",
+    "facebook-nodejs-business-sdk": "^22.0.0",
     "framer-motion": "^12.4.7",
     "next": "15.1.7",
     "nextjs-google-analytics": "^2.3.7",

@@ -121,6 +121,21 @@ export async function GET(request: Request) {
     
     console.log('GET /api/scheduler: Art digest generated and saved successfully:', article.title);
     
+    // Post to Facebook page
+    let facebookPostResult = null;
+    try {
+      const { FacebookService } = await import('@/lib/services/facebookService');
+      facebookPostResult = await FacebookService.postToFacebookPage(article);
+      console.log('GET /api/scheduler: Facebook post result:', facebookPostResult);
+    } catch (facebookError) {
+      console.error('GET /api/scheduler: Error posting to Facebook:', facebookError);
+      facebookPostResult = { 
+        success: false, 
+        message: 'Failed to post to Facebook', 
+        error: facebookError instanceof Error ? facebookError.message : String(facebookError) 
+      };
+    }
+    
     return NextResponse.json({
       status: 'OK',
       message: 'Art digest generated successfully',
@@ -128,7 +143,8 @@ export async function GET(request: Request) {
       article: {
         id: article.id,
         title: article.title
-      }
+      },
+      facebookPost: facebookPostResult
     });
   } catch (error) {
     console.error('GET /api/scheduler: Error generating art digest:', error);
