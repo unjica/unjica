@@ -75,12 +75,16 @@ export default function RootLayout({
         />
       </head>
 
-      <body className={`${inter.className} min-h-screen flex flex-col bg-white dark:bg-gray-900`}>
+      <body className={`${inter.className} min-h-screen flex flex-col bg-gradient-to-b from-indigo-50 via-white to-rose-50 dark:from-gray-900 dark:via-slate-900 dark:to-purple-950 transition-colors duration-300`}>
         <AuthProvider>
+          <div className="fixed inset-0 z-[-10] bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-indigo-200/20 via-transparent to-transparent dark:from-indigo-500/10 blur-xl pointer-events-none"></div>
+          <div className="fixed bottom-0 left-0 z-[-10] h-[70vh] w-[70vw] bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-rose-200/20 via-transparent to-transparent dark:from-rose-500/10 blur-xl pointer-events-none"></div>
           <SchedulerInitializer />
           <Navbar />
-          <main className="flex-grow">
-            {children}
+          <main className="flex-grow relative z-0">
+            <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
+              {children}
+            </div>
           </main>
           <Footer />
         </AuthProvider>

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from './Button';
 import { supabase } from '@/lib/supabase';
 
@@ -12,6 +12,8 @@ export function Navbar() {
   const [session, setSession] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   
   useEffect(() => {
     async function getSession() {
@@ -33,18 +35,44 @@ export function Navbar() {
     
     getSession();
   }, []);
+
+  // Handle clicks outside the menu
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        isMenuOpen && 
+        menuRef.current && 
+        buttonRef.current && 
+        !menuRef.current.contains(event.target as Node) &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
+        setIsMenuOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMenuOpen]);
+
+  // Close menu when pathname changes (navigation)
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [pathname]);
   
   const isActive = (path: string) => {
     return pathname === path;
   };
   
   const handleLogout = async () => {
+    setIsMenuOpen(false);
     await supabase.auth.signOut();
     router.push('/');
   };
   
   return (
-    <nav className="bg-white dark:bg-gray-900 shadow-sm">
+    <nav className="bg-white dark:bg-gray-900 shadow-sm relative z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
@@ -109,6 +137,7 @@ export function Navbar() {
                     aria-expanded={isMenuOpen}
                     aria-haspopup="true"
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    ref={buttonRef}
                   >
                     <span className="sr-only">Open user menu</span>
                     {session.user.user_metadata?.avatar_url ? (
@@ -128,11 +157,12 @@ export function Navbar() {
                 
                 {isMenuOpen && (
                   <div
-                    className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none"
+                    className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
                     role="menu"
                     aria-orientation="vertical"
                     aria-labelledby="user-menu-button"
                     tabIndex={-1}
+                    ref={menuRef}
                   >
                     <div className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200 border-b border-gray-100 dark:border-gray-700">
                       <div className="font-medium">{session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User'}</div>
@@ -147,6 +177,7 @@ export function Navbar() {
                       role="menuitem"
                       tabIndex={-1}
                       id="user-menu-item-0"
+                      onClick={() => setIsMenuOpen(false)}
                     >
                       Profile
                     </Link>
@@ -211,7 +242,7 @@ export function Navbar() {
       
       {/* Mobile menu */}
       {isMenuOpen && (
-        <div className="sm:hidden" id="mobile-menu">
+        <div className="sm:hidden z-40" id="mobile-menu">
           <div className="pt-2 pb-3 space-y-1">
             <Link
               href="/"
