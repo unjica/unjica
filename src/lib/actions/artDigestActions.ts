@@ -34,8 +34,8 @@ export async function generateDailyArtDigest(): Promise<GeneratedArticle> {
       recentNews = recentNewsData.news.slice(0, 5);
     }
     
-    // Generate article from the news items
-    const generatedContent = artContentGeneratorAgent.generateArticle(recentNews);
+    // Generate article from the news items - Now this is async
+    const generatedContent = await artContentGeneratorAgent.generateArticle(recentNews);
     
     // Create a unique ID
     const id = crypto.randomBytes(8).toString('hex');

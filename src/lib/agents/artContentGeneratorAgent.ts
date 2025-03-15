@@ -1,30 +1,15 @@
 import { ArtNewsItem } from './artNewsAgent';
+import OpenAI from 'openai';
 
 /**
- * Content patterns for generating article titles
+ * OpenAI client for generating content
  */
-const TITLE_TEMPLATES = [
-  "Modern Art Roundup: {primaryTopic} Trends This Week",
-  "The Pulse of Art: {primaryTopic} Highlights",
-  "Art Scene Update: {primaryTopic} in Focus",
-  "Contemporary Movements: The Rise of {primaryTopic}",
-  "This Week in Modern Art: {primaryTopic} Takes Center Stage",
-  "Art World Insights: {primaryTopic} and Beyond",
-  "Creative Frontiers: Exploring {primaryTopic} in Modern Art"
-];
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
 
 /**
- * Content patterns for generating article introductions
- */
-const INTRO_TEMPLATES = [
-  "The modern art world continues to evolve with {primaryTopic} gaining significant attention across major galleries and exhibitions. Our latest analysis reveals several important developments worth noting.",
-  "Recent developments in the realm of {primaryTopic} have sparked conversations among critics and enthusiasts alike. This week's art news brings several noteworthy insights.",
-  "The intersection of {primaryTopic} and traditional art practices has created a fascinating dialogue in recent exhibitions. Our team has analyzed the latest trends to bring you this comprehensive update.",
-  "As {primaryTopic} continues to shape contemporary art discourse, several key developments have emerged this week that signal important shifts in the creative landscape."
-];
-
-/**
- * Art Content Generator Agent - Analyzes art news and generates new content
+ * Art Content Generator Agent - Analyzes art news and generates new content using OpenAI
  */
 export class ArtContentGeneratorAgent {
   /**
@@ -88,64 +73,93 @@ export class ArtContentGeneratorAgent {
   }
   
   /**
-   * Generates a summary paragraph based on key information from news items
+   * Extracts the most relevant information from news items to prepare for OpenAI prompt
    */
-  private generateSummaryParagraph(newsItems: ArtNewsItem[], analysis: ReturnType<typeof this.analyzeNews>): string {
-    // Extract important information from the first few articles
-    const recentArticles = newsItems.slice(0, 5);
+  private prepareNewsContext(newsItems: ArtNewsItem[]): string {
+    let context = "";
     
-    let summary = '';
+    // Sort by recency
+    const sortedItems = [...newsItems].sort((a, b) => 
+      new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+    );
     
-    // Add information about events if we have them
-    if (analysis.recentEvents.length > 0) {
-      summary += `Recent highlights include ${analysis.recentEvents[0].replace(/^[^:]*:\s*/, '')}. `;
-      
-      if (analysis.recentEvents.length > 1) {
-        summary += `Additionally, art enthusiasts are taking notice of ${analysis.recentEvents[1].replace(/^[^:]*:\s*/, '')}. `;
-      }
-    }
+    // Take the most recent 5 items
+    const recentItems = sortedItems.slice(0, 5);
     
-    // Add information about themes
-    if (analysis.keyThemes.length > 0) {
-      summary += `Key themes emerging in the current art landscape include ${analysis.keyThemes.slice(0, 3).join(', ')}. `;
-    }
-    
-    // Add a synthesized insight
-    summary += `Critics from ${analysis.topSources.join(' and ')} note that the intersection of technology and traditional art practices continues to reshape how we experience and value creative expression. `;
-    
-    return summary;
-  }
-  
-  /**
-   * Generates a detailed section based on the news items
-   */
-  private generateDetailSection(newsItems: ArtNewsItem[]): string {
-    if (newsItems.length === 0) return '';
-    
-    let detail = "## Recent Developments\n\n";
-    
-    // Get the top 3 most substantial news items (based on description length)
-    const substantialNews = [...newsItems]
-      .sort((a, b) => (b.description?.length || 0) - (a.description?.length || 0))
-      .slice(0, 3);
-    
-    substantialNews.forEach((item, index) => {
-      detail += `### ${item.title}\n\n`;
-      detail += `${item.description}\n\n`;
-      
-      if (index < substantialNews.length - 1) {
-        detail += "The implications of this development extend beyond the immediate art scene, influencing how institutions approach curation and public engagement.\n\n";
-      }
+    // Format the news items as context for OpenAI
+    recentItems.forEach((item, index) => {
+      context += `ARTICLE ${index + 1}:\n`;
+      context += `Title: ${item.title}\n`;
+      context += `Source: ${item.source}\n`;
+      context += `Description: ${item.description}\n`;
+      context += `Tags: ${item.tags.join(', ')}\n\n`;
     });
     
-    return detail;
+    return context;
   }
-  
+
   /**
-   * Generates a conclusion paragraph
+   * Generates an article using OpenAI based on the collected news items
    */
-  private generateConclusion(analysis: ReturnType<typeof this.analyzeNews>): string {
-    return `As ${analysis.primaryTopic} continues to evolve, artists and institutions alike are finding new ways to engage with audiences and push creative boundaries. The coming weeks will likely reveal further developments in these emerging trends, particularly as major exhibitions prepare for seasonal transitions and new voices enter the conversation.`;
+  private async generateArticleWithOpenAI(newsItems: ArtNewsItem[], analysis: ReturnType<typeof this.analyzeNews>): Promise<{
+    title: string;
+    content: string;
+  }> {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OpenAI API key is not configured');
+    }
+
+    const newsContext = this.prepareNewsContext(newsItems);
+    
+    try {
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: `You are an insightful art journalist writing articles about contemporary and modern art. 
+            Create a well-structured, engaging article based on recent art news with a human touch - include your own opinions, 
+            insights, and critique. The article should feel like it was written by a knowledgeable art enthusiast, not an AI.
+            
+            The primary topic is: ${analysis.primaryTopic}
+            Key themes include: ${analysis.keyThemes.join(', ')}
+            
+            Use markdown formatting for the article structure. Include:
+            - A catchy title (# Title)
+            - Introduction section
+            - Main content divided into meaningful sections with subheadings (## Subheading)
+            - Your personal perspective and critical analysis
+            - A conclusion section
+            
+            Tone: Conversational, insightful, with occasional wit and genuine enthusiasm for art
+            Length: Approximately 800-1000 words`
+          },
+          {
+            role: "user",
+            content: `Here are some recent art news articles to base your article on:\n\n${newsContext}\n\nPlease create a human-like art article with your own perspective that discusses these recent developments in the art world, focusing especially on ${analysis.primaryTopic}.`
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 2000,
+      });
+
+      const generatedContent = response.choices[0]?.message?.content || "";
+      
+      // Extract title from content (should be the first line with # prefix)
+      const titleMatch = generatedContent.match(/^# (.+)$/m);
+      const title = titleMatch ? titleMatch[1] : `${analysis.primaryTopic}: A Contemporary Art Perspective`;
+      
+      // Remove the title from the content as we'll use it separately
+      const contentWithoutTitle = generatedContent.replace(/^# .+$/m, '').trim();
+      
+      return {
+        title,
+        content: contentWithoutTitle
+      };
+    } catch (error) {
+      console.error('Error generating article with OpenAI:', error);
+      throw error;
+    }
   }
   
   /**
@@ -153,13 +167,13 @@ export class ArtContentGeneratorAgent {
    * @param newsItems Array of art news items to analyze and synthesize
    * @returns A generated article with title, content and metadata
    */
-  generateArticle(newsItems: ArtNewsItem[]): {
+  async generateArticle(newsItems: ArtNewsItem[]): Promise<{
     title: string;
     content: string;
     primaryTopic: string;
     tags: string[];
     publishedAt: string;
-  } {
+  }> {
     if (newsItems.length === 0) {
       return {
         title: "Modern Art Weekly Digest",
@@ -173,57 +187,63 @@ export class ArtContentGeneratorAgent {
     // Analyze the news items
     const analysis = this.analyzeNews(newsItems);
     
-    // Generate title using a template
-    const titleTemplate = TITLE_TEMPLATES[Math.floor(Math.random() * TITLE_TEMPLATES.length)];
-    const title = titleTemplate.replace('{primaryTopic}', analysis.primaryTopic);
-    
-    // Generate introduction
-    const introTemplate = INTRO_TEMPLATES[Math.floor(Math.random() * INTRO_TEMPLATES.length)];
-    const introduction = introTemplate.replace('{primaryTopic}', analysis.primaryTopic.toLowerCase());
-    
-    // Generate the main content sections
-    const summary = this.generateSummaryParagraph(newsItems, analysis);
-    const detailSection = this.generateDetailSection(newsItems);
-    const conclusion = this.generateConclusion(analysis);
-    
-    // Assemble the full content
-    const content = `
-# ${title}
+    try {
+      // Generate article using OpenAI
+      const generated = await this.generateArticleWithOpenAI(newsItems, analysis);
+      
+      // Assemble the full content with title
+      const content = `
+# ${generated.title}
 
-${introduction}
-
-## Summary
-
-${summary}
-
-${detailSection}
-
-## Looking Ahead
-
-${conclusion}
+${generated.content}
 
 ---
 
 *This article was generated based on recent art news from ${analysis.topSources.join(', ')} and other sources.*
-    `.trim();
-    
-    // Generate tags by combining analysis themes with standard ones
-    const tags = [
-      'modern art',
-      'art digest',
-      analysis.primaryTopic.toLowerCase(),
-      ...analysis.keyThemes.slice(0, 3)
-    ];
-    
-    return {
-      title,
-      content,
-      primaryTopic: analysis.primaryTopic,
-      tags: [...new Set(tags)], // Remove duplicates
-      publishedAt: new Date().toISOString()
-    };
+      `.trim();
+      
+      // Generate tags by combining analysis themes with standard ones
+      const tags = [
+        'modern art',
+        'art digest',
+        analysis.primaryTopic.toLowerCase(),
+        ...analysis.keyThemes.slice(0, 3)
+      ];
+      
+      return {
+        title: generated.title,
+        content,
+        primaryTopic: analysis.primaryTopic,
+        tags: [...new Set(tags)], // Remove duplicates
+        publishedAt: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('Failed to generate article with OpenAI:', error);
+      
+      // Fall back to a basic article if OpenAI fails
+      return {
+        title: `${analysis.primaryTopic}: Recent Developments`,
+        content: `
+# ${analysis.primaryTopic}: Recent Developments
+
+Due to technical limitations, we couldn't generate our usual in-depth analysis. 
+Here's a brief overview of recent developments in ${analysis.primaryTopic}.
+
+## Recent News
+
+${newsItems.slice(0, 3).map(item => `- **${item.title}**: ${item.description}`).join('\n\n')}
+
+---
+
+*This article provides a summary of recent art news from ${analysis.topSources.join(', ')} and other sources.*
+        `.trim(),
+        primaryTopic: analysis.primaryTopic,
+        tags: [...new Set(['modern art', 'art digest', analysis.primaryTopic.toLowerCase()])],
+        publishedAt: new Date().toISOString()
+      };
+    }
   }
 }
 
 // Singleton instance
-export const artContentGeneratorAgent = new ArtContentGeneratorAgent(); 
+export const artContentGeneratorAgent = new ArtContentGeneratorAgent();
