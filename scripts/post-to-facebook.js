@@ -16,11 +16,7 @@ require('dotenv').config({ path: '.env' });
 
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-const path = require('path');
-const fs = require('fs');
-
-// Import the Facebook service
-const facebookServicePath = path.join(__dirname, '../dist/lib/services/facebookService.js');
+const fetch = require('node-fetch');
 
 // Check if the article ID was provided
 const articleId = process.argv[2];
@@ -61,27 +57,47 @@ async function main() {
       slug: article.slug || undefined
     };
     
-    // Check if the Facebook service file exists
-    if (!fs.existsSync(facebookServicePath)) {
-      console.error(`Error: Facebook service file not found at ${facebookServicePath}`);
-      console.log('Make sure to build the project first with: npm run build');
+    // Check if Facebook credentials are configured
+    const accessToken = process.env.FACEBOOK_ACCESS_TOKEN;
+    const pageId = process.env.FACEBOOK_PAGE_ID;
+    
+    if (!accessToken || !pageId) {
+      console.error('Error: Facebook credentials not configured');
+      console.log('Please set FACEBOOK_ACCESS_TOKEN and FACEBOOK_PAGE_ID in your .env.local file');
       process.exit(1);
     }
     
-    // Import the Facebook service
-    const { FacebookService } = require(facebookServicePath);
+    // Create the post message
+    const hashtags = formattedArticle.tags.map(tag => `#${tag.replace(/\s+/g, '')}`).join(' ');
+    const postMessage = `🎨 New Art Digest: ${formattedArticle.title}\n\n${formattedArticle.summary}\n\n${hashtags}\n\nRead more on our website!`;
+    
+    // Create the URL to the article
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const articleUrl = `${baseUrl}/art-news/digest/${formattedArticle.slug}`;
     
     // Post to Facebook
     console.log('Posting to Facebook...');
-    const result = await FacebookService.postToFacebookPage(formattedArticle);
     
-    if (result.success) {
-      console.log('Successfully posted to Facebook:', result.message);
+    const url = `https://graph.facebook.com/v18.0/${pageId}/feed`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: postMessage,
+        link: articleUrl,
+        access_token: accessToken,
+      }),
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      console.log('Successfully posted to Facebook:', data);
+      console.log(`Post ID: ${data.id}`);
     } else {
-      console.error('Failed to post to Facebook:', result.message);
-      if (result.error) {
-        console.error('Error details:', result.error);
-      }
+      console.error('Failed to post to Facebook:', data);
       process.exit(1);
     }
     

@@ -1,5 +1,5 @@
 import { GeneratedArticle } from '@/lib/agents/models/generatedArticle';
-import { BusinessDataAPI } from 'facebook-nodejs-business-sdk';
+import * as FacebookSDK from 'facebook-nodejs-business-sdk';
 
 /**
  * Service for interacting with Facebook API
@@ -27,24 +27,35 @@ export class FacebookService {
       // Create the post message
       const postMessage = this.createPostMessage(article);
       
-      // Create the URL to the article
+      // Create the URL to the article - using the correct path structure
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-      const articleUrl = `${baseUrl}/digest/${article.slug}`;
+      const articleUrl = `${baseUrl}/art-news/digest/${article.slug}`;
       
-      // Initialize the Facebook API
-      const api = new BusinessDataAPI(this.accessToken);
-      
-      // Post to Facebook page
-      const response = await api.call('POST', `/${this.pageId}/feed`, {
-        message: postMessage,
-        link: articleUrl,
+      // Use the Facebook Graph API directly with fetch
+      const url = `https://graph.facebook.com/v18.0/${this.pageId}/feed`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: postMessage,
+          link: articleUrl,
+          access_token: this.accessToken,
+        }),
       });
       
-      console.log('Successfully posted to Facebook:', response);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Facebook API error: ${JSON.stringify(errorData)}`);
+      }
+      
+      const data = await response.json();
+      console.log('Successfully posted to Facebook:', data);
       
       return {
         success: true,
-        message: `Successfully posted to Facebook. Post ID: ${response.id}`
+        message: `Successfully posted to Facebook. Post ID: ${data.id}`
       };
     } catch (error) {
       console.error('Error posting to Facebook:', error);

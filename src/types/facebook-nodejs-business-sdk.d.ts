@@ -1,6 +1,4 @@
 declare module 'facebook-nodejs-business-sdk' {
-  export class BusinessDataAPI {
-    constructor(accessToken: string);
-    call(method: string, path: string, params?: Record<string, any>): Promise<any>;
-  }
+  // We're not using any specific classes from the SDK anymore
+  // Just keeping the declaration for potential future use
 } 
