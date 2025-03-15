@@ -3,6 +3,7 @@
 import { Button } from './Button';
 import { Container } from './Container';
 import { useState } from 'react';
+import Link from 'next/link';
 
 export function Footer() {
   const [email, setEmail] = useState('');
@@ -53,6 +54,14 @@ export function Footer() {
             <div className="text-sm text-gray-500 dark:text-gray-400">
               © {new Date().getFullYear()} Powered by <a href="https://tacko.io" target="_blank" rel="noopener noreferrer" className="text-[#9CBDFF] hover:underline transition">Tacko</a><br />
               All rights reserved.
+            </div>
+            <div className="flex flex-col space-y-2 pt-2">
+              <Link href="/terms-of-service" className="text-sm text-gray-500 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-400 transition">
+                Terms of Service
+              </Link>
+              <Link href="/privacy-policy" className="text-sm text-gray-500 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-400 transition">
+                Privacy Policy
+              </Link>
             </div>
           </div>
           
@@ -132,6 +141,9 @@ export function Footer() {
             </form>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               Get the latest news and updates straight to your inbox.
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              By subscribing, you agree to our <Link href="/terms-of-service" className="text-blue-500 hover:underline dark:text-blue-400">Terms</Link> and <Link href="/privacy-policy" className="text-blue-500 hover:underline dark:text-blue-400">Privacy Policy</Link>.
             </p>
           </div>
         </div>
