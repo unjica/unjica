@@ -32,7 +32,7 @@ export default function ArticleDetailPage({ params }: ArticlePageProps) {
           throw new Error('Failed to load article');
         }
         const data = await response.json();
-        setArticle(data);
+        setArticle(data.article);
       } catch (err) {
         console.error('Error loading article:', err);
         setError(err instanceof Error ? err.message : 'An unknown error occurred');

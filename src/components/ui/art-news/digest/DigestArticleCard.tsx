@@ -223,11 +223,13 @@ export const DigestArticleCard = ({
         ) : (
           <div className="mb-4 prose dark:prose-invert max-w-none">
             <div dangerouslySetInnerHTML={{ 
-              __html: article.content
-                .replace(/^# .*/gm, '') // Remove the main title
-                .replace(/^## (.*)/gm, '<h2>$1</h2>') // Convert markdown h2 to HTML
-                .replace(/^### (.*)/gm, '<h3>$1</h3>') // Convert markdown h3 to HTML
-                .replace(/\n\n/g, '<br/><br/>') // Convert double linebreaks to HTML breaks
+              __html: article.content 
+                ? article.content
+                  .replace(/^# .*/gm, '') // Remove the main title
+                  .replace(/^## (.*)/gm, '<h2>$1</h2>') // Convert markdown h2 to HTML
+                  .replace(/^### (.*)/gm, '<h3>$1</h3>') // Convert markdown h3 to HTML
+                  .replace(/\n\n/g, '<br/><br/>') // Convert double linebreaks to HTML breaks
+                : 'Content not available'
             }} />
           </div>
         )}
@@ -239,7 +241,7 @@ export const DigestArticleCard = ({
             initialDislikes={dislikesCount}
           />
           
-          {article.sourceNewsIds.length > 0 && (
+          {article.sourceNewsIds && article.sourceNewsIds.length > 0 && (
             <div className="text-xs text-gray-500 dark:text-gray-400">
               Based on {article.sourceNewsIds.length} news sources
             </div>
