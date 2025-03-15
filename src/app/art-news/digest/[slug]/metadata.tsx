@@ -39,6 +39,12 @@ export async function generateMetadata(
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     const url = `${baseUrl}/art-news/digest/${typedArticle.slug || typedArticle.id}`;
     
+    // Get the image URL - either from the article or generate a dynamic OG image URL
+    const ogImageUrl = typedArticle.imageUrl || `${baseUrl}/art-news/digest/${params.slug}/opengraph-image`;
+    
+    // Get Facebook App ID from environment variables
+    const fbAppId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || '';
+    
     return {
       title: `${article.title} | AI Art Digest`,
       description: article.summary,
@@ -55,16 +61,29 @@ export async function generateMetadata(
         publishedTime: article.publishedAt.toISOString(),
         modifiedTime: article.lastUpdated.toISOString(),
         section: 'Art News',
-        tags
+        tags,
+        images: [
+          {
+            url: ogImageUrl,
+            width: 1200,
+            height: 630,
+            alt: `${article.title} | AI Art Digest`,
+          }
+        ]
       },
       twitter: {
         card: 'summary_large_image',
         title: article.title,
         description: article.summary,
         creator: '@AIArtDigest',
+        images: [ogImageUrl]
       },
       alternates: {
         canonical: url,
+      },
+      other: {
+        'fb:app_id': fbAppId,
+        'og:url': url,
       },
     };
   } catch (error) {

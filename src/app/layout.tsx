@@ -29,6 +29,9 @@ export const metadata = {
     statusBarStyle: 'default',
     title: 'Modern Art News',
   },
+  other: {
+    'fb:app_id': process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || '',
+  },
 };
 
 export const viewport: Viewport = {
@@ -43,6 +46,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const fbAppId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || '';
+  
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -57,6 +62,7 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
         <link rel="manifest" href="/site.webmanifest" />
         <meta name="msapplication-TileColor" content="#603cba" />
+        <meta property="fb:app_id" content={fbAppId} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
