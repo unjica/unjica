@@ -89,12 +89,6 @@ export function CommentSection({ articleId }: CommentSectionProps) {
       const { data: authListener } = supabase.auth.onAuthStateChange(
         (_event, session) => {
           setSession(session);
-          // Debug log for auth state changes
-          console.log('Auth state changed:', session ? {
-            id: session.user.id,
-            email: session.user.email,
-            metadata: session.user.user_metadata,
-          } : 'No session');
         }
       );
       
@@ -286,8 +280,6 @@ export function CommentSection({ articleId }: CommentSectionProps) {
       } else {
         throw new Error('Authentication required for deleting comments');
       }
-      
-      console.log(`Deleting comment: ${commentId}`);
       
       const response = await fetch(`/api/comments?id=${commentId}`, {
         method: 'DELETE',

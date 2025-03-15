@@ -306,7 +306,6 @@ export async function DELETE(request: Request) {
     
     // Delete all replies first
     if (replies.length > 0) {
-      console.log(`Deleting ${replies.length} replies to comment ${commentId}`);
       await (prisma as any).comment.deleteMany({
         where: {
           parentId: commentId,
