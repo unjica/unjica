@@ -23,9 +23,20 @@ const nextConfig: NextConfig = {
         hostname: 'oaidalleapiprodscus.blob.core.windows.net',
         pathname: '**',
       },
+      {
+        protocol: 'https',
+        hostname: '*.public.blob.vercel-storage.com',
+        pathname: '**',
+      },
     ],
     unoptimized: false,
-    domains: ['source.unsplash.com', 'images.unsplash.com', 'picsum.photos', 'oaidalleapiprodscus.blob.core.windows.net'],
+    domains: [
+      'source.unsplash.com',
+      'images.unsplash.com',
+      'picsum.photos',
+      'oaidalleapiprodscus.blob.core.windows.net',
+      'public.blob.vercel-storage.com'
+    ],
   },
   typescript: {
     // Disable TypeScript errors during build

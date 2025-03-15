@@ -67,6 +67,12 @@ export class ImageGenerationService {
       try {
         // Download the image from DALL-E (which expires)
         const imageResponse = await fetch(dalleImageUrl);
+        if (!imageResponse.ok) {
+          console.error('Failed to download DALL-E image:', await imageResponse.text());
+          // Return a fallback image since we couldn't download the DALL-E image
+          return `https://picsum.photos/seed/${seed}/1200/630`;
+        }
+        
         const imageBlob = await imageResponse.blob();
         
         // Generate unique filename
@@ -81,8 +87,9 @@ export class ImageGenerationService {
         return blob.url;
       } catch (storageError) {
         console.error('Failed to store image:', storageError);
-        // Fallback to the temporary DALL-E URL
-        return dalleImageUrl;
+        // NEVER fallback to the temporary DALL-E URL as it will expire
+        // Instead use Picsum as a reliable fallback
+        return `https://picsum.photos/seed/${seed}/1200/630`;
       }
     } catch (error) {
       console.error('Failed to generate image:', error);

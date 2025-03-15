@@ -135,7 +135,12 @@ export const DigestArticleCard = ({
       {article.imageUrl && !imageError && (
         <div className="relative w-full h-64 md:h-80">
           <Image 
-            src={article.imageUrl}
+            src={
+              // Verify the URL to avoid using expired DALL-E URLs
+              article.imageUrl.includes('oaidalleapiprodscus.blob.core.windows.net') 
+                ? '/images/fallback-article-image.jpg' // Local fallback if the URL is a DALL-E URL
+                : article.imageUrl
+            }
             alt={article.title}
             fill
             className="w-full h-full object-cover"
