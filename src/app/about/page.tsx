@@ -10,16 +10,12 @@ export default function AboutPage() {
     const now = new Date();
     let nextGen = new Date();
     
-    // Set to today at 3 PM (15:00)
-    nextGen.setHours(15, 0, 0, 0);
+    // Set to today at 4 PM (16:00)
+    nextGen.setHours(16, 0, 0, 0);
     
-    // If it's already past 6 PM today, set to tomorrow at 3 PM
-    if (now.getHours() >= 18) {
+    // If it's already past 4 PM today, set to tomorrow at 4 PM
+    if (now.getHours() >= 16) {
       nextGen.setDate(nextGen.getDate() + 1);
-    } 
-    // If it's between 3-6 PM, show "Due now"
-    else if (now.getHours() >= 15 && now.getHours() < 18) {
-      return 'Due now';
     }
     
     const diffMs = nextGen.getTime() - now.getTime();
@@ -77,7 +73,7 @@ export default function AboutPage() {
               artist statements, and exhibition reviews from around the world.
             </p>
             <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Once daily, between 3 PM and 6 PM, our system processes this information using OpenAI technology 
+              Once daily at 4 PM (16:00), our system processes this information using OpenAI technology 
               to generate a comprehensive digest that highlights key trends, notable exhibitions, 
               and significant developments in the art world.
             </p>

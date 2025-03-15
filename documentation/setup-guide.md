@@ -104,7 +104,7 @@ To set up a local cron job for daily generation:
 
 2. Add the following line to run the script every day at 3-6 PM:
    ```
-   0 15-18 * * * /absolute/path/to/your/project/scripts/generate-digest-cron.js
+   0 16 * * * /absolute/path/to/your/project/scripts/generate-digest-cron.js
    ```
 
 3. Save and exit.
@@ -119,7 +119,7 @@ For production deployment on Vercel:
      "crons": [
        {
          "path": "/api/scheduler",
-         "schedule": "0 15-18 * * *"
+         "schedule": "0 16 * * *"
        }
      ]
    }
