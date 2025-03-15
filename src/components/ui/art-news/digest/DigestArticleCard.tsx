@@ -135,19 +135,17 @@ export const DigestArticleCard = ({
       {article.imageUrl && !imageError && (
         <div className="relative w-full h-64 md:h-80">
           <Image 
-            src={
-              // Verify the URL to avoid using expired DALL-E URLs
-              article.imageUrl.includes('oaidalleapiprodscus.blob.core.windows.net') 
-                ? '/images/fallback-article-image.jpg' // Local fallback if the URL is a DALL-E URL
-                : article.imageUrl
-            }
-            alt={article.title}
+            src={article.imageUrl}
+            alt={article.title || 'Article image'}
             fill
             className="w-full h-full object-cover"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            onError={() => setImageError(true)}
-            priority
-            unoptimized
+            onError={(e) => {
+              console.error('Image failed to load in DigestArticleCard:', article.imageUrl);
+              setImageError(true);
+            }}
+            priority={true}
+            unoptimized={true}
             placeholder="blur"
             blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
           />

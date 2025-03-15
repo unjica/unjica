@@ -78,13 +78,6 @@ export function CommentSection({ articleId }: CommentSectionProps) {
       const { data } = await supabase.auth.getSession();
       setSession(data.session);
       
-      // Debug log to see session structure
-      console.log('Session data:', data.session ? {
-        id: data.session.user.id,
-        email: data.session.user.email,
-        metadata: data.session.user.user_metadata,
-      } : 'No session');
-      
       // Set up auth state listener
       const { data: authListener } = supabase.auth.onAuthStateChange(
         (_event, session) => {
