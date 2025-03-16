@@ -1,5 +1,4 @@
 import { GeneratedArticle } from '@/lib/agents/models/generatedArticle';
-import * as FacebookSDK from 'facebook-nodejs-business-sdk';
 
 /**
  * Service for interacting with Facebook API
@@ -76,6 +75,6 @@ export class FacebookService {
     // Create a message with the article title, summary, and hashtags
     const hashtags = article.tags.map(tag => `#${tag.replace(/\s+/g, '')}`).join(' ');
     
-    return `🎨 New Art Digest: ${article.title}\n\n${article.summary}\n\n${hashtags}\n\nRead more on our website!`;
+    return `🎨 New Art Digest: ${article.summary}\n\n${hashtags}\n\nRead more on our website!`;
   }
 } 

@@ -217,6 +217,6 @@ export class ArticleStorage {
     }
     
     // Otherwise return first 150 characters
-    return content.replace(/[#*_]/g, '').trim().substring(0, 150) + '...';
+    return content.replace(/[#*_]/g, '').trim().substring(0, 300) + '...';
   }
 } 

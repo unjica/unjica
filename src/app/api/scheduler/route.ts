@@ -125,8 +125,8 @@ export async function GET(request: Request) {
     let facebookPostResult = null;
     try {
       const { FacebookService } = await import('@/lib/services/facebookService');
+
       facebookPostResult = await FacebookService.postToFacebookPage(article);
-      console.log('GET /api/scheduler: Facebook post result:', facebookPostResult);
     } catch (facebookError) {
       console.error('GET /api/scheduler: Error posting to Facebook:', facebookError);
       facebookPostResult = { 
