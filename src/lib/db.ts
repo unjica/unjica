@@ -3,36 +3,11 @@ import { PrismaClient } from '@prisma/client';
 // Prevent multiple instances of Prisma Client in development
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
-// Validate and fix DATABASE_URL if needed
-const validateDatabaseUrl = () => {
-  const dbUrl = process.env.DATABASE_URL || '';
-  
-  // Check if DATABASE_URL is properly formatted
-  if (!dbUrl.startsWith('postgresql://') && !dbUrl.startsWith('postgres://')) {
-    console.warn('DATABASE_URL does not start with postgresql:// or postgres://, attempting to fix...');
-    
-    // Try to fix the URL by adding the protocol
-    if (dbUrl.includes('@') && dbUrl.includes(':')) {
-      // It looks like a database URL without protocol, try to add it
-      const fixedUrl = `postgresql://${dbUrl}`;
-      console.log('Fixed DATABASE_URL:', fixedUrl.replace(/:[^:]*@/, ':****@'));
-      process.env.DATABASE_URL = fixedUrl;
-    } else {
-      console.error('DATABASE_URL is invalid and cannot be automatically fixed. Please check your environment variables.');
-    }
-  }
-};
-
 // Create a new Prisma client with logging in development
 const createPrismaClient = () => {
   try {
     const client = new PrismaClient({
       log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-      datasources: {
-        db: {
-          url: process.env.DATABASE_URL
-        }
-      }
     });
 
     // Add middleware for error logging
@@ -57,7 +32,19 @@ const createPrismaClient = () => {
     return client;
   } catch (error) {
     console.error('Error creating Prisma client:', error);
-    throw error;
+    
+    // Return a mock client that will throw clear errors
+    return new Proxy({} as PrismaClient, {
+      get: (target, prop) => {
+        if (prop === '$connect' || prop === '$disconnect') {
+          return () => Promise.resolve();
+        }
+        
+        return () => {
+          throw new Error(`Database connection failed. Please check your DATABASE_URL environment variable. Original error: ${error}`);
+        };
+      }
+    });
   }
 };
 

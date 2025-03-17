@@ -1,13 +1,11 @@
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
   provider     = "postgresql"
-  url          = env("DATABASE_URL")
+  url          = "postgresql://postgres.visavjridpgdjukdgwfl:LogABS213.@aws-0-eu-central-1.pooler.supabase.com:6543/postgres?pgbouncer=true&sslmode=require"
   relationMode = "foreignKeys"
-  directUrl    = env("SUPABASE_DATABASE_URL")
 }
 
 model User {
