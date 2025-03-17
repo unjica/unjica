@@ -25,12 +25,14 @@ const validateDatabaseUrl = () => {
 
 // Create a new Prisma client with logging in development
 const createPrismaClient = () => {
-  // Validate DATABASE_URL before creating the client
-  validateDatabaseUrl();
-  
   try {
     const client = new PrismaClient({
       log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+      datasources: {
+        db: {
+          url: process.env.DATABASE_URL
+        }
+      }
     });
 
     // Add middleware for error logging
@@ -55,19 +57,7 @@ const createPrismaClient = () => {
     return client;
   } catch (error) {
     console.error('Error creating Prisma client:', error);
-    
-    // Return a mock client that will throw clear errors
-    return new Proxy({} as PrismaClient, {
-      get: (target, prop) => {
-        if (prop === '$connect' || prop === '$disconnect') {
-          return () => Promise.resolve();
-        }
-        
-        return () => {
-          throw new Error(`Database connection failed. Please check your DATABASE_URL environment variable. Original error: ${error}`);
-        };
-      }
-    });
+    throw error;
   }
 };
 

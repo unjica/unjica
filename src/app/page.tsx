@@ -8,6 +8,7 @@ import { DigestArticleCard } from '@/components/ui/art-news/digest/DigestArticle
 import { type GeneratedArticle } from '@/lib/agents/models/generatedArticle';
 import { supabase } from '@/lib/supabase';
 import { AdminControls } from '@/components/ui/AdminControls';
+import { FacebookService } from '@/lib/services/facebookService';
 
 const ARTICLES_PER_PAGE = 5;
 
@@ -17,10 +18,8 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-  const [lastGenTime, setLastGenTime] = useState<Date | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalArticles, setTotalArticles] = useState(0);
-  const [session, setSession] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [availableTopics, setAvailableTopics] = useState<string[]>([]);
@@ -29,7 +28,6 @@ export default function Home() {
   useEffect(() => {
     async function getSession() {
       const { data } = await supabase.auth.getSession();
-      setSession(data.session);
       
       // Check if user is admin (email is sanja.malovic2@gmail.com)
       if (data.session?.user?.email === 'sanja.malovic2@gmail.com') {
@@ -41,7 +39,6 @@ export default function Home() {
       // Set up auth state listener
       const { data: authListener } = supabase.auth.onAuthStateChange(
         (_event, session) => {
-          setSession(session);
           if (session?.user?.email === 'sanja.malovic2@gmail.com') {
             setIsAdmin(true);
           } else {
@@ -91,11 +88,6 @@ export default function Home() {
           : fetchedArticles;
         
         setTotalArticles(filteredArticles.length);
-        
-        // Set the last generation time if we have articles
-        if (fetchedArticles.length > 0) {
-          setLastGenTime(new Date(fetchedArticles[0].publishedAt));
-        }
       } catch (error) {
         // Set empty articles but don't block the UI
         setAllArticles([]);
@@ -129,10 +121,6 @@ export default function Home() {
             : fetchedArticles;
           
           setTotalArticles(filteredArticles.length);
-          
-          if (fetchedArticles.length > 0) {
-            setLastGenTime(new Date(fetchedArticles[0].publishedAt));
-          }
         }
       } catch (error) {
         // Don't update state on polling errors
@@ -225,9 +213,13 @@ export default function Home() {
       
       setArticles(filteredArticles.slice(0, ARTICLES_PER_PAGE));
       setTotalArticles(filteredArticles.length);
-      
-      // Set the last generation time
-      setLastGenTime(new Date());
+
+      try {
+        // Post to facebook
+        await FacebookService.postToFacebookPage(filteredArticles[0]);
+      } catch (error) {
+        console.error('Error posting to Facebook:', error);
+      }
     } catch (error) {
       // Silent error handling
     } finally {
@@ -241,50 +233,11 @@ export default function Home() {
     setCurrentPage(1); // Reset to first page when changing filters
   };
   
-  // Calculate time until next automatic generation
-  const getTimeUntilNextGen = () => {
-    if (!lastGenTime) return 'Unknown';
-    
-    const now = new Date();
-    const nextGen = new Date(lastGenTime);
-    nextGen.setHours(nextGen.getHours() + 1);
-    
-    // Ensure we're not showing times in the future due to timezone issues
-    if (nextGen > new Date(now.getTime() + 24 * 60 * 60 * 1000)) {
-      // If next gen time is more than a day in the future, it's likely a date error
-      return 'Due now';
-    }
-    
-    const diffMs = nextGen.getTime() - now.getTime();
-    if (diffMs <= 0) return 'Due now';
-    
-    const diffMins = Math.floor(diffMs / 60000);
-    return `${diffMins} minute${diffMins !== 1 ? 's' : ''}`;
-  };
-  
-  // Format date consistently with a safer approach
-  const formatDate = (date: Date | null) => {
-    if (!date) return 'Unknown';
-    
-    try {
-      // Use a more explicit date formatting to avoid ambiguity
-      return new Intl.DateTimeFormat('en-US', {
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      }).format(date);
-    } catch (error) {
-      return 'Invalid date';
-    }
-  };
-  
   return (
     <main className="py-16">
       <Container>
         {/* Admin Controls - only visible to admins */}
-        {isAdmin && <AdminControls onGenerateDigest={handleGenerateDigest} />}
+        {isAdmin && <AdminControls generateDigest={handleGenerateDigest} />}
         
         <div className="text-center mb-10">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">

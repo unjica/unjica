@@ -5,10 +5,10 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { supabase } from '@/lib/supabase';
 
 interface AdminControlsProps {
-  onGenerateDigest?: () => void;
+  generateDigest?: () => void;
 }
 
-export function AdminControls({ onGenerateDigest }: AdminControlsProps) {
+export function AdminControls({ generateDigest }: AdminControlsProps) {
   const { session, isAdmin, clearAuthData } = useAuth();
   const [stats, setStats] = useState<{
     articles: number;
@@ -77,66 +77,6 @@ export function AdminControls({ onGenerateDigest }: AdminControlsProps) {
     fetchStats();
   }, [isAdmin, session, clearAuthData]);
 
-  async function handleGenerateDigest() {
-    if (!isAdmin || !session) return;
-    
-    try {
-      setGenerating(true);
-      
-      // Get a fresh token directly from Supabase
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          throw error;
-        }
-        
-        const token = data.session?.access_token;
-        
-        if (!token) {
-          throw new Error('You must be logged in to generate a digest');
-        }
-        
-        const response = await fetch('/api/art-digest', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to generate digest');
-        }
-        
-        // Call the callback function if provided
-        if (onGenerateDigest) {
-          onGenerateDigest();
-        }
-        
-        // Reload the page to show the new digest
-        window.location.reload();
-      } catch (error) {
-        // Handle token errors
-        console.error('Error generating digest:', error);
-        
-        // If there's an error with the token, sign out and clear data
-        if (error instanceof Error && error.message.includes('Refresh Token')) {
-          clearAuthData();
-          await supabase.auth.signOut();
-          window.location.href = '/login?error=session_expired';
-        } else {
-          alert('Failed to generate digest. Please try again.');
-        }
-      }
-    } catch (error) {
-      alert('Failed to generate digest. Please try again.');
-    } finally {
-      setGenerating(false);
-    }
-  }
-
   // If not admin, don't render anything
   if (!isAdmin) return null;
 
@@ -170,7 +110,7 @@ export function AdminControls({ onGenerateDigest }: AdminControlsProps) {
       
       <div className="flex justify-between">
         <button
-          onClick={handleGenerateDigest}
+          onClick={generateDigest}
           disabled={generating}
           className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
         >

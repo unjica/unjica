@@ -3,6 +3,10 @@
     {
       "path": "/api/scheduler",
       "schedule": "0 16 * * *"
+    },
+    {
+      "path": "/api/social/facebook/post-latest",
+      "schedule": "0 17 * * *"
     }
   ],
   "env": {
@@ -10,7 +14,9 @@
     "DATABASE_URL": "${DATABASE_URL}",
     "NEXT_PUBLIC_SUPABASE_URL": "${NEXT_PUBLIC_SUPABASE_URL}",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY": "${NEXT_PUBLIC_SUPABASE_ANON_KEY}",
-    "NEXT_PUBLIC_BASE_URL": "${NEXT_PUBLIC_BASE_URL}"
+    "NEXT_PUBLIC_BASE_URL": "${NEXT_PUBLIC_BASE_URL}",
+    "FACEBOOK_ACCESS_TOKEN": "${FACEBOOK_ACCESS_TOKEN}",
+    "FACEBOOK_PAGE_ID": "${FACEBOOK_PAGE_ID}"
   },
   "buildCommand": "prisma generate && next build",
   "functions": {

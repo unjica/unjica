@@ -11,13 +11,13 @@ export class ImageGenerationService {
   static async generateImageForArticle(
     topic: string, 
     tags: string[], 
-    articleId?: string, 
-    title?: string
+    articleSlug?: string,
+    title?: string,
   ): Promise<string | undefined> {
     try {
       // Combine article ID, title, topic, and multiple tags to create a more unique seed
       const uniqueIdentifier = [
-        articleId || '',
+        articleSlug || '',
         title || '',
         topic,
         ...tags.slice(0, 3) // Use up to 3 tags for more variety
@@ -76,7 +76,7 @@ export class ImageGenerationService {
         const imageBlob = await imageResponse.blob();
         
         // Generate unique filename
-        const fileName = `article-images/${articleId || Date.now()}-${topic.replace(/\s+/g, '-').toLowerCase()}.jpg`;
+        const fileName = `article-images/${articleSlug || Date.now()}-${topic.replace(/\s+/g, '-').toLowerCase()}.jpg`;
         console.log(`[ImageGeneration] Uploading to Vercel Blob as: ${fileName}`);
         
         // Check if Vercel Blob environment variables are set

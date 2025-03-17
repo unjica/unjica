@@ -9,7 +9,6 @@ import { revalidatePath } from 'next/cache';
 import crypto from 'crypto';
 import { slugify, ensureUniqueSlug } from '@/lib/utils/slugify';
 import { prisma } from '@/lib/db';
-import { FacebookService } from '@/lib/services/facebookService';
 
 /**
  * Fetches fresh news from the last hour and generates a new article
@@ -66,7 +65,7 @@ export async function generateDailyArtDigest(): Promise<GeneratedArticle> {
       const imageUrl = await ImageGenerationService.generateImageForArticle(
         generatedContent.primaryTopic,
         generatedContent.tags,
-        id,
+        slug,
         generatedContent.title
       );
       
@@ -88,14 +87,6 @@ export async function generateDailyArtDigest(): Promise<GeneratedArticle> {
       // Revalidate the digest page to show the new content
       revalidatePath('/');
       
-      // Post to Facebook page
-      try {
-        await FacebookService.postToFacebookPage(article);
-      } catch (facebookError) {
-        console.error('Error posting to Facebook:', facebookError);
-        // Continue even if Facebook posting fails
-      }
-      
       return article;
     } catch (dbError) {
       console.error('Error checking for existing slugs:', dbError);
@@ -109,7 +100,7 @@ export async function generateDailyArtDigest(): Promise<GeneratedArticle> {
       const imageUrl = await ImageGenerationService.generateImageForArticle(
         generatedContent.primaryTopic,
         generatedContent.tags,
-        id,
+        fallbackSlug,
         generatedContent.title
       );
       
@@ -131,35 +122,11 @@ export async function generateDailyArtDigest(): Promise<GeneratedArticle> {
       // Revalidate the digest page to show the new content
       revalidatePath('/');
       
-      // Post to Facebook page
-      try {
-        await FacebookService.postToFacebookPage(article);
-      } catch (facebookError) {
-        console.error('Error posting to Facebook:', facebookError);
-        // Continue even if Facebook posting fails
-      }
-      
       return article;
     }
   } catch (error) {
     console.error('Error generating art digest:', error);
-    
-    // Return a fallback article in case of error
-    const fallbackId = crypto.randomBytes(8).toString('hex');
-    const timestamp = Date.now().toString().slice(-6);
-    
-    return {
-      id: fallbackId,
-      title: 'Art Digest Generation Error',
-      content: '## Error\n\nThere was an error generating the latest art digest. Please try again later.',
-      primaryTopic: 'Error',
-      summary: 'There was an error generating the latest art digest. Please try again later.',
-      tags: ['error'],
-      publishedAt: now.toISOString(),
-      sourceNewsIds: [],
-      lastUpdated: now.toISOString(),
-      slug: `error-digest-${timestamp}`
-    };
+    throw error;
   }
 }
 

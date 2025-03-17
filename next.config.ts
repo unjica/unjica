@@ -63,14 +63,11 @@ const nextConfig: NextConfig = {
   // Validate environment variables on build
   env: {
     BLOB_READ_WRITE_TOKEN: process.env.BLOB_READ_WRITE_TOKEN,
+    FACEBOOK_ACCESS_TOKEN: process.env.FACEBOOK_ACCESS_TOKEN,
+    FACEBOOK_PAGE_ID: process.env.FACEBOOK_PAGE_ID,
+    NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
+    NEWS_API_KEY: process.env.NEWS_API_KEY,
   },
 };
-
-// Logging for debugging purposes if not in production
-if (process.env.NODE_ENV !== 'production') {
-  // Safe to log these during development
-  console.log('Next.js config loaded with environment:');
-  console.log('- BLOB_READ_WRITE_TOKEN:', process.env.BLOB_READ_WRITE_TOKEN ? '✅ Set' : '❌ Not set');
-}
 
 export default nextConfig;
