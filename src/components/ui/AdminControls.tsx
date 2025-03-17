@@ -6,9 +6,10 @@ import { supabase } from '@/lib/supabase';
 
 interface AdminControlsProps {
   generateDigest?: () => void;
+  isGenerating?: boolean;
 }
 
-export function AdminControls({ generateDigest }: AdminControlsProps) {
+export function AdminControls({ generateDigest, isGenerating }: AdminControlsProps) {
   const { session, isAdmin, clearAuthData } = useAuth();
   const [stats, setStats] = useState<{
     articles: number;
@@ -16,7 +17,6 @@ export function AdminControls({ generateDigest }: AdminControlsProps) {
     users: number;
   } | null>(null);
   const [loading, setLoading] = useState(false);
-  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     if (!isAdmin || !session) return;
@@ -111,10 +111,10 @@ export function AdminControls({ generateDigest }: AdminControlsProps) {
       <div className="flex justify-between">
         <button
           onClick={generateDigest}
-          disabled={generating}
+          disabled={isGenerating}
           className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {generating ? 'Generating...' : 'Generate New Digest'}
+          {isGenerating ? 'Generating...' : 'Generate New Digest'}
         </button>
         
         <a

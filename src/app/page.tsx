@@ -237,7 +237,7 @@ export default function Home() {
     <main className="py-16">
       <Container>
         {/* Admin Controls - only visible to admins */}
-        {isAdmin && <AdminControls generateDigest={handleGenerateDigest} />}
+        {isAdmin && <AdminControls generateDigest={handleGenerateDigest} isGenerating={isGenerating} />}
         
         <div className="text-center mb-10">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
