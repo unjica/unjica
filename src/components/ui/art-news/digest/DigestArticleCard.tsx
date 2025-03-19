@@ -122,8 +122,6 @@ export const DigestArticleCard = ({
       setIsDeleting(false);
     }
   };
-
-  console.log('article', article.summary.split('\n\n')[1]);
   
   return (
     <motion.div
