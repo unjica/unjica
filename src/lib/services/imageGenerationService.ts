@@ -1,7 +1,7 @@
 /**
  * Service for generating or retrieving images for articles
  */
-import { put } from '@vercel/blob';
+import { R2Service } from '@/lib/services/r2Service';
 
 export class ImageGenerationService {
   /**
@@ -63,13 +63,12 @@ export class ImageGenerationService {
       const data = await response.json();
       const dalleImageUrl = data.data[0].url;
       
-      // Store the image permanently in Vercel Blob
+      // Store the image permanently in R2 instead of Vercel Blob
       try {
         // Download the image from DALL-E (which expires)
         const imageResponse = await fetch(dalleImageUrl);
         if (!imageResponse.ok) {
           console.error('Failed to download DALL-E image:', await imageResponse.text());
-          // Return a fallback image since we couldn't download the DALL-E image
           return `https://picsum.photos/seed/${seed}/1200/630`;
         }
         
@@ -77,25 +76,18 @@ export class ImageGenerationService {
         
         // Generate unique filename
         const fileName = `article-images/${articleSlug || Date.now()}-${topic.replace(/\s+/g, '-').toLowerCase()}.jpg`;
-        console.log(`[ImageGeneration] Uploading to Vercel Blob as: ${fileName}`);
+        console.log(`[ImageGeneration] Uploading to R2 as: ${fileName}`);
         
-        // Check if Vercel Blob environment variables are set
-        if (!process.env.BLOB_READ_WRITE_TOKEN) {
-          console.error('BLOB_READ_WRITE_TOKEN is not set. Cannot upload to Vercel Blob.');
+        // Upload to R2
+        const imageUrl = await R2Service.uploadImage(fileName, imageBlob, 'image/jpeg');
+        if (!imageUrl) {
+          console.error('Failed to upload image to R2');
           return `https://picsum.photos/seed/${seed}/1200/630`;
         }
         
-        // Upload to Vercel Blob
-        const blob = await put(fileName, imageBlob, {
-          access: 'public',
-          contentType: 'image/jpeg'
-        });
-        
-        return blob.url;
+        return imageUrl;
       } catch (storageError) {
         console.error('Failed to store image:', storageError);
-        // NEVER fallback to the temporary DALL-E URL as it will expire
-        // Instead use Picsum as a reliable fallback
         return `https://picsum.photos/seed/${seed}/1200/630`;
       }
     } catch (error) {

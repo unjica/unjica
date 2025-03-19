@@ -7,7 +7,6 @@
  */
 
 import { prisma } from '@/lib/db';
-import { put } from '@vercel/blob';
 import { ImageGenerationService } from '../services/imageGenerationService';
 
 async function fixImageUrls() {

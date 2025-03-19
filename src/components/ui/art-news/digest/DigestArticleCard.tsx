@@ -10,7 +10,6 @@ import Link from 'next/link';
 import { LikeDislikeButton } from '../LikeDislikeButton';
 import { CommentSection } from '../CommentSection';
 import { supabase } from '@/lib/supabase';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 
 interface DigestArticleCardProps {
@@ -31,8 +30,7 @@ export const DigestArticleCard = ({
   const [likesCount, setLikesCount] = useState(0);
   const [dislikesCount, setDislikesCount] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
-  const { session, isAdmin, clearAuthData } = useAuth();
-  const router = useRouter();
+  const { isAdmin, clearAuthData } = useAuth();
   
   useEffect(() => {
     // Fetch reaction counts when component mounts
@@ -124,6 +122,8 @@ export const DigestArticleCard = ({
       setIsDeleting(false);
     }
   };
+
+  console.log('article', article.summary.split('\n\n')[1]);
   
   return (
     <motion.div

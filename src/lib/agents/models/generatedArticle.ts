@@ -208,15 +208,22 @@ export class ArticleStorage {
   
   /**
    * Creates a summary from the full content
+   * Removes article title before processing the summary
    */
   static createSummary(content: string): string {
+    // Remove any paragraph that starts with "# "
+    const contentWithoutTitle = content
+      .split('\n\n')
+      .filter(paragraph => !paragraph.trim().startsWith('# '))
+      .join('\n\n');
+
     // Extract the first paragraph after "## Summary" if it exists
-    const summaryMatch = content.match(/## Summary\s+([^\n]+)/);
+    const summaryMatch = contentWithoutTitle.match(/## Summary\s+([^\n]+)/);
     if (summaryMatch && summaryMatch[1]) {
       return summaryMatch[1];
     }
     
     // Otherwise return first 150 characters
-    return content.replace(/[#*_]/g, '').trim().substring(0, 300) + '...';
+    return contentWithoutTitle.replace(/[#*_]/g, '').trim().substring(0, 300) + '...';
   }
 } 

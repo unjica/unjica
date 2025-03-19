@@ -85,7 +85,7 @@ export async function GET() {
             },
             body: JSON.stringify({
               url: imageUrl,
-              message: `🎨 ${latestArticle.summary}\n\nRead more: ${process.env.NEXT_PUBLIC_BASE_URL}/art/${latestArticle.slug}`
+              message: `🎨 ${latestArticle.title}\n\n${latestArticle.summary}\n\nRead more: ${process.env.NEXT_PUBLIC_BASE_URL}/art/${latestArticle.slug}`
             }),
           }
         );
@@ -117,7 +117,7 @@ export async function GET() {
           },
           body: JSON.stringify({
             image_url: imageUrl,
-            caption: `🎨 ${latestArticle.summary}\n\nRead more: ${process.env.NEXT_PUBLIC_BASE_URL}/art/${latestArticle.slug}`
+            caption: `🎨 ${latestArticle.title}\n\n${latestArticle.summary}\n\nRead more: ${process.env.NEXT_PUBLIC_BASE_URL}/art/${latestArticle.slug}`
           }),
         }
       );

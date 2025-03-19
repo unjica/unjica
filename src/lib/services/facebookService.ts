@@ -75,6 +75,6 @@ export class FacebookService {
     // Create a message with the article title, summary, and hashtags
     const hashtags = article.tags.map(tag => `#${tag.replace(/\s+/g, '')}`).join(' ');
     
-    return `🎨 New Art Digest: ${article.summary}\n\n${hashtags}\n\nRead more on our website!`;
+    return `🎨 ${article.title}\n\n$${article.summary}\n\n${hashtags}\n\nRead more on our website!`;
   }
 } 

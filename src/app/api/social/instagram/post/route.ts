@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         image_url: imageUrl,
-        caption: `🎨 ${article.summary}\n\nRead more: ${process.env.NEXT_PUBLIC_BASE_URL}/art/${article.slug}`
+        caption: `🎨 ${article.title}\n\n${article.summary}\n\nRead more: ${process.env.NEXT_PUBLIC_BASE_URL}/art/${article.slug}`
       }),
     });
 

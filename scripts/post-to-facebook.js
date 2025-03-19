@@ -69,7 +69,7 @@ async function main() {
     
     // Create the post message
     const hashtags = formattedArticle.tags.map(tag => `#${tag.replace(/\s+/g, '')}`).join(' ');
-    const postMessage = `🎨 New Art Digest: ${formattedArticle.summary}\n\n${hashtags}\n\nRead more on our website!`;
+    const postMessage = `🎨 ${formattedArticle.title}\n\n${formattedArticle.summary}\n\n${hashtags}\n\nRead more on our website!`;
     
     // Create the URL to the article
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
