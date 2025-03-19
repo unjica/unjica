@@ -1,0 +1,198 @@
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
+
+export async function GET() {
+  try {
+    // Debug environment variables
+    console.log('Environment variables:', {
+      hasFacebookToken: !!process.env.FACEBOOK_ACCESS_TOKEN,
+      facebookTokenLength: process.env.FACEBOOK_ACCESS_TOKEN?.length,
+      hasInstagramToken: !!process.env.INSTAGRAM_ACCESS_TOKEN,
+      instagramTokenLength: process.env.INSTAGRAM_ACCESS_TOKEN?.length,
+      hasInstagramAccountId: !!process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID,
+      hasFacebookPageId: !!process.env.FACEBOOK_PAGE_ID,
+      baseUrl: process.env.NEXT_PUBLIC_BASE_URL
+    });
+
+    // Verify credentials
+    if (!process.env.FACEBOOK_ACCESS_TOKEN || !process.env.FACEBOOK_PAGE_ID) {
+      return NextResponse.json({ 
+        error: 'Missing Facebook credentials',
+        details: {
+          hasAccessToken: !!process.env.FACEBOOK_ACCESS_TOKEN,
+          hasPageId: !!process.env.FACEBOOK_PAGE_ID
+        }
+      }, { status: 500 });
+    }
+
+    if (!process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID || !process.env.INSTAGRAM_ACCESS_TOKEN) {
+      return NextResponse.json({ 
+        error: 'Missing Instagram credentials',
+        details: {
+          hasAccountId: !!process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID,
+          hasAccessToken: !!process.env.INSTAGRAM_ACCESS_TOKEN
+        }
+      }, { status: 500 });
+    }
+
+    // Find the most recent article
+    const latestArticle = await prisma.generatedArticle.findFirst({
+      orderBy: {
+        publishedAt: 'desc'
+      }
+    });
+
+    if (!latestArticle) {
+      return NextResponse.json({ error: 'No articles found' }, { status: 404 });
+    }
+
+    // Get the image URL from the article
+    const imageUrl = latestArticle.imageUrl;
+    if (!imageUrl) {
+      return NextResponse.json({ error: 'Article has no image' }, { status: 400 });
+    }
+
+    const results = {
+      facebook: null as any,
+      instagram: null as any,
+      errors: [] as string[]
+    };
+
+    // Post to Facebook
+    try {
+      console.log('Posting to Facebook...');
+      
+      // First, verify page access token
+      const pageTokenResponse = await fetch(
+        `https://graph.facebook.com/v18.0/${process.env.FACEBOOK_PAGE_ID}?fields=access_token&access_token=${encodeURIComponent(process.env.FACEBOOK_ACCESS_TOKEN)}`
+      );
+
+      if (!pageTokenResponse.ok) {
+        const errorText = await pageTokenResponse.text();
+        console.error('Failed to get page access token:', errorText);
+        results.errors.push(`Facebook: Failed to get page access token - ${errorText}`);
+      } else {
+        const pageTokenResult = await pageTokenResponse.json();
+        const pageAccessToken = pageTokenResult.access_token;
+
+        // Post to Facebook using page access token
+        const facebookResponse = await fetch(
+          `https://graph.facebook.com/v18.0/${process.env.FACEBOOK_PAGE_ID}/photos?access_token=${encodeURIComponent(pageAccessToken)}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              url: imageUrl,
+              message: `🎨 ${latestArticle.summary}\n\nRead more: ${process.env.NEXT_PUBLIC_BASE_URL}/art/${latestArticle.slug}`
+            }),
+          }
+        );
+
+        if (!facebookResponse.ok) {
+          const errorText = await facebookResponse.text();
+          console.error('Facebook post failed:', errorText);
+          results.errors.push(`Facebook: ${errorText}`);
+        } else {
+          const facebookResult = await facebookResponse.json();
+          console.log('Facebook API Response:', facebookResult);
+          results.facebook = facebookResult;
+        }
+      }
+    } catch (error: any) {
+      console.error('Error posting to Facebook:', error);
+      results.errors.push(`Facebook: ${error.message}`);
+    }
+
+    // Post to Instagram
+    try {
+      console.log('Creating Instagram media container...');
+      const mediaResponse = await fetch(
+        `https://graph.facebook.com/v18.0/${process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID}/media?access_token=${encodeURIComponent(process.env.INSTAGRAM_ACCESS_TOKEN)}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            image_url: imageUrl,
+            caption: `🎨 ${latestArticle.summary}\n\nRead more: ${process.env.NEXT_PUBLIC_BASE_URL}/art/${latestArticle.slug}`
+          }),
+        }
+      );
+
+      if (!mediaResponse.ok) {
+        const errorText = await mediaResponse.text();
+        console.error('Instagram media container creation failed:', errorText);
+        results.errors.push(`Instagram: ${errorText}`);
+      } else {
+        const mediaResult = await mediaResponse.json();
+        console.log('Instagram media container created:', mediaResult);
+
+        if (mediaResult.id) {
+          // Wait for the container to be ready
+          await new Promise(resolve => setTimeout(resolve, 5000));
+
+          // Publish the media
+          console.log('Publishing Instagram media...');
+          const publishResponse = await fetch(
+            `https://graph.facebook.com/v18.0/${process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID}/media_publish?access_token=${encodeURIComponent(process.env.INSTAGRAM_ACCESS_TOKEN)}`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                creation_id: mediaResult.id
+              }),
+            }
+          );
+
+          if (!publishResponse.ok) {
+            const errorText = await publishResponse.text();
+            console.error('Instagram publish failed:', errorText);
+            results.errors.push(`Instagram publish: ${errorText}`);
+          } else {
+            const publishResult = await publishResponse.json();
+            console.log('Instagram publish complete:', publishResult);
+            results.instagram = publishResult;
+          }
+        } else {
+          results.errors.push('Instagram: Failed to create media container');
+        }
+      }
+    } catch (error: any) {
+      console.error('Error posting to Instagram:', error);
+      results.errors.push(`Instagram: ${error.message}`);
+    }
+
+    // Return results
+    if (results.errors.length > 0) {
+      return NextResponse.json({
+        success: false,
+        errors: results.errors,
+        results: {
+          facebook: results.facebook,
+          instagram: results.instagram
+        }
+      }, { status: results.facebook || results.instagram ? 207 : 500 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      results: {
+        facebook: results.facebook,
+        instagram: results.instagram
+      }
+    });
+  } catch (error: any) {
+    console.error('Error in social media posting:', error);
+    return NextResponse.json(
+      { error: 'Failed to post to social media', details: error.message },
+      { status: 500 }
+    );
+  }
+}
+
+export const dynamic = 'force-dynamic'; 
