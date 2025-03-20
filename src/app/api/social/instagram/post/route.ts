@@ -41,14 +41,15 @@ export async function POST(request: Request) {
 
     console.log('Creating media container with image URL:', imageUrl);
 
-    // Create Instagram post using Graph API
-    const mediaUrl = `https://graph.facebook.com/v18.0/${process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID}/media?access_token=${encodeURIComponent(process.env.INSTAGRAM_ACCESS_TOKEN)}`;
-    console.log('Media URL:', mediaUrl);
+    // Create Instagram post using Graph API - Ensure proper token handling
+    const accessToken = process.env.INSTAGRAM_ACCESS_TOKEN?.trim();
+    const mediaUrl = `https://graph.facebook.com/v18.0/${process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID}/media?access_token=${encodeURIComponent(accessToken || '')}`;
+    console.log('Using Business Account ID:', process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID);
 
     const mediaResponse = await fetch(mediaUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         image_url: imageUrl,
@@ -61,7 +62,10 @@ export async function POST(request: Request) {
       console.error('Media container creation failed:', {
         status: mediaResponse.status,
         statusText: mediaResponse.statusText,
-        error: errorText
+        error: errorText,
+        businessAccountId: process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID,
+        tokenLength: accessToken?.length,
+        imageUrl: imageUrl
       });
       return NextResponse.json({ 
         error: 'Media container creation failed',
@@ -89,13 +93,13 @@ export async function POST(request: Request) {
     await new Promise(resolve => setTimeout(resolve, 5000));
 
     // Publish the media container
-    const publishUrl = `https://graph.facebook.com/v18.0/${process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID}/media_publish?access_token=${encodeURIComponent(process.env.INSTAGRAM_ACCESS_TOKEN)}`;
+    const publishUrl = `https://graph.facebook.com/v18.0/${process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID}/media_publish?access_token=${encodeURIComponent(accessToken || '')}`;
     console.log('Publish URL:', publishUrl);
 
     const publishResponse = await fetch(publishUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         creation_id: result.id
