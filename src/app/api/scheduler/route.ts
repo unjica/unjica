@@ -30,40 +30,40 @@ export async function GET(request: Request) {
   
   try {
     // Check if an art digest has already been generated today
-    // const today = new Date();
-    // today.setHours(0, 0, 0, 0); // Set to beginning of day
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to beginning of day
     
-    // const tomorrow = new Date(today);
-    // tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
     
-    // // Check if there's already an article published today
-    // const existingArticles = await prisma.generatedArticle.findMany({
-    //   where: {
-    //     publishedAt: {
-    //       gte: today,
-    //       lt: tomorrow
-    //     }
-    //   },
-    //   orderBy: {
-    //     publishedAt: 'desc'
-    //   }
-    // });
+    // Check if there's already an article published today
+    const existingArticles = await prisma.generatedArticle.findMany({
+      where: {
+        publishedAt: {
+          gte: today,
+          lt: tomorrow
+        }
+      },
+      orderBy: {
+        publishedAt: 'desc'
+      }
+    });
     
-    // // If there are existing articles and this is not a force run, skip generation
-    // if (existingArticles.length > 0 && !isForceRun) {
-    //   console.log(`GET /api/scheduler: Art digest already generated today. Found ${existingArticles.length} articles.`);
-    //   console.log(`GET /api/scheduler: Latest article: (${existingArticles[0].id}): ${existingArticles[0].title}`);
+    // If there are existing articles and this is not a force run, skip generation
+    if (existingArticles.length > 0 && !isForceRun) {
+      console.log(`GET /api/scheduler: Art digest already generated today. Found ${existingArticles.length} articles.`);
+      console.log(`GET /api/scheduler: Latest article: (${existingArticles[0].id}): ${existingArticles[0].title}`);
       
-    //   return NextResponse.json({
-    //     status: 'OK',
-    //     message: 'Art digest already generated today',
-    //     lastRun: lastRunTime?.toISOString() || null,
-    //     existingArticle: {
-    //       id: existingArticles[0].id,
-    //       title: existingArticles[0].title
-    //     }
-    //   });
-    // }
+      return NextResponse.json({
+        status: 'OK',
+        message: 'Art digest already generated today',
+        lastRun: lastRunTime?.toISOString() || null,
+        existingArticle: {
+          id: existingArticles[0].id,
+          title: existingArticles[0].title
+        }
+      });
+    }
     
     // Check if there was a recent generation (within the last minute)
     // This helps prevent duplicate generations during deployment
