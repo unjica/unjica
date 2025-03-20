@@ -172,16 +172,16 @@ const postArticle = async () => {
       errors: [] as string[]
     };
 
-    // Post to Instagram
+    // Post to Facebook
     try {
-      results.instagram = await postToInstagram(latestArticle, hashtags, imageUrl);
+      results.facebook = await postToFacebook(latestArticle, hashtags, imageUrl);
     } catch (error: any) {
       results.errors.push(error.message);
     }
 
-    // Post to Facebook
+    // Post to Instagram
     try {
-      results.facebook = await postToFacebook(latestArticle, hashtags, imageUrl);
+      results.instagram = await postToInstagram(latestArticle, hashtags, imageUrl);
     } catch (error: any) {
       results.errors.push(error.message);
     }
