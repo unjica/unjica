@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 
-export async function POST() {
+const postArticle = async () => {
   try {
     // Debug environment variables
     console.log('Environment variables:', {
@@ -193,6 +193,14 @@ export async function POST() {
       { status: 500 }
     );
   }
+}
+
+export async function GET() {
+  return postArticle();
+}
+
+export async function POST() {
+  return postArticle();
 }
 
 export const dynamic = 'force-dynamic'; 
