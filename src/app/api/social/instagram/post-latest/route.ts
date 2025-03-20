@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { generateHashtags } from '@/lib/utils/hashtags';
 
 export async function GET() {
   try {
@@ -45,6 +46,8 @@ export async function GET() {
     const mediaUrl = `https://graph.facebook.com/v18.0/${process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID}/media?access_token=${encodeURIComponent(process.env.INSTAGRAM_ACCESS_TOKEN)}`;
     console.log('Media URL:', mediaUrl);
 
+    const hashtags = generateHashtags(latestArticle);
+
     const mediaResponse = await fetch(mediaUrl, {
       method: 'POST',
       headers: {
@@ -52,7 +55,7 @@ export async function GET() {
       },
       body: JSON.stringify({
         image_url: imageUrl,
-        caption: `🎨 ${latestArticle.title}\n\n${latestArticle.summary}\n\nRead more: ${process.env.NEXT_PUBLIC_BASE_URL}/art/${latestArticle.slug}`
+        caption: `🎨 ${latestArticle.title}\n\n${latestArticle.summary}\n\nRead more: ${process.env.NEXT_PUBLIC_BASE_URL}/art/${latestArticle.slug}\n\n${hashtags}`
       }),
     });
 

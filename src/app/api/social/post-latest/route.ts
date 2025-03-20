@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { generateHashtags } from '@/lib/utils/hashtags';
 
 const postArticle = async () => {
   try {
@@ -46,6 +47,8 @@ const postArticle = async () => {
       return NextResponse.json({ error: 'No articles found' }, { status: 404 });
     }
 
+    const hashtags = generateHashtags(latestArticle);
+
     // Get the image URL from the article
     const imageUrl = latestArticle.imageUrl;
     if (!imageUrl) {
@@ -85,7 +88,7 @@ const postArticle = async () => {
             },
             body: JSON.stringify({
               url: imageUrl,
-              message: `🎨 ${latestArticle.title}\n\n${latestArticle.summary}\n\nRead more: ${process.env.NEXT_PUBLIC_BASE_URL}/art/${latestArticle.slug}`
+              message: `🎨 ${latestArticle.title}\n\n${latestArticle.summary}\n\nRead more: ${process.env.NEXT_PUBLIC_BASE_URL}/art/${latestArticle.slug}\n\n${hashtags}`
             }),
           }
         );
@@ -117,7 +120,7 @@ const postArticle = async () => {
           },
           body: JSON.stringify({
             image_url: imageUrl,
-            caption: `🎨 ${latestArticle.title}\n\n${latestArticle.summary}\n\nRead more: ${process.env.NEXT_PUBLIC_BASE_URL}/art/${latestArticle.slug}`
+            caption: `🎨 ${latestArticle.title}\n\n${latestArticle.summary}\n\nRead more: ${process.env.NEXT_PUBLIC_BASE_URL}/art/${latestArticle.slug}\n\n${hashtags}`
           }),
         }
       );

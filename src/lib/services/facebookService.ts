@@ -1,4 +1,5 @@
 import { GeneratedArticle } from '@/lib/agents/models/generatedArticle';
+import { generateHashtags } from '../utils/hashtags';
 
 /**
  * Service for interacting with Facebook API
@@ -72,28 +73,6 @@ export class FacebookService {
    * @returns Formatted message string
    */
   private static createPostMessage(article: GeneratedArticle): string {
-    // Generate hashtags based on article content
-    const generateHashtags = (article: any) => {
-      const hashtags = ['#art', '#artwork', '#modernart', '#contemporaryart', '#abstractart', '#popart'];
-      
-      // Add artist name as hashtag if available
-      if (article.artist) {
-        hashtags.push(`#${article.artist.replace(/\s+/g, '')}`);
-      }
-      
-      // Add period/movement as hashtag if available
-      if (article.period) {
-        hashtags.push(`#${article.period.replace(/\s+/g, '')}`);
-      }
-      
-      // Add style as hashtag if available
-      if (article.style) {
-        hashtags.push(`#${article.style.replace(/\s+/g, '')}`);
-      }
-
-      return hashtags.join(' ');
-    };
-
     const hashtags = generateHashtags(article);
     return `🎨 ${article.title}\n\n${article.summary}\n\nRead more: ${process.env.NEXT_PUBLIC_BASE_URL}/art/${article.slug}\n\n${hashtags}`;
   }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { generateHashtags } from '@/lib/utils/hashtags';
 
 export async function POST(request: Request) {
   try {
@@ -40,28 +41,6 @@ export async function POST(request: Request) {
     }
 
     console.log('Creating media container with image URL:', imageUrl);
-
-    // Generate hashtags based on article content
-    const generateHashtags = (article: any) => {
-      const hashtags = ['#art', '#artwork', '#modernart', '#contemporaryart', '#abstractart', '#popart'];
-      
-      // Add artist name as hashtag if available
-      if (article.artist) {
-        hashtags.push(`#${article.artist.replace(/\s+/g, '')}`);
-      }
-      
-      // Add period/movement as hashtag if available
-      if (article.period) {
-        hashtags.push(`#${article.period.replace(/\s+/g, '')}`);
-      }
-      
-      // Add style as hashtag if available
-      if (article.style) {
-        hashtags.push(`#${article.style.replace(/\s+/g, '')}`);
-      }
-
-      return hashtags.join(' ');
-    };
 
     const hashtags = generateHashtags(article);
 

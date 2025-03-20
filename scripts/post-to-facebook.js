@@ -17,6 +17,7 @@ require('dotenv').config({ path: '.env' });
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const fetch = require('node-fetch');
+const { generateHashtags } = require('../src/lib/utils/hashtags');
 
 // Check if the article ID was provided
 const articleId = process.argv[2];
@@ -68,8 +69,8 @@ async function main() {
     }
     
     // Create the post message
-    const hashtags = formattedArticle.tags.map(tag => `#${tag.replace(/\s+/g, '')}`).join(' ');
-    const postMessage = `🎨 ${formattedArticle.title}\n\n${formattedArticle.summary}\n\n${hashtags}\n\nRead more on our website!`;
+    const hashtags = generateHashtags(formattedArticle);
+    const postMessage = `🎨 ${formattedArticle.title}\n\n${formattedArticle.summary}\n\nRead more on our website!\n\n${hashtags}`;
     
     // Create the URL to the article
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
