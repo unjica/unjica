@@ -41,6 +41,30 @@ export async function POST(request: Request) {
 
     console.log('Creating media container with image URL:', imageUrl);
 
+    // Generate hashtags based on article content
+    const generateHashtags = (article: any) => {
+      const hashtags = ['#art', '#artwork', '#modernart', '#contemporaryart', '#abstractart', '#popart'];
+      
+      // Add artist name as hashtag if available
+      if (article.artist) {
+        hashtags.push(`#${article.artist.replace(/\s+/g, '')}`);
+      }
+      
+      // Add period/movement as hashtag if available
+      if (article.period) {
+        hashtags.push(`#${article.period.replace(/\s+/g, '')}`);
+      }
+      
+      // Add style as hashtag if available
+      if (article.style) {
+        hashtags.push(`#${article.style.replace(/\s+/g, '')}`);
+      }
+
+      return hashtags.join(' ');
+    };
+
+    const hashtags = generateHashtags(article);
+
     // Create Instagram post using Graph API - Ensure proper token handling
     const accessToken = process.env.INSTAGRAM_ACCESS_TOKEN?.trim();
     const mediaUrl = `https://graph.facebook.com/v18.0/${process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID}/media?access_token=${encodeURIComponent(accessToken || '')}`;
@@ -53,7 +77,7 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         image_url: imageUrl,
-        caption: `🎨 ${article.title}\n\n${article.summary}\n\nRead more: ${process.env.NEXT_PUBLIC_BASE_URL}/art/${article.slug}`
+        caption: `🎨 ${article.title}\n\n${article.summary}\n\nRead more: ${process.env.NEXT_PUBLIC_BASE_URL}/art/${article.slug}\n\n${hashtags}`,
       }),
     });
 

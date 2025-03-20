@@ -17,6 +17,50 @@ export function AdminControls({ generateDigest, isGenerating }: AdminControlsPro
     users: number;
   } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isPosting, setIsPosting] = useState(false);
+
+  // Add function to handle social media posting
+  const handleSocialPost = async () => {
+    try {
+      setIsPosting(true);
+      
+      // Get a fresh token
+      const { data: { session }, error: tokenError } = await supabase.auth.getSession();
+      
+      if (tokenError) throw tokenError;
+      
+      const token = session?.access_token;
+      if (!token) return;
+
+      const response = await fetch('/api/social/post-latest', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to post to social media');
+      }
+
+      if (data.success) {
+        alert('Successfully posted to social media!');
+      } else if (data.errors?.length > 0) {
+        // Some posts succeeded but others failed
+        alert(`Partial success posting to social media.\nErrors:\n${data.errors.join('\n')}`);
+      } else {
+        throw new Error('Unknown error occurred');
+      }
+    } catch (error) {
+      console.error('Error posting to social media:', error);
+      alert(error instanceof Error ? error.message : 'Failed to post to social media');
+    } finally {
+      setIsPosting(false);
+    }
+  };
 
   useEffect(() => {
     if (!isAdmin || !session) return;
@@ -108,13 +152,21 @@ export function AdminControls({ generateDigest, isGenerating }: AdminControlsPro
         </div>
       ) : null}
       
-      <div className="flex justify-between">
+      <div className="flex justify-between items-center gap-2">
         <button
           onClick={generateDigest}
           disabled={isGenerating}
           className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isGenerating ? 'Generating...' : 'Generate New Digest'}
+        </button>
+        
+        <button
+          onClick={handleSocialPost}
+          disabled={isPosting}
+          className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isPosting ? 'Posting...' : 'Post to Social Media'}
         </button>
         
         <a
