@@ -72,16 +72,16 @@ export class ImageGenerationService {
           return `https://picsum.photos/seed/${seed}/1200/630`;
         }
         
-        // Convert response to Blob and then to ReadableStream
-        const imageBlob = await imageResponse.blob();
-        const stream = imageBlob.stream();
+        // Convert response to ArrayBuffer and then to Buffer
+        const arrayBuffer = await imageResponse.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
         
         // Generate unique filename
         const fileName = `article-images/${articleSlug || Date.now()}-${topic.replace(/\s+/g, '-').toLowerCase()}.jpg`;
         console.log(`[ImageGeneration] Uploading to R2 as: ${fileName}`);
         
-        // Upload to R2 using ReadableStream
-        const imageUrl = await R2Service.uploadImage(fileName, stream, 'image/jpeg');
+        // Upload to R2 using Buffer
+        const imageUrl = await R2Service.uploadImage(fileName, buffer, 'image/jpeg');
         if (!imageUrl) {
           console.error('Failed to upload image to R2');
           return `https://picsum.photos/seed/${seed}/1200/630`;

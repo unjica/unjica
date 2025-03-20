@@ -34,7 +34,7 @@ export class R2Service {
 
   static async uploadImage(
     fileName: string,
-    file: Buffer | ReadableStream,
+    file: Buffer | Blob | ReadableStream,
     contentType: string
   ): Promise<string> {
     try {
