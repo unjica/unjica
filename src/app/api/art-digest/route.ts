@@ -345,37 +345,37 @@ export async function POST(request: Request) {
     console.log('POST /api/art-digest: Access confirmed, generating article');
 
     // Check if an article has already been generated today
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set to beginning of day
+    // const today = new Date();
+    // today.setHours(0, 0, 0, 0); // Set to beginning of day
 
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    // const tomorrow = new Date(today);
+    // tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // Check if there's already an article published today
-    const existingArticles = await prisma.generatedArticle.findMany({
-      where: {
-        publishedAt: {
-          gte: today,
-          lt: tomorrow
-        }
-      },
-      orderBy: {
-        publishedAt: 'desc'
-      },
-      take: 5 // Get the latest 5 just to see if there are multiple
-    });
+    // // Check if there's already an article published today
+    // const existingArticles = await prisma.generatedArticle.findMany({
+    //   where: {
+    //     publishedAt: {
+    //       gte: today,
+    //       lt: tomorrow
+    //     }
+    //   },
+    //   orderBy: {
+    //     publishedAt: 'desc'
+    //   },
+    //   take: 5 // Get the latest 5 just to see if there are multiple
+    // });
 
-    if (existingArticles.length > 0) {
-      console.log(`POST /api/art-digest: Art digest already generated today. Found ${existingArticles.length} articles.`);
-      console.log(`POST /api/art-digest: Latest article: (${existingArticles[0].id}): ${existingArticles[0].title}`);
+    // if (existingArticles.length > 0) {
+    //   console.log(`POST /api/art-digest: Art digest already generated today. Found ${existingArticles.length} articles.`);
+    //   console.log(`POST /api/art-digest: Latest article: (${existingArticles[0].id}): ${existingArticles[0].title}`);
       
-      // Return the existing article instead of generating a new one
-      return NextResponse.json({ 
-        article: existingArticles[0],
-        success: true,
-        note: 'Returned existing article instead of generating a new one'
-      });
-    }
+    //   // Return the existing article instead of generating a new one
+    //   return NextResponse.json({ 
+    //     article: existingArticles[0],
+    //     success: true,
+    //     note: 'Returned existing article instead of generating a new one'
+    //   });
+    // }
 
     const article = await generateDailyArtDigest();
     
