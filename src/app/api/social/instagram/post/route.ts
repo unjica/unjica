@@ -2,6 +2,34 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { generateHashtags } from '@/lib/utils/hashtags';
 
+// Add retry logic helper function
+async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 3, delay = 2000) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, {
+        ...options,
+        // Add timeout signal
+        signal: AbortSignal.timeout(30000) // 30 second timeout
+      });
+      
+      if (response.ok) return response;
+      
+      if (response.status === 504) {
+        console.log(`Attempt ${attempt}: Got 504 timeout, retrying...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      
+      return response;
+    } catch (error) {
+      if (attempt === maxRetries) throw error;
+      console.log(`Attempt ${attempt} failed, retrying...`, error);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  throw new Error('Max retries reached');
+}
+
 export async function POST(request: Request) {
   try {
     const { articleId } = await request.json();
@@ -49,7 +77,7 @@ export async function POST(request: Request) {
     const mediaUrl = `https://graph.facebook.com/v18.0/${process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID}/media?access_token=${encodeURIComponent(accessToken || '')}`;
     console.log('Using Business Account ID:', process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID);
 
-    const mediaResponse = await fetch(mediaUrl, {
+    const mediaResponse = await fetchWithRetry(mediaUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -99,7 +127,7 @@ export async function POST(request: Request) {
     const publishUrl = `https://graph.facebook.com/v18.0/${process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID}/media_publish?access_token=${encodeURIComponent(accessToken || '')}`;
     console.log('Publish URL:', publishUrl);
 
-    const publishResponse = await fetch(publishUrl, {
+    const publishResponse = await fetchWithRetry(publishUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
