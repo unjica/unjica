@@ -34,7 +34,7 @@
       "memory": 1024,
       "maxDuration": 60
     },
-    "api/social/instagram/post/*.ts": {
+    "app/api/social/instagram/post/route.ts": {
       "maxDuration": 60
     }
   },
