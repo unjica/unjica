@@ -70,6 +70,8 @@ const nextConfig: NextConfig = {
     FACEBOOK_PAGE_ID: process.env.FACEBOOK_PAGE_ID,
     NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
     NEWS_API_KEY: process.env.NEWS_API_KEY,
+    INSTAGRAM_ACCESS_TOKEN: process.env.INSTAGRAM_ACCESS_TOKEN,
+    INSTAGRAM_BUSINESS_ACCOUNT_ID: process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID,
   },
 };
 
