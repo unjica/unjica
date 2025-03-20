@@ -1,6 +1,117 @@
+import { generateHashtags } from '@/lib/utils/hashtags';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { generateHashtags } from '@/lib/utils/hashtags';
+
+const postToFacebook = async (latestArticle: any, hashtags: string, imageUrl: string) => {
+  try {
+    console.log('Posting to Facebook...');
+    
+    // First, verify page access token
+    const pageTokenResponse = await fetch(
+      `https://graph.facebook.com/v18.0/${process.env.FACEBOOK_PAGE_ID}?fields=access_token&access_token=${encodeURIComponent(process.env.FACEBOOK_ACCESS_TOKEN)}`
+    );
+
+    if (!pageTokenResponse.ok) {
+      const errorText = await pageTokenResponse.text();
+      console.error('Failed to get page access token:', errorText);
+      throw new Error(`Facebook: Failed to get page access token - ${errorText}`);
+    } else {
+      const pageTokenResult = await pageTokenResponse.json();
+      const pageAccessToken = pageTokenResult.access_token;
+
+      // Post to Facebook using page access token
+      const facebookResponse = await fetch(
+        `https://graph.facebook.com/v18.0/${process.env.FACEBOOK_PAGE_ID}/photos?access_token=${encodeURIComponent(pageAccessToken)}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url: imageUrl,
+            message: `🎨 ${latestArticle.title}\n\n${latestArticle.summary}\n\nRead more: ${process.env.NEXT_PUBLIC_BASE_URL}/art/${latestArticle.slug}\n\n${hashtags}`
+          }),
+        }
+      );
+
+      if (!facebookResponse.ok) {
+        const errorText = await facebookResponse.text();
+        console.error('Facebook post failed:', errorText);
+        throw new Error(`Facebook: ${errorText}`);
+      } else {
+        const facebookResult = await facebookResponse.json();
+        console.log('Facebook API Response:', facebookResult);
+        return facebookResult;
+      }
+    }
+  } catch (error: any) {
+    console.error('Error posting to Facebook:', error);
+    throw new Error(`Facebook: ${error.message}`);
+  }
+}
+
+const postToInstagram = async (latestArticle: any, hashtags: string, imageUrl: string) => {
+  try {
+    console.log('Creating Instagram media container...');
+    const mediaResponse = await fetch(
+      `https://graph.facebook.com/v18.0/${process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID}/media?access_token=${encodeURIComponent(process.env.INSTAGRAM_ACCESS_TOKEN)}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image_url: imageUrl,
+          caption: `🎨 ${latestArticle.title}\n\n${latestArticle.summary}\n\nRead more: ${process.env.NEXT_PUBLIC_BASE_URL}/art/${latestArticle.slug}\n\n${hashtags}`
+        }),
+      }
+    );
+
+    if (!mediaResponse.ok) {
+      const errorText = await mediaResponse.text();
+      console.error('Instagram media container creation failed:', errorText);
+      throw new Error(`Instagram: ${errorText}`);
+    } else {
+      const mediaResult = await mediaResponse.json();
+      console.log('Instagram media container created:', mediaResult);
+
+      if (mediaResult.id) {
+        // Wait for the container to be ready
+        await new Promise(resolve => setTimeout(resolve, 5000));
+
+        // Publish the media
+        console.log('Publishing Instagram media...');
+        const publishResponse = await fetch(
+          `https://graph.facebook.com/v18.0/${process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID}/media_publish?access_token=${encodeURIComponent(process.env.INSTAGRAM_ACCESS_TOKEN)}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              creation_id: mediaResult.id
+            }),
+          }
+        );
+
+        if (!publishResponse.ok) {
+          const errorText = await publishResponse.text();
+          console.error('Instagram publish failed:', errorText);
+          throw new Error(`Instagram publish: ${errorText}`);
+        } else {
+          const publishResult = await publishResponse.json();
+          console.log('Instagram publish complete:', publishResult);
+          return publishResult;
+        }
+      } else {
+        throw new Error('Instagram: Failed to create media container');
+      }
+    }
+  } catch (error: any) {
+    console.error('Error posting to Instagram:', error);
+    throw new Error(`Instagram: ${error.message}`);
+  }
+}
 
 const postArticle = async () => {
   try {
@@ -61,113 +172,18 @@ const postArticle = async () => {
       errors: [] as string[]
     };
 
-    // Post to Facebook
-    try {
-      console.log('Posting to Facebook...');
-      
-      // First, verify page access token
-      const pageTokenResponse = await fetch(
-        `https://graph.facebook.com/v18.0/${process.env.FACEBOOK_PAGE_ID}?fields=access_token&access_token=${encodeURIComponent(process.env.FACEBOOK_ACCESS_TOKEN)}`
-      );
-
-      if (!pageTokenResponse.ok) {
-        const errorText = await pageTokenResponse.text();
-        console.error('Failed to get page access token:', errorText);
-        results.errors.push(`Facebook: Failed to get page access token - ${errorText}`);
-      } else {
-        const pageTokenResult = await pageTokenResponse.json();
-        const pageAccessToken = pageTokenResult.access_token;
-
-        // Post to Facebook using page access token
-        const facebookResponse = await fetch(
-          `https://graph.facebook.com/v18.0/${process.env.FACEBOOK_PAGE_ID}/photos?access_token=${encodeURIComponent(pageAccessToken)}`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              url: imageUrl,
-              message: `🎨 ${latestArticle.title}\n\n${latestArticle.summary}\n\nRead more: ${process.env.NEXT_PUBLIC_BASE_URL}/art/${latestArticle.slug}\n\n${hashtags}`
-            }),
-          }
-        );
-
-        if (!facebookResponse.ok) {
-          const errorText = await facebookResponse.text();
-          console.error('Facebook post failed:', errorText);
-          results.errors.push(`Facebook: ${errorText}`);
-        } else {
-          const facebookResult = await facebookResponse.json();
-          console.log('Facebook API Response:', facebookResult);
-          results.facebook = facebookResult;
-        }
-      }
-    } catch (error: any) {
-      console.error('Error posting to Facebook:', error);
-      results.errors.push(`Facebook: ${error.message}`);
-    }
-
     // Post to Instagram
     try {
-      console.log('Creating Instagram media container...');
-      const mediaResponse = await fetch(
-        `https://graph.facebook.com/v18.0/${process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID}/media?access_token=${encodeURIComponent(process.env.INSTAGRAM_ACCESS_TOKEN)}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            image_url: imageUrl,
-            caption: `🎨 ${latestArticle.title}\n\n${latestArticle.summary}\n\nRead more: ${process.env.NEXT_PUBLIC_BASE_URL}/art/${latestArticle.slug}\n\n${hashtags}`
-          }),
-        }
-      );
-
-      if (!mediaResponse.ok) {
-        const errorText = await mediaResponse.text();
-        console.error('Instagram media container creation failed:', errorText);
-        results.errors.push(`Instagram: ${errorText}`);
-      } else {
-        const mediaResult = await mediaResponse.json();
-        console.log('Instagram media container created:', mediaResult);
-
-        if (mediaResult.id) {
-          // Wait for the container to be ready
-          await new Promise(resolve => setTimeout(resolve, 5000));
-
-          // Publish the media
-          console.log('Publishing Instagram media...');
-          const publishResponse = await fetch(
-            `https://graph.facebook.com/v18.0/${process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID}/media_publish?access_token=${encodeURIComponent(process.env.INSTAGRAM_ACCESS_TOKEN)}`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                creation_id: mediaResult.id
-              }),
-            }
-          );
-
-          if (!publishResponse.ok) {
-            const errorText = await publishResponse.text();
-            console.error('Instagram publish failed:', errorText);
-            results.errors.push(`Instagram publish: ${errorText}`);
-          } else {
-            const publishResult = await publishResponse.json();
-            console.log('Instagram publish complete:', publishResult);
-            results.instagram = publishResult;
-          }
-        } else {
-          results.errors.push('Instagram: Failed to create media container');
-        }
-      }
+      results.instagram = await postToInstagram(latestArticle, hashtags, imageUrl);
     } catch (error: any) {
-      console.error('Error posting to Instagram:', error);
-      results.errors.push(`Instagram: ${error.message}`);
+      results.errors.push(error.message);
+    }
+
+    // Post to Facebook
+    try {
+      results.facebook = await postToFacebook(latestArticle, hashtags, imageUrl);
+    } catch (error: any) {
+      results.errors.push(error.message);
     }
 
     // Return results
