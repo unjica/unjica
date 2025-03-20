@@ -33,6 +33,9 @@
     "app/api/art-digest/manual/route.ts": {
       "memory": 1024,
       "maxDuration": 60
+    },
+    "api/social/instagram/post/*.ts": {
+      "maxDuration": 60
     }
   },
   "headers": [
