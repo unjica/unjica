@@ -214,19 +214,15 @@ const postArticle = async () => {
       errors: [] as string[]
     };
 
-    // Post to Facebook
-    try {
-      results.facebook = await postToFacebook(latestArticle, hashtags, imageUrl);
-    } catch (error: any) {
+    Promise.all([
+      postToFacebook(latestArticle, hashtags, imageUrl),
+      postToInstagram(latestArticle, hashtags, imageUrl)
+    ]).then(([facebookResult, instagramResult]) => {
+      results.facebook = facebookResult;
+      results.instagram = instagramResult;
+    }).catch((error: any) => {
       results.errors.push(error.message);
-    }
-
-    // Post to Instagram
-    try {
-      results.instagram = await postToInstagram(latestArticle, hashtags, imageUrl);
-    } catch (error: any) {
-      results.errors.push(error.message);
-    }
+    });
 
     // Return results
     if (results.errors.length > 0) {
