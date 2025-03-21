@@ -21,5 +21,7 @@ export const generateHashtags = (article: any) => {
       hashtags.push(`#${article.style.replace(/\s+/g, '')}`);
     }
 
+    hashtags.push(`#${article.primaryTopic.replace(/\s+/g, '')}`);
+
     return hashtags.join(' ');
   };

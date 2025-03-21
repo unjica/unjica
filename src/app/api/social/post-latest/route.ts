@@ -4,6 +4,10 @@ import { prisma } from '@/lib/db';
 
 const postToFacebook = async (latestArticle: any, hashtags: string, imageUrl: string) => {
   try {
+    if (!process.env.FACEBOOK_PAGE_ID || !process.env.FACEBOOK_ACCESS_TOKEN) {
+      throw new Error('Missing Facebook credentials');
+    }
+
     console.log('Posting to Facebook...');
     
     // First, verify page access token
@@ -52,7 +56,19 @@ const postToFacebook = async (latestArticle: any, hashtags: string, imageUrl: st
 
 const postToInstagram = async (latestArticle: any, hashtags: string, imageUrl: string) => {
   try {
+    if (!process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID || !process.env.INSTAGRAM_ACCESS_TOKEN) {
+      throw new Error('Missing Instagram credentials');
+    }
+
     console.log('Creating Instagram media container...');
+    
+    // Log the request details (without sensitive data)
+    console.log('Instagram API Request:', {
+      accountId: process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID,
+      imageUrl: imageUrl,
+      hasAccessToken: !!process.env.INSTAGRAM_ACCESS_TOKEN
+    });
+
     const mediaResponse = await fetch(
       `https://graph.facebook.com/v18.0/${process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID}/media?access_token=${encodeURIComponent(process.env.INSTAGRAM_ACCESS_TOKEN)}`,
       {
@@ -67,46 +83,72 @@ const postToInstagram = async (latestArticle: any, hashtags: string, imageUrl: s
       }
     );
 
+    // Log the raw response for debugging
+    const responseText = await mediaResponse.text();
+    console.log('Instagram API Raw Response:', responseText);
+
     if (!mediaResponse.ok) {
-      const errorText = await mediaResponse.text();
-      console.error('Instagram media container creation failed:', errorText);
-      throw new Error(`Instagram: ${errorText}`);
-    } else {
-      const mediaResult = await mediaResponse.json();
-      console.log('Instagram media container created:', mediaResult);
-
-      if (mediaResult.id) {
-        // Wait for the container to be ready
-        await new Promise(resolve => setTimeout(resolve, 5000));
-
-        // Publish the media
-        console.log('Publishing Instagram media...');
-        const publishResponse = await fetch(
-          `https://graph.facebook.com/v18.0/${process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID}/media_publish?access_token=${encodeURIComponent(process.env.INSTAGRAM_ACCESS_TOKEN)}`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              creation_id: mediaResult.id
-            }),
-          }
-        );
-
-        if (!publishResponse.ok) {
-          const errorText = await publishResponse.text();
-          console.error('Instagram publish failed:', errorText);
-          throw new Error(`Instagram publish: ${errorText}`);
-        } else {
-          const publishResult = await publishResponse.json();
-          console.log('Instagram publish complete:', publishResult);
-          return publishResult;
-        }
-      } else {
-        throw new Error('Instagram: Failed to create media container');
-      }
+      console.error('Instagram media container creation failed:', {
+        status: mediaResponse.status,
+        statusText: mediaResponse.statusText,
+        response: responseText
+      });
+      throw new Error(`Instagram: ${responseText}`);
     }
+
+    let mediaResult;
+    try {
+      mediaResult = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('Failed to parse Instagram API response:', parseError);
+      throw new Error(`Instagram: Invalid JSON response - ${responseText}`);
+    }
+
+    if (!mediaResult.id) {
+      throw new Error('Instagram: Failed to create media container');
+    }
+
+    // Wait for 2 seconds before publishing
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Publish the media
+    console.log('Publishing Instagram media...');
+    const publishResponse = await fetch(
+      `https://graph.facebook.com/v18.0/${process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID}/media_publish?access_token=${encodeURIComponent(process.env.INSTAGRAM_ACCESS_TOKEN)}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          creation_id: mediaResult.id
+        }),
+      }
+    );
+
+    // Log the raw publish response
+    const publishResponseText = await publishResponse.text();
+    console.log('Instagram Publish Raw Response:', publishResponseText);
+
+    if (!publishResponse.ok) {
+      console.error('Instagram publish failed:', {
+        status: publishResponse.status,
+        statusText: publishResponse.statusText,
+        response: publishResponseText
+      });
+      throw new Error(`Instagram publish: ${publishResponseText}`);
+    }
+
+    let publishResult;
+    try {
+      publishResult = JSON.parse(publishResponseText);
+    } catch (parseError) {
+      console.error('Failed to parse Instagram publish response:', parseError);
+      throw new Error(`Instagram publish: Invalid JSON response - ${publishResponseText}`);
+    }
+
+    console.log('Instagram publish complete:', publishResult);
+    return publishResult;
   } catch (error: any) {
     console.error('Error posting to Instagram:', error);
     throw new Error(`Instagram: ${error.message}`);
