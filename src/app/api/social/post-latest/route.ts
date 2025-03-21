@@ -208,41 +208,27 @@ const postArticle = async () => {
       return NextResponse.json({ error: 'Article has no image' }, { status: 400 });
     }
 
-    const results = {
-      facebook: null as any,
-      instagram: null as any,
-      errors: [] as string[]
-    };
+    try {
+      // Run both posts in parallel and await their completion
+      const [facebookResult, instagramResult] = await Promise.all([
+        postToFacebook(latestArticle, hashtags, imageUrl),
+        postToInstagram(latestArticle, hashtags, imageUrl)
+      ]);
 
-    Promise.all([
-      postToFacebook(latestArticle, hashtags, imageUrl),
-      postToInstagram(latestArticle, hashtags, imageUrl)
-    ]).then(([facebookResult, instagramResult]) => {
-      results.facebook = facebookResult;
-      results.instagram = instagramResult;
-    }).catch((error: any) => {
-      results.errors.push(error.message);
-    });
-
-    // Return results
-    if (results.errors.length > 0) {
+      return NextResponse.json({
+        success: true,
+        results: {
+          facebook: facebookResult,
+          instagram: instagramResult
+        }
+      });
+    } catch (error: any) {
+      console.error('Error posting to social media:', error);
       return NextResponse.json({
         success: false,
-        errors: results.errors,
-        results: {
-          facebook: results.facebook,
-          instagram: results.instagram
-        }
-      }, { status: results.facebook || results.instagram ? 207 : 500 });
+        error: error.message
+      }, { status: 500 });
     }
-
-    return NextResponse.json({
-      success: true,
-      results: {
-        facebook: results.facebook,
-        instagram: results.instagram
-      }
-    });
   } catch (error: any) {
     console.error('Error in social media posting:', error);
     return NextResponse.json(
