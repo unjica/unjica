@@ -1,28 +1,30 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { Container } from '@/components/ui/Container';
-import { GradientText } from '@/components/ui/GradientText';
-import { Button } from '@/components/ui/Button';
 import { DigestArticleCard } from '@/components/ui/art-news/digest/DigestArticleCard';
+import { DigestArticleCardSkeleton } from '@/components/ui/art-news/digest/DigestArticleCardSkeleton';
+import { FeaturedArticle } from '@/components/ui/art-news/FeaturedArticle';
+import { FeaturedArticleSkeleton } from '@/components/ui/art-news/FeaturedArticleSkeleton';
+import { Sidebar } from '@/components/ui/Sidebar';
 import { type GeneratedArticle } from '@/lib/agents/models/generatedArticle';
 import { supabase } from '@/lib/supabase';
 import { AdminControls } from '@/components/ui/AdminControls';
 import { FacebookService } from '@/lib/services/facebookService';
 
-const ARTICLES_PER_PAGE = 5;
+const ARTICLES_PER_PAGE = 6;
 
 export default function Home() {
   const [articles, setArticles] = useState<GeneratedArticle[]>([]);
-  const [allArticles, setAllArticles] = useState<GeneratedArticle[]>([]);
+  const [featuredArticle, setFeaturedArticle] = useState<GeneratedArticle | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalArticles, setTotalArticles] = useState(0);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
-  const [availableTopics, setAvailableTopics] = useState<string[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
   
   // Get session and check if user is admin
   useEffect(() => {
@@ -55,46 +57,87 @@ export default function Home() {
     getSession();
   }, []);
   
-  // Calculate the total number of pages
-  const totalPages = Math.ceil(totalArticles / ARTICLES_PER_PAGE);
-  
-  // Extract unique topics from articles
-  useEffect(() => {
-    if (allArticles.length > 0) {
-      const topics = Array.from(new Set(allArticles.map((article: GeneratedArticle) => article.primaryTopic)))
-        .filter(topic => topic && topic.trim() !== '');
-      setAvailableTopics(topics);
+  // Load more articles when scrolling to bottom
+  const loadMoreArticles = useCallback(async () => {
+    if (isLoadingMore || !hasMore) return;
+
+    setIsLoadingMore(true);
+    try {
+      const params = new URLSearchParams({
+        limit: ARTICLES_PER_PAGE.toString(),
+        ...(nextCursor && { cursor: nextCursor }),
+        ...(selectedTopic && { topic: selectedTopic })
+      });
+
+      const response = await fetch(`/api/art-digest?${params}`);
+      if (!response.ok) throw new Error('Failed to load more articles');
+      
+      const data = await response.json();
+      const newArticles = data.articles || [];
+      
+      setArticles(prev => [...prev, ...newArticles]);
+      setNextCursor(data.nextCursor);
+      setHasMore(data.hasMore);
+    } catch (error) {
+      console.error('Error loading more articles:', error);
+    } finally {
+      setIsLoadingMore(false);
     }
-  }, [allArticles]);
+  }, [nextCursor, selectedTopic, isLoadingMore, hasMore]);
+
+  // Set up intersection observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first.isIntersecting && hasMore && !isLoadingMore) {
+          loadMoreArticles();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentRef = loadMoreRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, [loadMoreArticles, hasMore, isLoadingMore]);
   
-  // Load saved articles from API
+  // Load initial articles
   useEffect(() => {
     async function loadArticles() {
       setIsLoading(true);
       try {
-        const response = await fetch('/api/art-digest');
-        if (!response.ok) {
-          throw new Error(`Failed to load articles: ${response.status}`);
-        }
+        const params = new URLSearchParams({
+          limit: ARTICLES_PER_PAGE.toString(),
+          ...(selectedTopic && { topic: selectedTopic })
+        });
+
+        const response = await fetch(`/api/art-digest?${params}`);
+        if (!response.ok) throw new Error('Failed to load articles');
         
         const data = await response.json();
         const fetchedArticles = data.articles || [];
         
-        setAllArticles(fetchedArticles);
+        setArticles(fetchedArticles);
+        setNextCursor(data.nextCursor);
+        setHasMore(data.hasMore);
         
-        // Filter articles based on selected topic
-        const filteredArticles = selectedTopic 
-          ? fetchedArticles.filter((article: GeneratedArticle) => article.primaryTopic === selectedTopic)
-          : fetchedArticles;
-        
-        setTotalArticles(filteredArticles.length);
+        // Set featured article (most recent)
+        if (fetchedArticles.length > 0) {
+          setFeaturedArticle(fetchedArticles[0]);
+        }
       } catch (error) {
-        // Set empty articles but don't block the UI
-        setAllArticles([]);
-        setTotalArticles(0);
+        console.error('Error loading articles:', error);
+        setArticles([]);
       } finally {
         setIsLoading(false);
-        setInitialLoadComplete(true);
       }
     }
     
@@ -103,69 +146,31 @@ export default function Home() {
     // Set up polling for new articles
     const interval = setInterval(async () => {
       try {
-        const response = await fetch('/api/art-digest');
-        if (!response.ok) {
-          return; // Skip this polling cycle
-        }
+        const params = new URLSearchParams({
+          limit: ARTICLES_PER_PAGE.toString(),
+          ...(selectedTopic && { topic: selectedTopic })
+        });
+
+        const response = await fetch(`/api/art-digest?${params}`);
+        if (!response.ok) return;
         
         const data = await response.json();
         const fetchedArticles = data.articles || [];
         
-        if (fetchedArticles.length !== allArticles.length) {
-          // Only update if the count has changed
-          setAllArticles(fetchedArticles);
-          
-          // Filter articles based on selected topic
-          const filteredArticles = selectedTopic 
-            ? fetchedArticles.filter((article: GeneratedArticle) => article.primaryTopic === selectedTopic)
-            : fetchedArticles;
-          
-          setTotalArticles(filteredArticles.length);
+        // Only update if we have new articles
+        if (fetchedArticles.length > 0 && (!articles.length || fetchedArticles[0].id !== articles[0].id)) {
+          setArticles(fetchedArticles);
+          setNextCursor(data.nextCursor);
+          setHasMore(data.hasMore);
+          setFeaturedArticle(fetchedArticles[0]);
         }
       } catch (error) {
-        // Don't update state on polling errors
+        console.error('Error polling for new articles:', error);
       }
     }, 60000); // Poll every minute
     
     return () => clearInterval(interval);
-  }, [selectedTopic, allArticles.length]);
-  
-  // Handle page change and topic filter
-  useEffect(() => {
-    function updateDisplayedArticles() {
-      if (!initialLoadComplete) return; // Skip if initial load is not complete
-      
-      setIsLoading(true);
-      try {
-        // Filter articles based on selected topic
-        const filteredArticles = selectedTopic 
-          ? allArticles.filter((article: GeneratedArticle) => article.primaryTopic === selectedTopic)
-          : allArticles;
-        
-        setTotalArticles(filteredArticles.length);
-        
-        // Reset to first page when changing filters
-        const pageToUse = currentPage > Math.ceil(filteredArticles.length / ARTICLES_PER_PAGE) 
-          ? 1 
-          : currentPage;
-        
-        if (pageToUse !== currentPage) {
-          setCurrentPage(pageToUse);
-        }
-        
-        const startIndex = (pageToUse - 1) * ARTICLES_PER_PAGE;
-        const endIndex = startIndex + ARTICLES_PER_PAGE;
-        
-        setArticles(filteredArticles.slice(startIndex, endIndex));
-      } catch (error) {
-        // Silent error handling
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    
-    updateDisplayedArticles();
-  }, [currentPage, selectedTopic, allArticles, initialLoadComplete]);
+  }, [selectedTopic]);
   
   // Function to manually generate a new digest
   const handleGenerateDigest = async () => {
@@ -192,9 +197,6 @@ export default function Home() {
         throw new Error('Failed to generate digest');
       }
       
-      // Go to the first page to show the new article
-      setCurrentPage(1);
-      
       // Refresh articles from the API
       const articlesResponse = await fetch('/api/art-digest');
       if (!articlesResponse.ok) {
@@ -204,7 +206,7 @@ export default function Home() {
       const articlesData = await articlesResponse.json();
       const fetchedArticles = articlesData.articles || [];
       
-      setAllArticles(fetchedArticles);
+      setFeaturedArticle(fetchedArticles[0]);
       
       // Filter articles based on selected topic
       const filteredArticles = selectedTopic 
@@ -212,11 +214,12 @@ export default function Home() {
         : fetchedArticles;
       
       setArticles(filteredArticles.slice(0, ARTICLES_PER_PAGE));
-      setTotalArticles(filteredArticles.length);
+      setNextCursor(articlesData.nextCursor);
+      setHasMore(articlesData.hasMore);
 
       try {
         // Post to facebook
-        await FacebookService.postToFacebookPage(filteredArticles[0]);
+        await FacebookService.postToFacebookPage(fetchedArticles[0]);
       } catch (error) {
         console.error('Error posting to Facebook:', error);
       }
@@ -227,154 +230,66 @@ export default function Home() {
     }
   };
   
-  // Handle topic filter change
-  const handleTopicChange = (topic: string | null) => {
-    setSelectedTopic(topic);
-    setCurrentPage(1); // Reset to first page when changing filters
-  };
-  
   return (
-    <main className="py-16">
-      <Container>
-        {/* Admin Controls - only visible to admins */}
-        {isAdmin && <AdminControls generateDigest={handleGenerateDigest} isGenerating={isGenerating} />}
-        
-        <div className="text-center mb-10">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            <GradientText>Art News Digest</GradientText>
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-6">
-            Stay updated with the latest trends and developments in the contemporary art world.
-          </p>
-          
+    <>
+      <main className="min-h-screen py-6">
+        <Container>
+          {/* Admin Controls - only visible to admins */}
           {isAdmin && (
-            <div className="flex justify-center">
-              <Button 
-                onClick={handleGenerateDigest} 
-                disabled={isGenerating}
-                className="px-6"
-              >
-                {isGenerating ? (
-                  <>
-                    <span className="mr-2">Generating</span>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  </>
-                ) : (
-                  'Generate New Digest Now'
-                )}
-              </Button>
+            <div className="mb-6">
+              <AdminControls generateDigest={handleGenerateDigest} isGenerating={isGenerating} />
             </div>
           )}
-        </div>
-        
-        {/* Topic Filter */}
-        {availableTopics.length > 0 && (
-          <div className="mb-8">
-            <div className="flex flex-wrap justify-center gap-2">
-              <Button
-                variant={selectedTopic === null ? "gradient" : "outline"}
-                onClick={() => handleTopicChange(null)}
-                className="px-4 py-2"
-              >
-                All Topics
-              </Button>
-              
-              {availableTopics.map(topic => (
-                <Button
-                  key={topic}
-                  variant={selectedTopic === topic ? "gradient" : "outline"}
-                  onClick={() => handleTopicChange(topic)}
-                  className="px-4 py-2"
-                >
-                  {topic}
-                </Button>
-              ))}
+          
+          {/* Featured Article */}
+          {isLoading ? (
+            <div className="mb-8">
+              <FeaturedArticleSkeleton />
             </div>
-          </div>
-        )}
-        
-        {isLoading && !initialLoadComplete ? (
-          <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          </div>
-        ) : isLoading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          </div>
-        ) : articles.length === 0 && initialLoadComplete ? (
-          <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
-              {selectedTopic 
-                ? `No articles found for the topic "${selectedTopic}".` 
-                : "No digest articles have been generated yet."}
-            </p>
-            {!selectedTopic && (
-              <p className="text-gray-500 dark:text-gray-400 text-sm">
-                Click the button above to generate your first AI art digest.
-              </p>
-            )}
-            {selectedTopic && (
-              <Button
-                variant="outline"
-                onClick={() => setSelectedTopic(null)}
-                className="mt-4"
-              >
-                Show All Topics
-              </Button>
-            )}
-          </div>
-        ) : (
-          <>
-            <div className="space-y-10">
-              {articles.map((article) => (
-                <DigestArticleCard 
-                  key={article.id} 
-                  article={article} 
-                  isExpanded={articles.length === 1}
-                />
-              ))}
+          ) : featuredArticle && (
+            <div className="mb-8">
+              <FeaturedArticle article={featuredArticle} />
+            </div>
+          )}
+          
+          {/* Main Content Grid */}
+          <div className="flex gap-8">
+            {/* Articles Grid */}
+            <div className="flex-1">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {isLoading ? (
+                  // Show skeleton loaders while loading
+                  Array.from({ length: ARTICLES_PER_PAGE }).map((_, index) => (
+                    <DigestArticleCardSkeleton key={index} className="h-full" />
+                  ))
+                ) : (
+                  articles.map((article) => (
+                    <DigestArticleCard
+                      key={article.id}
+                      article={article}
+                      className="h-full"
+                    />
+                  ))
+                )}
+              </div>
+              
+              {/* Infinite Scroll Trigger */}
+              <div ref={loadMoreRef} className="mt-8">
+                {isLoadingMore && (
+                  <div className="flex justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#4A6BF6]"></div>
+                  </div>
+                )}
+              </div>
             </div>
             
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex justify-center mt-10">
-                <nav className="flex items-center space-x-2" aria-label="Pagination">
-                  <Button
-                    variant="outline"
-                    onClick={() => setCurrentPage(current => Math.max(current - 1, 1))}
-                    disabled={currentPage === 1}
-                    className="px-2 py-1"
-                  >
-                    Previous
-                  </Button>
-                  
-                  <div className="flex items-center space-x-1">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                      <Button
-                        key={page}
-                        variant={page === currentPage ? "gradient" : "outline"}
-                        onClick={() => setCurrentPage(page)}
-                        className="w-8 h-8 rounded-md p-0"
-                      >
-                        <span className="mx-auto">{page}</span>
-                      </Button>
-                    ))}
-                  </div>
-                  
-                  <Button
-                    variant="outline"
-                    onClick={() => setCurrentPage(current => Math.min(current + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                    className="px-2 py-1"
-                  >
-                    Next
-                  </Button>
-                </nav>
-              </div>
-            )}
-          </>
-        )}
-      </Container>
-    </main>
+            {/* Sidebar */}
+            <div className="hidden lg:block w-80">
+              <Sidebar />
+            </div>
+          </div>
+        </Container>
+      </main>
+    </>
   );
 }

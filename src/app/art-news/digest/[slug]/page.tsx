@@ -33,9 +33,6 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
         // Convert relative URL to absolute
         imageUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://unjica.com'}${article.imageUrl.startsWith('/') ? '' : '/'}${article.imageUrl}`;
       }
-      
-      // Verify URL is accessible and exists
-      console.log('OpenGraph image URL:', imageUrl);
     }
     
     const openGraphMetadata: any = {

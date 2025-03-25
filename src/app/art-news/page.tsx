@@ -25,7 +25,6 @@ export default function ArtNewsPage() {
       try {
         setLoading(true);
         const apiUrl = `/api/art-news?page=${currentPage}&pageSize=${pageSize}`;
-        console.log(`Fetching news from: ${apiUrl}`);
         
         const response = await fetch(apiUrl);
         
@@ -35,7 +34,6 @@ export default function ArtNewsPage() {
         }
         
         const data = await response.json();
-        console.log('API response:', data);
         
         if (isMounted) {
           setNews(data.news || []);
