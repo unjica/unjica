@@ -1,16 +1,53 @@
+import { GalleryVerticalEnd } from "lucide-react";
+import { Building2, Camera, ImageIcon, Palette, Users } from "lucide-react";
+import { Calendar } from "lucide-react";
+import { getTopicSlug } from "../utils/topicMapper";
+
 export interface Category {
   name: string;
   href: string;
   primaryTopic: string;
   slug: string;
+  icon: { 
+    icon: React.ElementType; 
+    color: string 
+  };
 }
 
-export const categories: Category[] = [
-  { name: 'Contemporary', href: '/category/contemporary', primaryTopic: 'Contemporary Art', slug: 'contemporary' },
-  { name: 'Exhibitions', href: '/category/exhibitions', primaryTopic: 'Exhibition', slug: 'exhibitions' },
-  { name: 'Painting', href: '/category/painting', primaryTopic: 'Painting', slug: 'painting' },
-  { name: 'Artists', href: '/category/artists', primaryTopic: 'Artist', slug: 'artists' },
-  { name: 'Photography', href: '/category/photography', primaryTopic: 'Photography', slug: 'photography' },
-  { name: 'Museums', href: '/category/museums', primaryTopic: 'Museum', slug: 'museums' },
-  { name: 'Gallery', href: '/category/gallery', primaryTopic: 'Gallery', slug: 'gallery' },
-]; 
+const primaryTopics = [
+  'Contemporary Art',
+  'Exhibition',
+  'Painting',
+  'Artist',
+  'Photography',
+  'Museum',
+  'Gallery',
+]
+const getTopicIcon = (topic: string) => {
+  switch (topic) {
+    case 'Contemporary Art': 
+      return { icon: Palette, color: 'from-blue-500/20 to-purple-500/20' }
+    case 'Exhibitions': 
+      return { icon: Calendar, color: 'from-green-500/20 to-emerald-500/20' }
+    case 'Painting': 
+      return { icon: ImageIcon, color: 'from-orange-500/20 to-red-500/20' }
+    case 'Artists': 
+      return { icon: Users, color: 'from-pink-500/20 to-rose-500/20' }
+    case 'Photography': 
+      return { icon: Camera, color: 'from-cyan-500/20 to-blue-500/20' }
+    case 'Museums': 
+      return { icon: Building2, color: 'from-yellow-500/20 to-amber-500/20' }
+    case 'Gallery': 
+      return { icon: GalleryVerticalEnd, color: 'from-violet-500/20 to-purple-500/20' }
+    default:
+      return { icon: Palette, color: 'from-blue-500/20 to-purple-500/20' }
+  }
+};
+
+export const categories: Category[] = primaryTopics.map(topic => ({
+  name: topic,
+  href: `/category/${getTopicSlug(topic)}`,
+  primaryTopic: topic,
+  slug: getTopicSlug(topic),
+  icon: getTopicIcon(topic)
+}));

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import { type GeneratedArticle } from '@/lib/agents/models/generatedArticle';
+import { getTopicSlug } from '@/lib/utils/topicMapper';
 
 interface FeaturedArticleProps {
   article: GeneratedArticle;
@@ -23,7 +24,7 @@ export const FeaturedArticle = ({ article }: FeaturedArticleProps) => {
       transition={{ duration: 0.5 }}
       className="relative bg-[#1A1C2E] rounded-xl overflow-hidden"
     >
-      <Link href={`/art-news/digest/${article.slug || article.id}`}>
+      <Link href={`/category/${getTopicSlug(article.primaryTopic)}/${article.slug || article.id}`}>
         <div className="relative h-[400px] md:h-[500px]">
           {article.imageUrl ? (
             <Image

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { Prisma } from '@prisma/client';
+import { getTopicSlug } from '@/lib/utils/topicMapper';
 
 // Type with extra fields
 type GeneratedArticleWithExtras = Prisma.GeneratedArticleGetPayload<{}> & {
@@ -50,7 +51,7 @@ export async function GET() {
       const typedArticle = article as GeneratedArticleWithExtras;
       
       return {
-        url: `${baseUrl}/art-news/digest/${typedArticle.slug || typedArticle.id}`,
+        url: `${baseUrl}/category/${getTopicSlug(article.primaryTopic)}/${typedArticle.slug || typedArticle.id}`,
         lastModified: article.lastUpdated.toISOString(),
         changeFrequency: 'weekly',
         priority: 0.8

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { GeneratedArticle } from '@/lib/agents/models/generatedArticle';
 import Image from 'next/image';
-import { ThumbsUp, ThumbsDown, Share2, Bookmark } from 'lucide-react';
+import { ThumbsUp, ThumbsDown } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { CommentSection } from '@/components/ui/art-news/CommentSection';
@@ -45,7 +45,6 @@ export const DigestArticleView = ({ article }: DigestArticleViewProps) => {
       const response = await fetch(`/api/reactions?articleId=${article.id}`);
       if (response.ok) {
         const data = await response.json();
-        console.log('Fetched reactions:', data); // Debug log
         setReactions({
           likes: data.likesCount || 0,
           dislikes: data.dislikesCount || 0,

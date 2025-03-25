@@ -59,7 +59,6 @@ export async function generateDailyArtDigest(): Promise<GeneratedArticle> {
       
       // Ensure the slug is unique
       const slug = ensureUniqueSlug(baseSlug, existingSlugs.map(item => item.slug || '').filter(Boolean));
-      console.log(`Generated unique slug: ${slug} (from base: ${baseSlug})`);
       
       // Generate an image for the article
       const imageUrl = await ImageGenerationService.generateImageForArticle(

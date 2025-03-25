@@ -4,26 +4,6 @@ import { Container } from '@/components/ui/Container';
 import { Sidebar } from '@/components/ui/Sidebar';
 import { categories } from '@/lib/types/categories';
 import Link from 'next/link';
-import { 
-  Palette, 
-  Camera, 
-  Building2, 
-  Users, 
-  Image as ImageIcon, 
-  GalleryVerticalEnd,
-  Calendar
-} from 'lucide-react';
-
-// Map categories to their icons and colors
-const categoryStyles = {
-  'Contemporary': { icon: Palette, color: 'from-blue-500/20 to-purple-500/20' },
-  'Exhibitions': { icon: Calendar, color: 'from-green-500/20 to-emerald-500/20' },
-  'Painting': { icon: ImageIcon, color: 'from-orange-500/20 to-red-500/20' },
-  'Artists': { icon: Users, color: 'from-pink-500/20 to-rose-500/20' },
-  'Photography': { icon: Camera, color: 'from-cyan-500/20 to-blue-500/20' },
-  'Museums': { icon: Building2, color: 'from-yellow-500/20 to-amber-500/20' },
-  'Gallery': { icon: GalleryVerticalEnd, color: 'from-violet-500/20 to-purple-500/20' },
-};
 
 export default function CategoriesPage() {
   return (
@@ -45,8 +25,8 @@ export default function CategoriesPage() {
             {/* Categories Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {categories.map((cat) => {
-                const Icon = categoryStyles[cat.name as keyof typeof categoryStyles].icon;
-                const gradient = categoryStyles[cat.name as keyof typeof categoryStyles].color;
+                const Icon = cat.icon.icon;
+                const gradient = cat.icon.color;
                 
                 return (
                   <Link

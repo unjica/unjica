@@ -12,7 +12,7 @@ import { supabase } from '@/lib/supabase';
 import { AdminControls } from '@/components/ui/AdminControls';
 import { FacebookService } from '@/lib/services/facebookService';
 
-const ARTICLES_PER_PAGE = 6;
+const ARTICLES_PER_PAGE = 12;
 
 export default function Home() {
   const [articles, setArticles] = useState<GeneratedArticle[]>([]);
@@ -22,7 +22,6 @@ export default function Home() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   
@@ -66,7 +65,6 @@ export default function Home() {
       const params = new URLSearchParams({
         limit: ARTICLES_PER_PAGE.toString(),
         ...(nextCursor && { cursor: nextCursor }),
-        ...(selectedTopic && { topic: selectedTopic })
       });
 
       const response = await fetch(`/api/art-digest?${params}`);
@@ -83,7 +81,7 @@ export default function Home() {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [nextCursor, selectedTopic, isLoadingMore, hasMore]);
+  }, [nextCursor, isLoadingMore, hasMore]);
 
   // Set up intersection observer for infinite scroll
   useEffect(() => {
@@ -114,9 +112,9 @@ export default function Home() {
     async function loadArticles() {
       setIsLoading(true);
       try {
+        // if it's the first load, add one more article
         const params = new URLSearchParams({
-          limit: ARTICLES_PER_PAGE.toString(),
-          ...(selectedTopic && { topic: selectedTopic })
+          limit: (ARTICLES_PER_PAGE + 1).toString()
         });
 
         const response = await fetch(`/api/art-digest?${params}`);
@@ -132,6 +130,8 @@ export default function Home() {
         // Set featured article (most recent)
         if (fetchedArticles.length > 0) {
           setFeaturedArticle(fetchedArticles[0]);
+          // and remove it from the list
+          setArticles(fetchedArticles.slice(1));
         }
       } catch (error) {
         console.error('Error loading articles:', error);
@@ -147,8 +147,7 @@ export default function Home() {
     const interval = setInterval(async () => {
       try {
         const params = new URLSearchParams({
-          limit: ARTICLES_PER_PAGE.toString(),
-          ...(selectedTopic && { topic: selectedTopic })
+          limit: ARTICLES_PER_PAGE.toString()
         });
 
         const response = await fetch(`/api/art-digest?${params}`);
@@ -163,6 +162,8 @@ export default function Home() {
           setNextCursor(data.nextCursor);
           setHasMore(data.hasMore);
           setFeaturedArticle(fetchedArticles[0]);
+          // and remove it from the list
+          setArticles(fetchedArticles.slice(1));
         }
       } catch (error) {
         console.error('Error polling for new articles:', error);
@@ -170,7 +171,7 @@ export default function Home() {
     }, 60000); // Poll every minute
     
     return () => clearInterval(interval);
-  }, [selectedTopic]);
+  }, []);
   
   // Function to manually generate a new digest
   const handleGenerateDigest = async () => {
@@ -207,13 +208,10 @@ export default function Home() {
       const fetchedArticles = articlesData.articles || [];
       
       setFeaturedArticle(fetchedArticles[0]);
+      // and remove it from the list
+      setArticles(fetchedArticles.slice(1));
       
-      // Filter articles based on selected topic
-      const filteredArticles = selectedTopic 
-        ? fetchedArticles.filter((article: GeneratedArticle) => article.primaryTopic === selectedTopic)
-        : fetchedArticles;
-      
-      setArticles(filteredArticles.slice(0, ARTICLES_PER_PAGE));
+      setArticles(fetchedArticles.slice(0, ARTICLES_PER_PAGE));
       setNextCursor(articlesData.nextCursor);
       setHasMore(articlesData.hasMore);
 

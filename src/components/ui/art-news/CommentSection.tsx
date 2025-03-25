@@ -211,12 +211,6 @@ export function CommentSection({ articleId }: CommentSectionProps) {
         anonymousId: anonymousId || getAnonymousId(),
       };
       
-      console.log('Submitting comment:', {
-        ...commentData,
-        content: commentData.content.substring(0, 50) + (commentData.content.length > 50 ? '...' : ''),
-        isAuthenticated: !!session?.user
-      });
-      
       const response = await fetch('/api/comments', {
         method: 'POST',
         headers,

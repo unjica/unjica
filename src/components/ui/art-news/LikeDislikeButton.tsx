@@ -118,7 +118,7 @@ export function LikeDislikeButton({
       const { data } = await supabase.auth.getSession();
       
       if (!data.session) {
-        console.log('No session available for fetching user reaction');
+        console.warn('No session available for fetching user reaction');
         return;
       }
       
@@ -160,12 +160,6 @@ export function LikeDislikeButton({
           setApiError('Authentication required. Please log in again.');
           return;
         }
-        
-        console.log('Sending authenticated reaction:', {
-          articleId,
-          type: newReactionType,
-          userId: session.user.id
-        });
         
         // Authenticated user flow
         const response = await fetch('/api/reactions', {
@@ -232,12 +226,6 @@ export function LikeDislikeButton({
           if (newReactionType === 'DISLIKE') count++;
           
           return count;
-        });
-        
-        console.log('Sending anonymous reaction:', {
-          articleId,
-          type: newReactionType,
-          anonymousId
         });
         
         // Then perform API call to persist the change

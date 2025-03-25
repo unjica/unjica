@@ -52,8 +52,6 @@ export default function ArtNewsPage() {
           // If we're requesting a page that doesn't exist or is empty
           if (currentPage > 3) {
             if (!isRedirecting.current) {
-              console.log(`Page ${currentPage} is beyond our limit of 3, redirecting to page 3`);
-              
               // Prevent redirect loops
               isRedirecting.current = true;
               setCurrentPage(3); // Always max of 3 pages
@@ -90,10 +88,6 @@ export default function ArtNewsPage() {
   const handlePageChange = (newPage: number) => {
     // Always limit to 3 pages max
     const targetPage = Math.min(newPage, 3);
-    
-    if (targetPage !== newPage) {
-      console.log(`Requested page ${newPage} exceeds our limit of 3 pages, using ${targetPage} instead`);
-    }
     
     // Prevent setting the same page (avoids unnecessary re-fetches)
     if (targetPage === currentPage) return;

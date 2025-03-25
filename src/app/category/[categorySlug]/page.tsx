@@ -32,13 +32,13 @@ const categoryStyles = {
 
 export default function CategoryPage() {
   const params = useParams();
-  const slug = params.slug as string;
+  const categorySlug = params.categorySlug as string;
   const [articles, setArticles] = useState<GeneratedArticle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Find the category based on the slug
-  const category = categories.find(cat => cat.slug === slug);
+  const category = categories.find(cat => cat.slug === categorySlug);
 
   useEffect(() => {
     async function fetchCategoryArticles() {
@@ -131,7 +131,7 @@ export default function CategoryPage() {
                     Category Not Found
                   </h1>
                   <p className="text-gray-400">
-                    The category "{slug}" doesn't exist. Browse our available categories below:
+                    The category "{categorySlug}" doesn't exist. Browse our available categories below:
                   </p>
                 </div>
 

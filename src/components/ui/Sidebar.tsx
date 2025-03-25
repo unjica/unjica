@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 import { TrendingUp, Star, Info } from 'lucide-react';
 import { type GeneratedArticle } from '@/lib/agents/models/generatedArticle';
+import { getTopicSlug } from '@/lib/utils/topicMapper';
 
 interface SidebarProps {
   className?: string;
@@ -101,7 +101,7 @@ export const Sidebar = ({ className = '' }: SidebarProps) => {
               popularArticles.map((article) => (
                 <Link
                   key={article.id}
-                  href={`/art-news/digest/${article.slug || article.id}`}
+                  href={`/category/${getTopicSlug(article.primaryTopic)}/${article.slug || article.id}`}
                   className="block group"
                 >
                   <div className="flex items-start space-x-3">

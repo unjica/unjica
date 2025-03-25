@@ -7,6 +7,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { getTopicSlug } from '@/lib/utils/topicMapper';
 
 interface DigestArticleCardProps {
   article: GeneratedArticle;
@@ -93,7 +94,7 @@ export const DigestArticleCard = ({
       animate={{ opacity: 1 }}
       className={`group relative bg-[#1A1C2E] rounded-xl overflow-hidden ${className}`}
     >
-      <Link href={`/art-news/digest/${article.slug || article.id}`}>
+      <Link href={`/category/${getTopicSlug(article.primaryTopic)}/${article.slug || article.id}`}>
         {/* Image Container */}
         <div className="relative aspect-[4/3] overflow-hidden">
           {article.imageUrl ? (

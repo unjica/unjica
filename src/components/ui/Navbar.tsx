@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import { Button } from './Button';
 import { supabase } from '@/lib/supabase';
-import { Search } from 'lucide-react';
+import { LogOut, Search, User, Home, Newspaper, Info, Mail, LogIn } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { GradientText } from './GradientText';
 import { categories } from '@/lib/types/categories';
@@ -23,9 +23,21 @@ export function Navbar() {
   const searchRef = useRef<HTMLDivElement>(null);
   const searchButtonRef = useRef<HTMLButtonElement>(null);
   
+  // Prevent body scroll when menu is open
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMenuOpen]);
+
   useEffect(() => {
     async function getSession() {
-      const { data, error } = await supabase.auth.getSession();
+      const { data } = await supabase.auth.getSession();
       setSession(data.session);
       setLoading(false);
       
@@ -55,6 +67,7 @@ export function Navbar() {
         !menuRef.current.contains(event.target as Node) &&
         !buttonRef.current.contains(event.target as Node)
       ) {
+        // check if click is not in the menu container
         setIsMenuOpen(false);
       }
 
@@ -223,7 +236,6 @@ export function Navbar() {
                     <div
                       className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg py-1 bg-[#1A1C2E] ring-1 ring-black ring-opacity-5 focus:outline-none"
                       role="menu"
-                      ref={menuRef}
                     >
                       <div className="px-4 py-2 text-sm border-b border-gray-700">
                         <div className="font-medium text-white">
@@ -374,135 +386,178 @@ export function Navbar() {
 
       {/* Mobile menu */}
       {isMenuOpen && (
-        <div className="md:hidden bg-[#1A1C2E]">
-          <div className="px-2 pt-2 pb-3 space-y-1">
-            <Link
-              href="/"
-              className={`block px-3 py-2 rounded-md text-base font-medium ${
-                isActive('/') 
-                  ? 'text-white bg-gradient-to-r from-[#4A6BF6] to-[#6B8AFB]' 
-                  : 'text-gray-300 hover:text-white hover:bg-gray-700'
-              }`}
-            >
-              Home
-            </Link>
-            <Link
-              href="/art-news"
-              className={`block px-3 py-2 rounded-md text-base font-medium ${
-                isActive('/art-news') 
-                  ? 'text-white bg-gradient-to-r from-[#4A6BF6] to-[#6B8AFB]' 
-                  : 'text-gray-300 hover:text-white hover:bg-gray-700'
-              }`}
-            >
-              Art News
-            </Link>
-            <Link
-              href="/about"
-              className={`block px-3 py-2 rounded-md text-base font-medium ${
-                isActive('/about') 
-                  ? 'text-white bg-gradient-to-r from-[#4A6BF6] to-[#6B8AFB]' 
-                  : 'text-gray-300 hover:text-white hover:bg-gray-700'
-              }`}
-            >
-              About
-            </Link>
-            <Link
-              href="/contact"
-              className={`block px-3 py-2 rounded-md text-base font-medium ${
-                isActive('/contact') 
-                  ? 'text-white bg-gradient-to-r from-[#4A6BF6] to-[#6B8AFB]' 
-                  : 'text-gray-300 hover:text-white hover:bg-gray-700'
-              }`}
-            >
-              Contact
-            </Link>
-          </div>
-
-          {/* Mobile Categories */}
-          <div className="px-2 py-3 border-t border-gray-700">
-            <div className="grid grid-cols-2 gap-2">
-              {categories.map((category) => (
-                <Link
-                  key={category.name}
-                  href={category.href}
-                  className={`text-sm font-medium px-3 py-2 rounded-md ${
-                    isCategoryActive(category.href)
-                      ? 'text-white bg-gradient-to-r from-[#4A6BF6] to-[#6B8AFB]'
-                      : 'text-gray-300 hover:text-white hover:bg-gray-700 transition-colors'
-                  }`}
-                >
-                  {category.name}
-                </Link>
-              ))}
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            onClick={() => setIsMenuOpen(false)}
+          />
+          {/* Menu */}
+          <motion.div 
+            ref={menuRef}
+            initial={{ opacity: 0, x: '100%' }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: '100%' }}
+            transition={{ type: "spring", damping: 20 }}
+            className="fixed inset-y-0 right-0 w-full max-w-sm bg-[#1A1C2E] border-l border-gray-800 z-50 md:hidden overflow-y-auto"
+          >
+            {/* Close button */}
+            <div className="sticky top-0 flex justify-end p-4 bg-[#1A1C2E] border-b border-gray-800">
+              <button
+                onClick={() => setIsMenuOpen(false)}
+                className="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800/50"
+              >
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-          </div>
 
-          {/* Mobile authentication */}
-          <div className="pt-4 pb-3 border-t border-gray-700">
-            {loading ? (
-              <div className="flex justify-center py-2">
-                <div className="w-5 h-5 border-2 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
+            {/* Main Navigation */}
+            <div className="px-4 py-3 space-y-1">
+              <Link
+                href="/"
+                className={`flex items-center px-4 py-3 rounded-xl text-base font-medium ${
+                  isActive('/') 
+                    ? 'text-white bg-gradient-to-r from-[#4A6BF6] to-[#6B8AFB]' 
+                    : 'text-gray-300 hover:text-white hover:bg-gray-800/50'
+                }`}
+              >
+                <span className="flex-1">Home</span>
+                <Home className="w-4 h-4" />
+              </Link>
+              <Link
+                href="/art-news"
+                className={`flex items-center px-4 py-3 rounded-xl text-base font-medium ${
+                  isActive('/art-news') 
+                    ? 'text-white bg-gradient-to-r from-[#4A6BF6] to-[#6B8AFB]' 
+                    : 'text-gray-300 hover:text-white hover:bg-gray-800/50'
+                }`}
+              >
+                <span className="flex-1">Art News</span>
+                <Newspaper className="w-4 h-4" />
+              </Link>
+              <Link
+                href="/about"
+                className={`flex items-center px-4 py-3 rounded-xl text-base font-medium ${
+                  isActive('/about') 
+                    ? 'text-white bg-gradient-to-r from-[#4A6BF6] to-[#6B8AFB]' 
+                    : 'text-gray-300 hover:text-white hover:bg-gray-800/50'
+                }`}
+              >
+                <span className="flex-1">About</span>
+                <Info className="w-4 h-4" />
+              </Link>
+              <Link
+                href="/contact"
+                className={`flex items-center px-4 py-3 rounded-xl text-base font-medium ${
+                  isActive('/contact') 
+                    ? 'text-white bg-gradient-to-r from-[#4A6BF6] to-[#6B8AFB]' 
+                    : 'text-gray-300 hover:text-white hover:bg-gray-800/50'
+                }`}
+              >
+                <span className="flex-1">Contact</span>
+                <Mail className="w-4 h-4" />
+              </Link>
+            </div>
+
+            {/* Categories */}
+            <div className="px-4 py-4 border-t border-gray-800">
+              <h3 className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                Categories
+              </h3>
+              <div className="grid grid-cols-2 gap-2">
+                {categories.map((category) => (
+                  <Link
+                    key={category.name}
+                    href={category.href}
+                    className={`group flex items-center justify-center px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 bg-gradient-to-r ${category.icon.color}`}
+                  >
+                    <span className="relative">
+                      {category.name}
+                      <span className={`absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-200 ${
+                        isCategoryActive(category.href) 
+                          ? 'w-full bg-white'
+                          : 'bg-white group-hover:w-full'
+                      }`} />
+                    </span>
+                  </Link>
+                ))}
               </div>
-            ) : session ? (
-              <div>
-                <div className="flex items-center px-4">
-                  {session.user.user_metadata?.avatar_url ? (
-                    <div className="flex-shrink-0">
+            </div>
+
+            {/* Authentication */}
+            <div className="px-4 py-3 border-t border-gray-800">
+              {loading ? (
+                <div className="flex justify-center py-4">
+                  <div className="w-6 h-6 border-2 border-gray-300 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : session ? (
+                <div>
+                  <div className="mt-2 mb-4 space-y-1">
+                    <Link
+                      href="/profile"
+                      className="flex items-center px-4 py-3 rounded-xl text-base font-medium text-gray-300 hover:text-white hover:bg-gray-800/50"
+                    >
+                      <span className="flex-1">Profile</span>
+                      <User className="w-4 h-4" />
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center w-full px-4 py-3 rounded-xl text-base font-medium text-gray-300 hover:text-white hover:bg-gray-800/50"
+                    >
+                      <span>Sign out</span>
+                      <LogOut className="w-4 h-4 ml-auto" />
+                    </button>
+                  </div>
+                  <div className="flex items-center px-4 py-4 border-t border-gray-800">
+                    {session.user.user_metadata?.avatar_url ? (
                       <img
                         className="h-10 w-10 rounded-full"
                         src={session.user.user_metadata.avatar_url}
                         alt={session.user.user_metadata?.name || session.user.email || 'User'}
                       />
-                    </div>
-                  ) : (
-                    <div className="flex-shrink-0">
-                      <div className="h-10 w-10 rounded-full bg-[#4A6BF6] text-white flex items-center justify-center">
+                    ) : (
+                      <div className="h-10 w-10 rounded-full bg-[#4A6BF6] text-white flex items-center justify-center text-lg font-medium">
                         {session.user.user_metadata?.name?.charAt(0).toUpperCase() || 
                          session.user.email?.charAt(0).toUpperCase() || 'U'}
                       </div>
+                    )}
+                    <div className="ml-3">
+                      <div className="text-base font-medium text-white">
+                        {session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User'}
+                      </div>
+                      <div className="text-sm text-gray-400">{session.user.email}</div>
+                      {(session.user.user_metadata?.role === 'ADMIN' || session.user.email === 'sanja.malovic2@gmail.com') && (
+                        <div className="text-xs font-medium text-[#4A6BF6] mt-0.5">Administrator</div>
+                      )}
                     </div>
-                  )}
-                  <div className="ml-3">
-                    <div className="text-base font-medium text-white">
-                      {session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User'}
-                    </div>
-                    <div className="text-sm font-medium text-gray-400">{session.user.email}</div>
                   </div>
                 </div>
-                <div className="mt-3 px-2 space-y-1">
+              ) : (
+                <div className="space-y-2">
                   <Link
-                    href="/profile"
-                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700"
+                    href="/login"
+                    className="flex items-center justify-center w-full px-4 py-3 rounded-xl text-base font-medium text-gray-300 hover:text-white hover:bg-gray-800/50"
                   >
-                    Profile
+                    Log In
+                    <LogIn className="w-4 h-4 ml-auto" />
                   </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700"
+                  <Link
+                    href="/register"
+                    className="flex items-center justify-center w-full px-4 py-3 rounded-xl text-base font-medium text-gray-300 hover:text-white hover:bg-gray-800/50"
                   >
-                    Sign out
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="px-4 space-y-2">
-                <Link
-                  href="/login"
-                  className="block text-center w-full px-4 py-2 text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-md"
-                >
-                  Log In
-                </Link>
-                <Link
-                  href="/register"
-                >
-                  <Button size="sm">
                     Register
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
+                    <LogIn className="w-4 h-4 ml-auto" />
+                  </Link>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </>
       )}
     </nav>
   );

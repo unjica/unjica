@@ -18,6 +18,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const fetch = require('node-fetch');
 const { generateHashtags } = require('../src/lib/utils/hashtags');
+const { getTopicSlug } = require('../src/lib/utils/topicMapper');
 
 // Check if the article ID was provided
 const articleId = process.argv[2];
@@ -74,7 +75,7 @@ async function main() {
     
     // Create the URL to the article
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const articleUrl = `${baseUrl}/art-news/digest/${formattedArticle.slug}`;
+    const articleUrl = `${baseUrl}/category/${getTopicSlug(formattedArticle.primaryTopic)}/${formattedArticle.slug}`;
     
     // Post to Facebook
     console.log('Posting to Facebook...');

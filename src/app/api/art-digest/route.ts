@@ -1,36 +1,14 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { generateDailyArtDigest } from '@/lib/actions/artDigestActions';
-import { Prisma } from '@prisma/client';
 import { supabase } from '@/lib/supabase';
-
-// This helps TypeScript recognize the additional fields
-type GeneratedArticleWithExtras = Prisma.GeneratedArticleGetPayload<{}> & {
-  imageUrl?: string | null;
-  slug?: string | null;
-};
-
-// Sample fallback article for when the database is unavailable
-const FALLBACK_ARTICLE = {
-  id: 'fallback-article-1',
-  title: 'Connection to Art Database Temporarily Unavailable',
-  content: '<p>We\'re currently experiencing technical difficulties with our database connection. Our team is working to resolve this issue as quickly as possible.</p><p>In the meantime, please check back later to view our latest art news and articles.</p><p>We apologize for any inconvenience this may cause.</p>',
-  primaryTopic: 'System',
-  summary: 'Database connection is temporarily unavailable. Please check back later.',
-  tags: JSON.stringify(['system', 'maintenance']),
-  publishedAt: new Date().toISOString(),
-  sourceNewsIds: JSON.stringify([]),
-  lastUpdated: new Date().toISOString(),
-  imageUrl: null,
-  slug: 'system-maintenance'
-};
 
 // GET handler to fetch all articles
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const cursor = searchParams.get('cursor');
-    const limit = parseInt(searchParams.get('limit') || '6');
+    const limit = parseInt(searchParams.get('limit') || '12');
     const topic = searchParams.get('topic');
     const slug = searchParams.get('slug');
 
@@ -63,6 +41,7 @@ export async function GET(request: Request) {
       query.cursor = {
         id: cursor
       };
+      query.skip = 1; // Skip the cursor article to avoid duplicates
     }
 
     // Add topic filter if provided

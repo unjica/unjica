@@ -1,5 +1,6 @@
 import { GeneratedArticle } from '@/lib/agents/models/generatedArticle';
 import { generateHashtags } from '../utils/hashtags';
+import { getTopicSlug } from '../utils/topicMapper';
 
 /**
  * Service for interacting with Facebook API
@@ -29,7 +30,7 @@ export class FacebookService {
       
       // Create the URL to the article - using the correct path structure
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-      const articleUrl = `${baseUrl}/art-news/digest/${article.slug}`;
+      const articleUrl = `${baseUrl}/category/${getTopicSlug(article.primaryTopic)}/${article.slug}`;
       
       // Use the Facebook Graph API directly with fetch
       const url = `https://graph.facebook.com/v18.0/${this.pageId}/feed`;
