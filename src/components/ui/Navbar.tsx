@@ -116,9 +116,9 @@ export function Navbar() {
   };
   
   const handleLogout = async () => {
-    setIsMenuOpen(false);
     await supabase.auth.signOut();
     router.push('/');
+    setIsMenuOpen(false);
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -236,6 +236,7 @@ export function Navbar() {
                     <div
                       className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg py-1 bg-[#1A1C2E] ring-1 ring-black ring-opacity-5 focus:outline-none"
                       role="menu"
+                      ref={menuRef}
                     >
                       <div className="px-4 py-2 text-sm border-b border-gray-700">
                         <div className="font-medium text-white">
@@ -246,13 +247,15 @@ export function Navbar() {
                           <div className="text-xs font-medium text-[#4A6BF6] mt-1">Administrator</div>
                         )}
                       </div>
-                      <Link
-                        href="/profile"
-                        className="block px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 transition-colors"
-                        onClick={() => setIsMenuOpen(false)}
+                      <button
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 transition-colors"
+                        onClick={() => {
+                          setIsMenuOpen(false);
+                          router.push('/profile');
+                        }}
                       >
                         Profile
-                      </Link>
+                      </button>
                       <button
                         onClick={handleLogout}
                         className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-gray-700 transition-colors"
@@ -397,7 +400,6 @@ export function Navbar() {
           />
           {/* Menu */}
           <motion.div 
-            ref={menuRef}
             initial={{ opacity: 0, x: '100%' }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: '100%' }}
