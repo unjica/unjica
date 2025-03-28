@@ -8,6 +8,7 @@ import { ThumbsUp, ThumbsDown } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { CommentSection } from '@/components/ui/art-news/CommentSection';
+import { getAnonymousId, trackAnonymousReaction, getAnonymousReaction } from '@/lib/anonymousUser';
 
 interface DigestArticleViewProps {
   article: GeneratedArticle;
@@ -23,6 +24,7 @@ interface ReactionsState {
     articleId: string;
     createdAt: string;
   } | null;
+  anonymousReaction?: 'LIKE' | 'DISLIKE';
 }
 
 export const DigestArticleView = ({ article }: DigestArticleViewProps) => {
@@ -45,10 +47,15 @@ export const DigestArticleView = ({ article }: DigestArticleViewProps) => {
       const response = await fetch(`/api/reactions?articleId=${article.id}`);
       if (response.ok) {
         const data = await response.json();
+        
+        // Get anonymous reaction using the utility function
+        const anonymousReaction = getAnonymousReaction(article.id, null) as 'LIKE' | 'DISLIKE' | null;
+        
         setReactions({
           likes: data.likesCount || 0,
           dislikes: data.dislikesCount || 0,
-          userReaction: data.userReaction || null
+          userReaction: data.userReaction || null,
+          anonymousReaction: anonymousReaction || undefined
         });
       }
     } catch (error) {
@@ -63,30 +70,50 @@ export const DigestArticleView = ({ article }: DigestArticleViewProps) => {
 
   // Handle reaction
   const handleReaction = async (type: 'LIKE' | 'DISLIKE') => {
-    if (!user || isReacting) return;
+    if (isReacting) return;
 
     try {
       setIsReacting(true);
-      const { data, error } = await supabase.auth.getSession();
-      
-      if (error) throw error;
-      if (!data.session) throw new Error('Not authenticated');
 
+      // If clicking the same reaction again, remove it
+      const newReactionType = (reactions.userReaction?.type === type || reactions.anonymousReaction === type) 
+        ? null 
+        : type;
+
+      // Track anonymous reaction locally
+      trackAnonymousReaction(article.id, null, newReactionType);
+
+      // Send reaction to server
       const response = await fetch('/api/reactions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${data.session.access_token}`
+          ...(user ? {
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+          } : {})
         },
         body: JSON.stringify({
           articleId: article.id,
-          type
+          type: newReactionType,
+          isAnonymous: !user,
+          anonymousId: !user ? getAnonymousId() : undefined
         })
       });
 
-      if (!response.ok) throw new Error('Failed to update reaction');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update reaction');
+      }
 
-      // Refetch reactions to get the latest state
+      // Update local state
+      setReactions(prev => ({
+        ...prev,
+        anonymousReaction: !user ? (newReactionType || undefined) : prev.anonymousReaction,
+        likes: newReactionType === 'LIKE' ? prev.likes + 1 : (prev.likes - 1),
+        dislikes: newReactionType === 'DISLIKE' ? prev.dislikes + 1 : (prev.dislikes - 1)
+      }));
+
+      // Refetch to get the latest server state
       await fetchReactions();
     } catch (error) {
       console.error('Error updating reaction:', error);
@@ -94,6 +121,9 @@ export const DigestArticleView = ({ article }: DigestArticleViewProps) => {
         clearAuthData();
         await supabase.auth.signOut();
         window.location.href = '/login?error=session_expired';
+      } else {
+        // If server request fails, remove the local reaction
+        trackAnonymousReaction(article.id, null, null);
       }
     } finally {
       setIsReacting(false);
@@ -218,9 +248,9 @@ export const DigestArticleView = ({ article }: DigestArticleViewProps) => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handleReaction('LIKE')}
-                disabled={isReacting || !user}
+                disabled={isReacting}
                 className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-colors ${
-                  reactions.userReaction?.type === 'LIKE'
+                  (reactions.userReaction?.type === 'LIKE' || reactions.anonymousReaction === 'LIKE')
                     ? 'bg-[#4A6BF6] text-white'
                     : 'bg-[#0A0C1C] text-gray-400 hover:bg-[#2A2C3E]'
                 } ${isReacting ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -230,16 +260,16 @@ export const DigestArticleView = ({ article }: DigestArticleViewProps) => {
                 ) : (
                   <ThumbsUp className="w-5 h-5" />
                 )}
-                <span className="font-medium">{reactions.likes || 0}</span>
+                <span className={`font-medium transition-opacity ${isReacting ? 'opacity-0' : ''}`}>{reactions.likes || 0}</span>
               </button>
             </div>
             
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handleReaction('DISLIKE')}
-                disabled={isReacting || !user}
+                disabled={isReacting}
                 className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-colors ${
-                  reactions.userReaction?.type === 'DISLIKE'
+                  (reactions.userReaction?.type === 'DISLIKE' || reactions.anonymousReaction === 'DISLIKE')
                     ? 'bg-red-500 text-white'
                     : 'bg-[#0A0C1C] text-gray-400 hover:bg-[#2A2C3E]'
                 } ${isReacting ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -249,15 +279,10 @@ export const DigestArticleView = ({ article }: DigestArticleViewProps) => {
                 ) : (
                   <ThumbsDown className="w-5 h-5" />
                 )}
-                <span className="font-medium">{reactions.dislikes || 0}</span>
+                <span className={`font-medium transition-opacity ${isReacting ? 'opacity-0' : ''}`}>{reactions.dislikes || 0}</span>
               </button>
             </div>
           </div>
-          {!user && (
-            <p className="mt-4 text-sm text-gray-400">
-              Please log in to react to articles
-            </p>
-          )}
         </div>
 
         {/* Comments Section */}
