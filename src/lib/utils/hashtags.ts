@@ -10,7 +10,8 @@ export const generateHashtags = (article: GeneratedArticle) => {
     
     // Add tags as hashtags if available
     if (article.tags) {
-      hashtags.push(...article.tags.map(tag => `#${tag.replace(/\s+/g, '').toLowerCase()}`));
+      const tagsArray = Array.isArray(article.tags) ? article.tags : JSON.parse(article.tags);
+      hashtags.push(...tagsArray.map((tag: string) => `#${tag.replace(/\s+/g, '_').toLowerCase()}`));
     }
 
     // Add topic as hashtag if available
