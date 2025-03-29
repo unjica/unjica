@@ -39,9 +39,6 @@ const defaultMetadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  verification: {
-    google: 'add-your-google-site-verification-here',
-  },
 };
 
 export default defaultMetadata; 
