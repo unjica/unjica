@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Unjica is a modern web application built using Next.js 15, React 19, and TypeScript. The project follows the App Router architecture introduced in Next.js 13+ and leverages the latest features of the React ecosystem to provide a robust and performant user experience. It features AI-generated art news digests that keep users updated on the latest trends in the art world.
+Unjica is a modern web application built using Next.js 15, React 19, and TypeScript. The project follows the App Router architecture introduced in Next.js 13+ and leverages the latest features of the React ecosystem to provide a robust and performant user experience. It features AI-generated art news digests that keep users updated on the latest trends in the art world, with a focus on modern and contemporary art.
 
 ## Key Features
 
@@ -16,6 +16,11 @@ Unjica is a modern web application built using Next.js 15, React 19, and TypeScr
 - **Authentication**: User authentication powered by Supabase Auth
 - **Analytics**: Google Analytics integration
 - **Component Library**: Custom UI components with modern design
+- **Social Integration**: Facebook page integration for automatic article sharing
+- **Image Management**: Cloudflare R2 storage for article images
+- **Comment System**: Nested comments with reactions
+- **Real-time Updates**: 60-second polling for new content
+- **Admin Controls**: Special interface for content management
 
 ## AI Content Generation Process
 
@@ -26,6 +31,7 @@ The application features a sophisticated content generation system that works as
 - Filters news from the last hour or falls back to the latest news items
 - Transforms raw API data into a standardized internal format
 - Includes fallback mechanisms with mock data when API access is limited
+- Implements a 15-minute cache to optimize API usage
 
 ### 2. Content Analysis
 - Analyzes collected news items to identify:
@@ -33,6 +39,7 @@ The application features a sophisticated content generation system that works as
   - Key themes across multiple news sources
   - Recent significant events and exhibitions
   - Notable artists and institutions mentioned
+  - Reliable news sources for attribution
 
 ### 3. Article Generation
 - Creates engaging content using OpenAI:
@@ -42,18 +49,42 @@ The application features a sophisticated content generation system that works as
   - Maintains professional insights while being approachable and engaging
   - Properly attributes sources and provides context to news items
   - Adds appropriate tagging for categorization
+  - Generates unique slugs for SEO-friendly URLs
 
 ### 4. Image Generation
 - Creates visual elements for each article using:
-  - OpenAI's DALL-E API when available (primary method)
-  - Fallback to placeholder images when API is unavailable
+  - OpenAI's DALL-E 3 API when available (primary method)
+  - Fallback to Lorem Picsum for placeholder images when API is unavailable
   - Images that visually represent the article's primary topic and tags
+  - Permanent storage in Cloudflare R2 for reliable access
 
 ### 5. Storage and Distribution
 - Each generated article is stored in a PostgreSQL database
 - Articles include metadata like publishing date, topics, and tags
 - The database storage enables historical browsing and search functionality
 - Articles are served through a responsive web interface
+- Real-time updates via 60-second polling
+- Automatic Facebook page sharing for new articles
+
+## User Engagement Features
+
+- **Comment System**: 
+  - Nested comments with replies
+  - Anonymous commenting support
+  - Reaction system for both articles and comments
+  - Real-time updates
+
+- **Social Sharing**:
+  - Automatic Facebook page posting
+  - Share buttons for articles
+  - Hashtag generation for social media
+  - SEO-optimized URLs and metadata
+
+- **Content Discovery**:
+  - Category-based navigation
+  - Tag-based filtering
+  - Infinite scroll pagination
+  - Featured article highlighting
 
 ## Scheduling System
 
@@ -61,6 +92,8 @@ The application features a sophisticated content generation system that works as
 - **External Cron Triggering**: Uses Vercel Cron running between 3 PM and 6 PM daily
 - **Manual Generation**: Admin users can trigger generation on demand
 - **Security**: Protected endpoints with secret key authentication
+- **Real-time Updates**: 60-second polling for new content
+- **Fallback Mechanisms**: Multiple scheduling options for reliability
 
 ## Project Goals
 
@@ -73,6 +106,8 @@ Specific goals include:
 - Creating an engaging user experience for art news consumption
 - Implementing modern web development patterns and practices
 - Showcasing integration of AI with database and frontend systems
+- Building a community-driven platform for art discussion
+- Maintaining high-quality, human-like content generation
 
 ## Target Audience
 
@@ -82,10 +117,12 @@ This project is intended for:
 - Frontend developers working with React and Next.js
 - Developers interested in AI content generation
 - Students and learners exploring modern web development patterns
+- Art professionals looking for curated art news
+- Content creators interested in AI-assisted content generation
 
 ## Technology Stack
 
-- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS, Framer Motion
+- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS, Framer Motion, Radix UI
 - **Backend**: Next.js API Routes, Prisma ORM
 - **Database**: PostgreSQL (via Supabase)
 - **Authentication**: Supabase Auth
@@ -93,6 +130,9 @@ This project is intended for:
 - **Scheduling**: External cron services, Vercel Cron
 - **AI Services**: OpenAI API for content and image generation
 - **Email**: Nodemailer for email services
+- **Storage**: Cloudflare R2 for image storage
+- **Social**: Facebook Graph API for page integration
+- **Analytics**: Google Analytics for user tracking
 
 ## Error Handling and Resilience
 
@@ -102,10 +142,19 @@ The system includes comprehensive error handling and fallback mechanisms:
 - Graceful degradation of features
 - Detailed error logging
 - User-friendly error messages
+- Multiple scheduling options
+- Image fallback system
+- Content generation fallbacks
 
 ## Project Status
 
-The project is currently in active development with ongoing improvements to the content generation system and user interface.
+The project is currently in active development with ongoing improvements to:
+- Content generation quality
+- User interface and experience
+- Performance optimization
+- Social media integration
+- Community features
+- Error handling and resilience
 
 ## License and Usage
 

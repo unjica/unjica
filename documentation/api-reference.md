@@ -22,8 +22,34 @@ src/
         │   └── route.ts
         ├── auth/
         │   └── route.ts
-        └── ...
+        ├── comments/
+        │   └── route.ts
+        ├── reactions/
+        │   └── route.ts
+        ├── facebook/
+        │   └── route.ts
+        └── images/
+            └── route.ts
 ```
+
+## Authentication
+
+All protected endpoints require authentication using one of the following methods:
+
+1. **Supabase Auth Token**:
+   ```
+   Authorization: Bearer <supabase_token>
+   ```
+
+2. **Cron Secret** (for scheduler endpoints):
+   ```
+   Authorization: Bearer <cron_secret>
+   ```
+
+3. **Admin Access**:
+   - Requires Supabase auth token
+   - User must have admin role
+   - Email must match admin email in configuration
 
 ## Endpoints
 
@@ -74,6 +100,10 @@ The endpoint uses Nodemailer to send email notifications about new subscriptions
 **Query Parameters:**
 - `id` (optional): The ID of a specific article to retrieve
 - `slug` (optional): The slug of a specific article to retrieve
+- `limit` (optional): Number of articles to return (default: 12)
+- `cursor` (optional): Pagination cursor
+- `topic` (optional): Filter by primary topic
+- `tag` (optional): Filter by tag
 
 **Response for All Articles (no ID or slug):**
 - **200 OK**: Successfully retrieved articles
@@ -91,9 +121,14 @@ The endpoint uses Nodemailer to send email notifications about new subscriptions
         "lastUpdated": "2023-05-01T12:00:00Z",
         "imageUrl": "https://example.com/image.jpg",
         "slug": "modern-art-trends-weekly-digest",
-        "sourceNewsIds": ["news1", "news2"]
+        "sourceNewsIds": ["news1", "news2"],
+        "commentCount": 5,
+        "reactionCount": 10
       }
-    ]
+    ],
+    "nextCursor": "next_page_cursor",
+    "hasMore": true,
+    "totalCount": 50
   }
   ```
 
@@ -112,7 +147,21 @@ The endpoint uses Nodemailer to send email notifications about new subscriptions
       "lastUpdated": "2023-05-01T12:00:00Z",
       "imageUrl": "https://example.com/image.jpg", 
       "slug": "modern-art-trends-weekly-digest",
-      "sourceNewsIds": ["news1", "news2"]
+      "sourceNewsIds": ["news1", "news2"],
+      "commentCount": 5,
+      "reactionCount": 10,
+      "comments": [
+        {
+          "id": "comment1",
+          "content": "...",
+          "createdAt": "2023-05-01T12:30:00Z",
+          "user": {
+            "id": "user1",
+            "name": "John Doe",
+            "image": "https://example.com/avatar.jpg"
+          }
+        }
+      ]
     }
   }
   ```
@@ -134,6 +183,7 @@ The endpoint uses Nodemailer to send email notifications about new subscriptions
 - The API includes fallback article functionality if the database is unavailable
 - Detailed error logging helps diagnose issues with database connections
 - Appropriate HTTP status codes are returned based on the type of error
+- Rate limiting is implemented to prevent abuse
 
 #### Generate Art Digest Article
 
@@ -195,6 +245,8 @@ The endpoint uses Nodemailer to send email notifications about new subscriptions
 - Uses the `generateDailyArtDigest()` function from artDigestActions.ts
 - Handles slug conflicts by appending a timestamp to ensure uniqueness
 - Saves generated articles to the database with appropriate metadata
+- Generates and stores article images
+- Posts to Facebook page if configured
 
 #### Delete Art Digest Article
 
@@ -249,275 +301,403 @@ The endpoint uses Nodemailer to send email notifications about new subscriptions
   }
   ```
 
-### Scheduler API
+**Implementation Details:**
+- Deletes all associated comments and reactions
+- Removes article image from storage
+- Updates related records (tags, categories)
+- Maintains data consistency
 
-**Endpoint:** `GET /api/scheduler`
+### Comments API
 
-**Description:** Retrieves the current status of the scheduler.
+#### Get Article Comments
 
-**Response:**
-- **200 OK**:
-  ```json
-  {
-    "status": "OK",
-    "message": "Scheduler API is working",
-    "lastRun": "2023-05-01T12:00:00Z",
-    "canRunNow": true,
-    "note": "This API doesn't provide actual scheduling. Set up an external cron job to call this API with POST to generate articles."
-  }
-  ```
+**Endpoint:** `GET /api/comments`
 
-**Endpoint:** `POST /api/scheduler`
-
-**Description:** Manually triggers the art digest generation task.
-
-**Response:**
-- **200 OK**: Task successfully triggered
-  ```json
-  {
-    "status": "OK",
-    "message": "Article digest generation triggered successfully",
-    "lastRun": "2023-05-01T12:00:00Z"
-  }
-  ```
-- **500 Internal Server Error**: Server error
-  ```json
-  {
-    "error": "Failed to run scheduled task"
-  }
-  ```
-
-**Security Notes:**
-The scheduler endpoint can be secured with a secret key provided in the `CRON_SECRET` environment variable. When calling the endpoint from external cron services, include this secret in the query parameter:
-
-```
-/api/scheduler?secret=your_secret_key
-```
-
-## Authentication
-
-The project uses two primary authentication methods:
-
-1. **API Key Authentication**: Used for scheduler and admin endpoints
-   - Uses the `CRON_SECRET` environment variable as a bearer token
-   - Format: `Authorization: Bearer <CRON_SECRET>`
-
-2. **Supabase Authentication**: Used for user accounts and admin access
-   - Uses Supabase's JWT tokens for authentication
-   - Admin access is restricted to specific email addresses
-   - Format: `Authorization: Bearer <supabase_jwt_token>`
-
-3. **Vercel Cron Detection**: Auto-authorizes requests in production mode
-   - Checks the User-Agent header for "vercel-cron"
-   - Only works in production environment
-
-## Error Handling
-
-The API incorporates comprehensive error handling mechanisms:
-
-1. **Database Connection Errors**
-   - Fallback content is provided when the database is unavailable
-   - Fallback article with ID `fallback-article-1` is returned for article requests
-   - Detailed error logging helps with troubleshooting
-
-2. **Error Response Format**
-   - All error responses follow a consistent format:
-     ```json
-     {
-       "error": "Error message description",
-       "details": "Optional detailed error information"
-     }
-     ```
-   - Appropriate HTTP status codes are returned based on the error type
-
-3. **Validation Errors**
-   - Input validation is performed on all request parameters and bodies
-   - Clear error messages indicate validation issues
-
-## API Usage Examples
-
-### Subscribing to the Newsletter
-
-**Example Request:**
-```javascript
-async function subscribeToNewsletter(email) {
-  try {
-    const response = await fetch('/api/subscribe', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email }),
-    });
-    
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.error || 'Subscription failed');
-    }
-    
-    return data;
-  } catch (error) {
-    console.error('Error:', error);
-    throw error;
-  }
-}
-```
-
-### Manually Generating an Art Digest
-
-**Example Request:**
-```javascript
-async function generateArtDigest() {
-  try {
-    const response = await fetch('/api/art-digest', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    });
-    
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.error || 'Generation failed');
-    }
-    
-    return data.article;
-  } catch (error) {
-    console.error('Error:', error);
-    throw error;
-  }
-}
-```
-
-## Rate Limiting
-
-Currently, the API does not implement rate limiting. Future updates may include rate limiting to protect against abuse.
-
-## Future API Plans
-
-Planned API enhancements include:
-
-1. User authentication endpoints
-2. Contact form submission handling
-3. Rate limiting implementation
-4. API versioning
-
-### Reactions API
-
-**Endpoint:** `GET /api/reactions`
-
-**Description:** Retrieves reaction counts (likes/dislikes) for an article and the user's reaction if authenticated.
+**Description:** Retrieves comments for a specific article.
 
 **Query Parameters:**
-- `articleId` (required): The ID of the article to get reactions for
-- `anonymousId` (optional): Anonymous user identifier for tracking reactions from non-authenticated users
+- `articleId`: The ID of the article
+- `limit` (optional): Number of comments to return (default: 20)
+- `cursor` (optional): Pagination cursor
 
 **Response:**
-- **200 OK**: Successfully retrieved reactions
+- **200 OK**: Successfully retrieved comments
   ```json
   {
-    "userReaction": {
-      "id": "abc123",
-      "type": "LIKE",
-      "userId": "user123",
-      "articleId": "article123",
-      "createdAt": "2023-05-01T12:00:00Z"
-    },
-    "likesCount": 10,
-    "dislikesCount": 2
-  }
-  ```
-- **400 Bad Request**: Missing article ID
-  ```json
-  {
-    "error": "Article ID is required"
-  }
-  ```
-- **500 Internal Server Error**: Server error
-  ```json
-  {
-    "error": "Failed to fetch reaction"
-  }
-  ```
-
-**Special Cases:**
-- For the fallback article (`articleId=fallback-article-1`), the API returns empty reaction data without querying the database:
-  ```json
-  {
-    "userReaction": null,
-    "likesCount": 0,
-    "dislikesCount": 0
+    "comments": [
+      {
+        "id": "comment1",
+        "content": "...",
+        "createdAt": "2023-05-01T12:30:00Z",
+        "user": {
+          "id": "user1",
+          "name": "John Doe",
+          "image": "https://example.com/avatar.jpg"
+        },
+        "replies": [
+          {
+            "id": "reply1",
+            "content": "...",
+            "createdAt": "2023-05-01T12:35:00Z",
+            "user": {
+              "id": "user2",
+              "name": "Jane Smith",
+              "image": "https://example.com/avatar2.jpg"
+            }
+          }
+        ]
+      }
+    ],
+    "nextCursor": "next_page_cursor",
+    "hasMore": true
   }
   ```
 
-**Endpoint:** `POST /api/reactions`
+#### Create Comment
 
-**Description:** Creates or updates a reaction (like/dislike) for an article.
+**Endpoint:** `POST /api/comments`
+
+**Description:** Creates a new comment on an article.
+
+**Authentication:**
+- Optional authentication for user comments
+- Anonymous comments allowed
 
 **Request Body:**
 ```json
 {
   "articleId": "article123",
-  "type": "LIKE",
-  "anonymousId": "anon123"
+  "content": "Comment text",
+  "parentId": "parent123" // Optional, for replies
 }
 ```
 
 **Response:**
-- **200 OK**: Successfully updated reaction
+- **200 OK**: Comment created successfully
   ```json
   {
-    "success": true,
-    "likesCount": 11,
-    "dislikesCount": 2
-  }
-  ```
-- **400 Bad Request**: Missing required fields
-  ```json
-  {
-    "error": "Article ID or Comment ID is required"
-  }
-  ```
-- **500 Internal Server Error**: Server error
-  ```json
-  {
-    "error": "Failed to update reaction"
+    "comment": {
+      "id": "comment1",
+      "content": "Comment text",
+      "createdAt": "2023-05-01T12:30:00Z",
+      "user": {
+        "id": "user1",
+        "name": "John Doe",
+        "image": "https://example.com/avatar.jpg"
+      }
+    }
   }
   ```
 
-**Special Cases:**
-- For the fallback article (`articleId=fallback-article-1`), the API acknowledges the reaction but doesn't store it:
+### Reactions API
+
+#### Get Article Reactions
+
+**Endpoint:** `GET /api/reactions`
+
+**Description:** Retrieves reactions for a specific article.
+
+**Query Parameters:**
+- `articleId`: The ID of the article
+- `type` (optional): Filter by reaction type
+
+**Response:**
+- **200 OK**: Successfully retrieved reactions
   ```json
   {
-    "success": true,
-    "message": "Reaction acknowledged but not stored for system article",
-    "likesCount": 0,
-    "dislikesCount": 0
+    "reactions": [
+      {
+        "id": "reaction1",
+        "type": "like",
+        "createdAt": "2023-05-01T12:30:00Z",
+        "user": {
+          "id": "user1",
+          "name": "John Doe",
+          "image": "https://example.com/avatar.jpg"
+        }
+      }
+    ],
+    "counts": {
+      "like": 10,
+      "love": 5,
+      "wow": 2
+    }
   }
   ```
+
+#### Add Reaction
+
+**Endpoint:** `POST /api/reactions`
+
+**Description:** Adds a reaction to an article.
 
 **Authentication:**
-- The endpoint supports both authenticated and anonymous users
-- For authenticated users, include a Bearer token in the Authorization header
-- For anonymous users, include an anonymousId in the request body
+- Optional authentication for user reactions
+- Anonymous reactions allowed
 
-## Environment Configuration
-
-The API relies on environment variables for configuration. These are defined in the `.env.local` file. Required variables include:
-
-```
-EMAIL_USER=your-email@example.com
-EMAIL_PASS=your-email-password
-EMAIL_HOST=smtp.example.com
-EMAIL_PORT=587
-EMAIL_TO=recipient@example.com
-EMAIL_FROM=sender@example.com
+**Request Body:**
+```json
+{
+  "articleId": "article123",
+  "type": "like"
+}
 ```
 
-## Security Considerations
+**Response:**
+- **200 OK**: Reaction added successfully
+  ```json
+  {
+    "reaction": {
+      "id": "reaction1",
+      "type": "like",
+      "createdAt": "2023-05-01T12:30:00Z",
+      "user": {
+        "id": "user1",
+        "name": "John Doe",
+        "image": "https://example.com/avatar.jpg"
+      }
+    }
+  }
+  ```
 
-1. Email credentials are stored as environment variables and not exposed to the client
-2. Input validation is performed on all API inputs
-3. The API follows Next.js best practices for API route implementation 
+### Facebook API
+
+#### Post to Facebook
+
+**Endpoint:** `POST /api/facebook`
+
+**Description:** Posts an article to the Facebook page.
+
+**Authentication:**
+- Requires admin authentication
+
+**Request Body:**
+```json
+{
+  "articleId": "article123"
+}
+```
+
+**Response:**
+- **200 OK**: Successfully posted to Facebook
+  ```json
+  {
+    "success": true,
+    "message": "Successfully posted to Facebook",
+    "postId": "facebook_post_id"
+  }
+  ```
+- **400 Bad Request**: Invalid article ID
+  ```json
+  {
+    "error": "Invalid article ID"
+  }
+  ```
+- **401 Unauthorized**: Authentication failed
+  ```json
+  {
+    "error": "Authentication error"
+  }
+  ```
+- **403 Forbidden**: User not authorized
+  ```json
+  {
+    "error": "Unauthorized. Admin access required."
+  }
+  ```
+- **500 Internal Server Error**: Facebook API error
+  ```json
+  {
+    "error": "Failed to post to Facebook",
+    "details": "Error details..."
+  }
+  ```
+
+### Images API
+
+#### Generate Article Image
+
+**Endpoint:** `POST /api/images/generate`
+
+**Description:** Generates an image for an article using DALL-E.
+
+**Authentication:**
+- Requires admin authentication
+
+**Request Body:**
+```json
+{
+  "articleId": "article123",
+  "topic": "Modern Art",
+  "tags": ["contemporary", "exhibition"]
+}
+```
+
+**Response:**
+- **200 OK**: Successfully generated image
+  ```json
+  {
+    "success": true,
+    "imageUrl": "https://example.com/image.jpg"
+  }
+  ```
+- **400 Bad Request**: Invalid request
+  ```json
+  {
+    "error": "Invalid request parameters"
+  }
+  ```
+- **401 Unauthorized**: Authentication failed
+  ```json
+  {
+    "error": "Authentication error"
+  }
+  ```
+- **403 Forbidden**: User not authorized
+  ```json
+  {
+    "error": "Unauthorized. Admin access required."
+  }
+  ```
+- **500 Internal Server Error**: Image generation error
+  ```json
+  {
+    "error": "Failed to generate image",
+    "details": "Error details..."
+  }
+  ```
+
+## Rate Limiting
+
+The API implements rate limiting to prevent abuse:
+
+- **General Endpoints**: 100 requests per minute
+- **Authentication Endpoints**: 5 requests per minute
+- **Image Generation**: 10 requests per hour
+- **Facebook API**: 50 requests per hour
+
+Rate limit headers are included in responses:
+```
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 95
+X-RateLimit-Reset: 1623456789
+```
+
+## Error Handling
+
+All API endpoints follow a consistent error handling pattern:
+
+1. **Validation Errors** (400):
+   ```json
+   {
+     "error": "Invalid input",
+     "details": ["Field 'email' is required"]
+   }
+   ```
+
+2. **Authentication Errors** (401):
+   ```json
+   {
+     "error": "Authentication failed",
+     "details": "Invalid token"
+   }
+   ```
+
+3. **Authorization Errors** (403):
+   ```json
+   {
+     "error": "Unauthorized",
+     "details": "Admin access required"
+   }
+   ```
+
+4. **Not Found Errors** (404):
+   ```json
+   {
+     "error": "Resource not found",
+     "details": "Article with ID '123' not found"
+   }
+   ```
+
+5. **Server Errors** (500):
+   ```json
+   {
+     "error": "Internal server error",
+     "details": "Database connection failed"
+   }
+   ```
+
+## CORS Configuration
+
+The API supports CORS with the following configuration:
+
+- **Allowed Origins**: Configured via environment variables
+- **Allowed Methods**: GET, POST, PUT, DELETE, OPTIONS
+- **Allowed Headers**: Content-Type, Authorization
+- **Max Age**: 86400 seconds (24 hours)
+
+## Webhooks
+
+The API supports webhooks for certain events:
+
+1. **Article Generation**:
+   - Triggered when a new article is generated
+   - Includes article data and metadata
+   - Requires webhook secret for verification
+
+2. **Comment Creation**:
+   - Triggered when a new comment is created
+   - Includes comment data and user information
+   - Requires webhook secret for verification
+
+Webhook configuration is managed through environment variables:
+```
+WEBHOOK_SECRET=your_secret_here
+WEBHOOK_URL=https://your-webhook-url.com
+```
+
+## API Versioning
+
+The API is versioned through the URL path:
+- Current version: `/api/v1/`
+- Legacy version: `/api/v0/` (deprecated)
+
+Version headers are included in responses:
+```
+X-API-Version: 1.0.0
+```
+
+## Monitoring and Analytics
+
+The API includes built-in monitoring:
+
+1. **Request Logging**:
+   - Endpoint accessed
+   - Response time
+   - Status code
+   - User agent
+   - IP address
+
+2. **Error Tracking**:
+   - Error type
+   - Stack trace
+   - Request context
+   - User information
+
+3. **Performance Metrics**:
+   - Response times
+   - Database query times
+   - Cache hit rates
+   - API usage statistics
+
+## Security Headers
+
+The API includes security headers:
+
+```
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-XSS-Protection: 1; mode=block
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+Content-Security-Policy: default-src 'self'
+``` 
