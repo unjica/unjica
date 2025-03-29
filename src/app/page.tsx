@@ -239,6 +239,42 @@ export default function Home() {
             </div>
           )}
           
+          {/* Hero Section */}
+          <div className="text-center mb-12 mt-5">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#4A6BF6]/10 rounded-full mb-6">
+              <span className="text-[#4A6BF6] font-medium">AI-Curated</span>
+              <span className="text-gray-400">•</span>
+              <span className="text-gray-300">Reviewed by Artists</span>
+            </div>
+            <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
+              Your Art News Companion
+            </h1>
+            <p className="text-sm md:text-lg lg:text-xl text-gray-300 max-w-2xl mx-auto">
+              Stay informed about the art world with expertly curated insights and analysis. 
+              Get personalized art news that matters to you, delivered fresh daily.
+            </p>
+          </div>
+
+          {/* Trust Section */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+            <div className="text-center p-4 bg-[#1A1C2E] rounded-lg">
+              <div className="text-2xl font-bold text-[#4A6BF6] mb-2">100+</div>
+              <div className="text-sm text-gray-300">Daily Readers</div>
+            </div>
+            <div className="text-center p-4 bg-[#1A1C2E] rounded-lg">
+              <div className="text-2xl font-bold text-[#4A6BF6] mb-2">50+</div>
+              <div className="text-sm text-gray-300">Art Experts</div>
+            </div>
+            <div className="text-center p-4 bg-[#1A1C2E] rounded-lg">
+              <div className="text-2xl font-bold text-[#4A6BF6] mb-2">24/7</div>
+              <div className="text-sm text-gray-300">Content Updates</div>
+            </div>
+            <div className="text-center p-4 bg-[#1A1C2E] rounded-lg">
+              <div className="text-2xl font-bold text-[#4A6BF6] mb-2">100%</div>
+              <div className="text-sm text-gray-300">Human Reviewed</div>
+            </div>
+          </div>
+          
           {/* Featured Article */}
           {isLoading ? (
             <div className="mb-8">
