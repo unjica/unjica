@@ -7,7 +7,8 @@ import { SchedulerInitializer } from '@/components/ui/SchedulerInitializer';
 import { Footer } from '@/components/ui/Footer';
 import { AuthProvider } from '@/components/auth/AuthProvider';
 import { FacebookSDKProvider } from '@/components/FacebookSDKProvider';
-import { Analytics } from "@vercel/analytics/react"
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -100,6 +101,7 @@ export default function RootLayout({
         </AuthProvider>
       </body>
       <Analytics />
+      <SpeedInsights />
     </html>
   );
 }
