@@ -75,6 +75,6 @@ export class FacebookService {
    */
   private static createPostMessage(article: GeneratedArticle): string {
     const hashtags = generateHashtags(article);
-    return `🎨 ${article.title}\n\n${article.summary}\n\n${article.content}\n\nCheck on our website, leave a comment, and share with your friends: ${process.env.NEXT_PUBLIC_BASE_URL}/category/${getTopicSlug(article.primaryTopic).toLowerCase()}/${article.slug}\n\n${hashtags}`;
+    return `🎨 ${article.title}\n\n${article.summary}\n\nRead more: ${process.env.NEXT_PUBLIC_BASE_URL}/category/${getTopicSlug(article.primaryTopic).toLowerCase()}/${article.slug}\n\n${hashtags}`;
   }
 } 
