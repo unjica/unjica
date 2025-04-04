@@ -2,11 +2,11 @@
   "crons": [
     {
       "path": "/api/scheduler",
-      "schedule": "0 16 * * *"
+      "schedule": "0 14 * * *"
     },
     {
       "path": "/api/social/post-latest",
-      "schedule": "0 17 * * *"
+      "schedule": "0 15 * * *"
     }
   ],
   "env": {
