@@ -116,21 +116,52 @@ export async function POST(request: Request) {
             
             // Create a user record for this Supabase user
             try {
-              const newUser = await prisma.user.create({
-                data: {
-                  id: supabaseUserId,
-                  name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'User',
-                  email: data.user.email || `${supabaseUserId}@placeholder.com`,
-                  image: data.user.user_metadata?.avatar_url || null,
-                  role: data.user.email === 'sanja.malovic2@gmail.com' ? 'ADMIN' : 'USER',
-                }
+              // First check if a user with this email already exists
+              const existingUser = await prisma.user.findFirst({
+                where: { email: data.user.email }
               });
-              
-              userId = newUser.id;
-              console.log('Created new user record:', userId);
+
+              if (existingUser) {
+                // If user exists with different ID, update the ID to match Supabase
+                if (existingUser.id !== supabaseUserId) {
+                  console.log('Updating existing user ID to match Supabase:', existingUser.id, '->', supabaseUserId);
+                  await prisma.user.update({
+                    where: { id: existingUser.id },
+                    data: { id: supabaseUserId }
+                  });
+                }
+                userId = supabaseUserId;
+                console.log('Using existing user:', userId);
+              } else {
+                // Create new user if no user with this email exists
+                const newUser = await prisma.user.create({
+                  data: {
+                    id: supabaseUserId,
+                    name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'User',
+                    email: data.user.email || `${supabaseUserId}@placeholder.com`,
+                    image: data.user.user_metadata?.avatar_url || null,
+                    role: data.user.email === 'sanja.malovic2@gmail.com' ? 'ADMIN' : 'USER',
+                  }
+                });
+                
+                userId = newUser.id;
+                console.log('Created new user record:', userId);
+              }
             } catch (createError) {
-              console.error('Failed to create user record:', createError);
-              // Continue with anonymous flow if user creation fails
+              console.error('Failed to create/update user record:', createError);
+              return NextResponse.json(
+                { 
+                  error: 'Failed to create/update user account', 
+                  details: createError,
+                  supabaseUserId,
+                  userData: {
+                    name: data.user.user_metadata?.name,
+                    email: data.user.email,
+                    image: data.user.user_metadata?.avatar_url
+                  }
+                },
+                { status: 500 }
+              );
             }
           }
         } catch (userError) {

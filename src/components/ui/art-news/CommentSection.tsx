@@ -207,8 +207,8 @@ export function CommentSection({ articleId }: CommentSectionProps) {
         content: commentText,
         articleId,
         parentId: replyingTo,
-        // Always include anonymousId as fallback in case user doesn't exist in database
-        anonymousId: anonymousId || getAnonymousId(),
+        // Only include anonymousId if user is not logged in
+        ...(data.session ? {} : { anonymousId: anonymousId || getAnonymousId() }),
       };
       
       const response = await fetch('/api/comments', {
