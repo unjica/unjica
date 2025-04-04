@@ -4,6 +4,7 @@ declare module '@prisma/client' {
   interface PrismaClient {
     comment: any;
     reaction: any;
+    subscriber: any;
   }
 }
 
