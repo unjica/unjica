@@ -227,7 +227,7 @@ export const DigestArticleView = ({ article }: DigestArticleViewProps) => {
       </div>
 
       {/* Article Content */}
-      <div className="px-2 -mt-10">
+      <div className="px-2 mt-10">
         <div className="prose prose-invert max-w-none">
           <div 
             className="text-gray-300 leading-relaxed [&>h2]:text-3xl [&>h2]:font-bold [&>h2]:text-white [&>h2]:mt-12 [&>h2]:mb-6 [&>h3]:text-2xl [&>h3]:font-semibold [&>h3]:text-white [&>h3]:mt-8 [&>h3]:mb-4 [&>p]:mb-6 [&>p]:text-gray-300 [&>p]:leading-relaxed"
