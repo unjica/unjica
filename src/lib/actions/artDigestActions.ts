@@ -83,6 +83,15 @@ export async function generateDailyArtDigest(): Promise<GeneratedArticle> {
         slug
       };
       
+      // Save the article to the database
+      await prisma.generatedArticle.create({
+        data: {
+          ...article,
+          sourceNewsIds: JSON.stringify(article.sourceNewsIds),
+          tags: JSON.stringify(article.tags)
+        }
+      });
+      
       // Revalidate the digest page to show the new content
       revalidatePath('/');
       
