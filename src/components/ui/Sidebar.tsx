@@ -101,7 +101,7 @@ export const Sidebar = ({ className = '' }: SidebarProps) => {
               popularArticles.map((article) => (
                 <Link
                   key={article.id}
-                  href={`/category/${getTopicSlug(article.primaryTopic)}/${article.slug || article.id}`}
+                  href={`/category/${getTopicSlug(article.primaryTopic).toLowerCase()}/${article.slug || article.id}`}
                   className="block group"
                 >
                   <div className="flex items-start space-x-3">

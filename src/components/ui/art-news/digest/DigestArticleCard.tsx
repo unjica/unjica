@@ -94,7 +94,7 @@ export const DigestArticleCard = ({
       animate={{ opacity: 1 }}
       className={`group relative bg-[#1A1C2E] rounded-xl overflow-hidden ${className}`}
     >
-      <Link href={`/category/${getTopicSlug(article.primaryTopic)}/${article.slug || article.id}`}>
+      <Link href={`/category/${getTopicSlug(article.primaryTopic).toLowerCase()}/${article.slug || article.id}`}>
         {/* Image Container */}
         <div className="relative aspect-[4/3] overflow-hidden">
           {article.imageUrl ? (

@@ -34,7 +34,7 @@ const postToFacebook = async (latestArticle: any, hashtags: string, imageUrl: st
           },
           body: JSON.stringify({
             url: imageUrl,
-            message: `🎨 ${latestArticle.title}\n\n${latestArticle.summary}\n\nRead more: ${process.env.NEXT_PUBLIC_BASE_URL}/category/${getTopicFromSlug(latestArticle.primaryTopic)}/${latestArticle.slug}\n\n${hashtags}`
+            message: `🎨 ${latestArticle.title}\n\n${latestArticle.summary}\n\n${latestArticle.content}\n\nCheck on our website, leave a comment, and share with your friends: ${process.env.NEXT_PUBLIC_BASE_URL}/category/${getTopicFromSlug(latestArticle.primaryTopic).toLowerCase()}/${latestArticle.slug}\n\n${hashtags}`
           }),
         }
       );
@@ -79,7 +79,7 @@ const postToInstagram = async (latestArticle: any, hashtags: string, imageUrl: s
         },
         body: JSON.stringify({
           image_url: imageUrl,
-          caption: `🎨 ${latestArticle.title}\n\n${latestArticle.summary}\n\nRead more: ${process.env.NEXT_PUBLIC_BASE_URL}/category/${getTopicFromSlug(latestArticle.primaryTopic)}/${latestArticle.slug}\n\n${hashtags}`
+          caption: `🎨 ${latestArticle.title}\n\n${latestArticle.summary}\n\nRead more: ${process.env.NEXT_PUBLIC_BASE_URL}/category/${getTopicFromSlug(latestArticle.primaryTopic).toLowerCase()}/${latestArticle.slug}\n\n${hashtags}`
         }),
       }
     );

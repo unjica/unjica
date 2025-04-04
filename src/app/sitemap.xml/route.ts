@@ -51,7 +51,7 @@ export async function GET() {
       const typedArticle = article as GeneratedArticleWithExtras;
       
       return {
-        url: `${baseUrl}/category/${getTopicSlug(article.primaryTopic)}/${typedArticle.slug || typedArticle.id}`,
+        url: `${baseUrl}/category/${getTopicSlug(article.primaryTopic).toLowerCase()}/${typedArticle.slug || typedArticle.id}`,
         lastModified: article.lastUpdated.toISOString(),
         changeFrequency: 'weekly',
         priority: 0.8

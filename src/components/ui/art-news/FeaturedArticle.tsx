@@ -24,7 +24,7 @@ export const FeaturedArticle = ({ article }: FeaturedArticleProps) => {
       transition={{ duration: 0.5 }}
       className="relative bg-[#1A1C2E] rounded-xl overflow-hidden"
     >
-      <Link href={`/category/${getTopicSlug(article.primaryTopic)}/${article.slug || article.id}`}>
+      <Link href={`/category/${getTopicSlug(article.primaryTopic).toLowerCase()}/${article.slug || article.id}`}>
         <div className="relative h-[400px] md:h-[500px]">
           {article.imageUrl ? (
             <Image

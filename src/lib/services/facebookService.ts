@@ -30,7 +30,7 @@ export class FacebookService {
       
       // Create the URL to the article - using the correct path structure
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-      const articleUrl = `${baseUrl}/category/${getTopicSlug(article.primaryTopic)}/${article.slug}`;
+      const articleUrl = `${baseUrl}/category/${getTopicSlug(article.primaryTopic).toLowerCase()}/${article.slug}`;
       
       // Use the Facebook Graph API directly with fetch
       const url = `https://graph.facebook.com/v18.0/${this.pageId}/feed`;
@@ -75,6 +75,6 @@ export class FacebookService {
    */
   private static createPostMessage(article: GeneratedArticle): string {
     const hashtags = generateHashtags(article);
-    return `🎨 ${article.title}\n\n${article.summary}\n\nRead more: ${process.env.NEXT_PUBLIC_BASE_URL}/category/${getTopicSlug(article.primaryTopic)}/${article.slug}\n\n${hashtags}`;
+    return `🎨 ${article.title}\n\n${article.summary}\n\n${article.content}\n\nCheck on our website, leave a comment, and share with your friends: ${process.env.NEXT_PUBLIC_BASE_URL}/category/${getTopicSlug(article.primaryTopic).toLowerCase()}/${article.slug}\n\n${hashtags}`;
   }
 } 
