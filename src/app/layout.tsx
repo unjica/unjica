@@ -9,6 +9,7 @@ import { AuthProvider } from '@/components/auth/AuthProvider';
 import { FacebookSDKProvider } from '@/components/FacebookSDKProvider';
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import Script from 'next/script';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -49,6 +50,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const fbAppId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || '';
+  const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
   
   return (
     <html lang="en" suppressHydrationWarning>
@@ -65,6 +67,25 @@ export default function RootLayout({
         <link rel="manifest" href="/site.webmanifest" />
         <meta name="msapplication-TileColor" content="#603cba" />
         <meta property="fb:app_id" content={fbAppId} />
+        {/* Google Analytics Script */}
+        <Script
+          strategy="afterInteractive"
+          src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}
+        />
+        <Script
+          id="google-analytics"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${gaMeasurementId}', {
+                page_path: window.location.pathname,
+              });
+            `,
+          }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
