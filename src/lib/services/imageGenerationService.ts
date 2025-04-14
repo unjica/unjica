@@ -45,7 +45,7 @@ export class ImageGenerationService {
         },
         body: JSON.stringify({
           model: "dall-e-3",
-          prompt: `A high-quality, professional image representing: ${title || topic}. Include visual elements related to: ${tags.join(', ')}. Style: modern, clean, suitable for article header.`,
+          prompt: `Act as a contemporary editorial artist. Create a high-quality, realistic image that visually interprets the theme: ‘${title || topic}’. Draw inspiration from: ${tags.join(', ')}. Use natural lighting, clean composition, and modern visual storytelling. The result should feel like a magazine header image — minimal, intentional, and emotionally resonant.`,
           n: 1,
           size: '1024x1024',
           quality: "standard",
