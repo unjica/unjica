@@ -321,10 +321,10 @@ export function Navbar() {
                 <Link
                   key={category.name}
                   href={category.href}
-                  className={`text-sm font-medium relative py-2 ${
+                  className={`group relative text-sm font-medium py-2 px-3 rounded-lg transition-all duration-200 ${
                     isCategoryActive(category.href)
-                      ? 'text-white'
-                      : 'text-gray-400 hover:text-white transition-colors'
+                      ? 'text-white bg-[#1A1C2E]'
+                      : 'text-gray-400 hover:text-white hover:bg-[#1A1C2E]/50'
                   }`}
                 >
                   <span>{category.name}</span>
@@ -471,21 +471,21 @@ export function Navbar() {
               <h3 className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
                 Categories
               </h3>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-2">
                 {categories.map((category) => (
                   <Link
                     key={category.name}
                     href={category.href}
-                    className={`group flex items-center justify-center px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 bg-gradient-to-r ${category.icon.color}`}
+                    className={`flex items-center px-4 py-3 rounded-xl text-base font-medium transition-all duration-200 ${
+                      isCategoryActive(category.href)
+                        ? 'text-white bg-gradient-to-r from-[#4A6BF6] to-[#6B8AFB]'
+                        : 'text-gray-300 hover:text-white hover:bg-gray-800/50'
+                    }`}
                   >
-                    <span className="relative">
-                      {category.name}
-                      <span className={`absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-200 ${
-                        isCategoryActive(category.href) 
-                          ? 'w-full bg-white'
-                          : 'bg-white group-hover:w-full'
-                      }`} />
-                    </span>
+                    <span className="flex-1">{category.name}</span>
+                    {isCategoryActive(category.href) && (
+                      <span className="w-2 h-2 rounded-full bg-white" aria-hidden="true" />
+                    )}
                   </Link>
                 ))}
               </div>
