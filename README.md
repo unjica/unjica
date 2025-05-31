@@ -1,3 +1,8 @@
+![License](https://img.shields.io/github/license/unjica/Live-Chat-Support-Demo)
+![Last Commit](https://img.shields.io/github/last-commit/unjica/Live-Chat-Support-Demo)
+![Issues](https://img.shields.io/github/issues/unjica/Live-Chat-Support-Demo)
+![Stars](https://img.shields.io/github/stars/unjica/Live-Chat-Support-Demo?style=social)
+
 # Hi, I'm Sanja 👋
 
 Passionate software engineer with a hunger for innovation and continuous growth.  
