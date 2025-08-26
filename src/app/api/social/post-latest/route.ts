@@ -158,17 +158,6 @@ const postToInstagram = async (latestArticle: any, hashtags: string, imageUrl: s
 
 const postArticle = async () => {
   try {
-    // Debug environment variables
-    console.log('Environment variables:', {
-      hasFacebookToken: !!process.env.FACEBOOK_ACCESS_TOKEN,
-      facebookTokenLength: process.env.FACEBOOK_ACCESS_TOKEN?.length,
-      hasInstagramToken: !!process.env.INSTAGRAM_ACCESS_TOKEN,
-      instagramTokenLength: process.env.INSTAGRAM_ACCESS_TOKEN?.length,
-      hasInstagramAccountId: !!process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID,
-      hasFacebookPageId: !!process.env.FACEBOOK_PAGE_ID,
-      baseUrl: process.env.NEXT_PUBLIC_BASE_URL
-    });
-
     // Verify credentials
     if (!process.env.FACEBOOK_ACCESS_TOKEN || !process.env.FACEBOOK_PAGE_ID) {
       return NextResponse.json({ 
@@ -199,6 +188,11 @@ const postArticle = async () => {
 
     if (!latestArticle) {
       return NextResponse.json({ error: 'No articles found' }, { status: 404 });
+    }
+
+    // generated in the past 12 hours
+    if (latestArticle.publishedAt < new Date(Date.now() - 1000 * 60 * 60 * 12)) {
+      return NextResponse.json({ error: 'Article is too old' }, { status: 400 });
     }
 
     const hashtags = generateHashtags(latestArticle);
