@@ -1,5 +1,5 @@
 # 👩‍💻 Sanja Malović — Full-Stack / Frontend Developer
-Frontend & Full-Stack Developer. Builder of tools, platforms, and smart workflows.
+Crafting digital masterpieces with elegance and precision.
 
 ## 📊 GitHub Stats
 
