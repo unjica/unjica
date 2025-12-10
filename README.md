@@ -1,9 +1,7 @@
 # 👩‍💻 Sanja Malović — Full-Stack / Frontend Developer
 Crafting digital masterpieces with elegance and precision.
 
-## 📊 GitHub Stats
-
-![GitHub Stats](https://github-readme-stats-git-masterrstaa-rickstaa.vercel.app/api?username=unjica&show_icons=true&cache_seconds=7200)
+---
 
 ## 🔧 Core Competencies
 
