@@ -1,4 +1,4 @@
-# Hi, I’m Sanja 👩‍💻  
+# 👩‍💻 Sanja Malović — Full-Stack / Frontend Developer
 Frontend & Full-Stack Developer. Builder of tools, platforms, and smart workflows.
 
 ## 📊 GitHub Stats
