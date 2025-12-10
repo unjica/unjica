@@ -1,6 +1,10 @@
 # Hi, I’m Sanja 👩‍💻  
 Frontend & Full-Stack Developer. Builder of tools, platforms, and smart workflows.
 
+## 📊 GitHub Stats
+
+![GitHub Stats](https://github-readme-stats-git-masterrstaa-rickstaa.vercel.app/api?username=unjica&show_icons=true&cache_seconds=7200)
+
 ## 🔧 Core Competencies
 
 - **Frontend:** Vue · Nuxt · React · Next.js · Tailwind · Zustand / Context  
