@@ -46,7 +46,3 @@ Frontend & Full-Stack Developer. Builder of tools, platforms, and smart workflow
 ## 🌐 Learn More
 
 For full portfolio, project list and contact info — head over to **[tacko.io](https://tacko.io)**.
-
----
-
-If you like — I can also **generate 2–3 variants** of this README: e.g. *concise résumé-style*, *detailed portfolio style*, and *hybrid (code + personality)*. Do you want me to build those for you now?
