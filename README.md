@@ -1,50 +1,43 @@
-# 👩‍💻 Sanja Malović — Full-Stack / Frontend Developer
-Crafting digital masterpieces with elegance and precision.
+# Sanja Malović
+
+Frontend Tech Lead · Senior Software Engineer  
+Scaling SaaS products with a full-stack mindset.
 
 ---
 
-## 🔧 Core Competencies
+I work where frontend architecture, performance, and product growth intersect.
 
-- **Frontend:** Vue · Nuxt · React · Next.js · Tailwind · Zustand / Context  
-- **Backend:** Laravel · Node.js · NestJS · PostgreSQL / MySQL  
-- **Infrastructure & Deployment:** Vercel · Railway · Supabase · Cloudflare R2 · Docker  
-- **Mobile:** React Native, Flutter (in progress)  
-- **Automation / Scripting:** Python — scrapers, bots, data pipelines, integrations with APIs  
+Over time, my role evolved from feature implementation to technical ownership — reviewing code quality, mentoring developers, and bringing structure when systems grow complex.
+
+I focus on clarity, maintainability, and long-term stability.
 
 ---
 
-## 🚀 What I’m Working On
+## What I Do
 
-- **Multi-tenant SaaS platform** for online stores — stable architecture with domain-based routing, separate admin + storefront frontends.  
-- **Real-time chat module (Next.js + Socket.IO)** — extendable support chat for web apps / SaaS.  
-- **Slovenian word-game mobile app** — React Native + backend, with user tracking, leaderboards, optimized for performance and UX.  
-- **Automated content & data workflows** — scrapers, data validators, AI-powered content generation, data ingestion and processing pipelines.  
-- **Custom tooling & helper libraries** — reusable pieces: form-validation, data fetching, Zod schemas, API clients, automation scripts.  
-
----
-
-## 🔎 Notable Projects
-
-| Project | Description |
-|---------|-------------|
-| **Live Chat Support Demo** | Real-time support/chat application with separate admin & visitor interfaces, built with Next.js + Socket.IO + Zustand + Tailwind. |
-| **Tacko.io** | Personal site where you share more about your background, projects, and expertise. |
-| **(WIP) Word-Game App** | Slovenian word-formation game with user login, stats, and social features — designed for speed, simplicity, and clean UX. |
-| **Automation & Scraper Suite** | Custom Python-based tools: high-performance scrapers, pipelines, data validators — built for reliability and scalability. |
+- Lead frontend architecture in growing SaaS products  
+- Review and elevate code quality across teams  
+- Mentor developers and guide technical decisions  
+- Identify and resolve performance bottlenecks  
+- Bridge frontend and backend when systems become fragile  
 
 ---
 
-## 🛠️ Tech & Tools I Use
+## Current Focus
 
-- **Frontend:** Vue · Nuxt · React · Next.js · TypeScript · Tailwind  
-- **Backend:** Node.js · NestJS · Laravel · PostgreSQL / MySQL  
-- **Mobile:** React Native · Flutter (learning)  
-- **Infra:** Vercel · Railway · Supabase · Cloudflare R2 · Docker / Docker Compose  
-- **Scripting:** Python (async, multiprocessing, scraping, data pipelines)  
-- **Automation:** n8n, custom bots, CI/CD, deployment scripts
+- Frontend architecture  
+- Performance optimization  
+- Technical leadership  
+- Building systems that scale without becoming brittle  
 
 ---
 
-## 🌐 Learn More
+## Contact
 
-For full portfolio, project list and contact info — head over to **[tacko.io](https://tacko.io)**.
+- 🌐 [tacko.io](https://tacko.io)  
+- 💼 [LinkedIn](https://www.linkedin.com/in/sanja-malovi%C4%87-034519184/)  
+- 📫 [sanja.malovic2@gmail.com](mailto:sanja.malovic2@gmail.com)
+
+---
+
+> I value ownership, technical clarity, and systems that remain stable as they grow.
