@@ -35,7 +35,7 @@ I focus on clarity, maintainability, and long-term stability.
 ## Contact
 
 - 🌐 [tacko.io](https://tacko.io)  
-- 💼 [LinkedIn](https://www.linkedin.com/in/sanja-malovi%C4%87-034519184/)  
+- 💼 [LinkedIn](https://www.linkedin.com/in/unjica/)  
 - 📫 [sanja.malovic2@gmail.com](mailto:sanja.malovic2@gmail.com)
 
 ---
