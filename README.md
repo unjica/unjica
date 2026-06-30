@@ -1,26 +1,29 @@
 ![Sanja Malović — Full-Stack Engineer](./assets/sanja-malovic-banner.png)
 
+Building products from idea to production.
+
+Open Source • SaaS • Developer Tools
+
 Senior Full-Stack Engineer passionate about building scalable SaaS products, developer tools, and modern web applications.
 
 I have 5+ years of experience building production software across the full stack using React, TypeScript, Node.js, Next.js, NestJS, and PostgreSQL. I enjoy taking products from idea to production, solving complex technical problems, and building software that delivers real value.
 
 ---
 
-## 🚀 What I'm working on
+## What I'm working on
 
-### Telemetry Tracker
-An open-source observability platform for modern applications.
+🚀 **Telemetry Tracker**
 
-Features include:
-- Error Tracking
-- Event Analytics
-- Session Tracking
-- Multi-tenant Organizations
-- API Keys
-- Custom SDKs
-- Self-hosted & Cloud deployments
+Open-source observability platform with custom SDKs, multi-tenant architecture, analytics, authentication, and self-hosted deployments.
 
-🔗 https://telemetry-tracker.tacko.io
+🌐 Website  
+https://telemetry-tracker.tacko.io
+
+📦 Repository  
+https://github.com/Telemetry-Tracker/telemetry-tracker
+
+📖 Documentation  
+https://telemetry-tracker.tacko.io/docs
 
 ---
 
@@ -91,23 +94,12 @@ Worked on one of the world's leading fishing platforms, building scalable fronte
 
 AI is part of my daily engineering workflow.
 
-I regularly use:
-- Cursor
-- Claude Code
-- GitHub Copilot
-- ChatGPT
-
-for architecture discussions, implementation, debugging, testing, documentation, and code reviews.
+Daily tools: Cursor • Claude Code • GitHub Copilot • ChatGPT — for architecture discussions, implementation, debugging, testing, documentation, and code reviews.
 
 ---
 
-## 🌍 Let's connect
+## Contact
 
-🌐 Portfolio  
-https://tacko.io
-
-💼 LinkedIn  
-https://linkedin.com/in/unjica
-
-📧 Email  
-sanja.malovic2@gmail.com
+Portfolio → [tacko.io](https://tacko.io)  
+LinkedIn → [linkedin.com/in/unjica](https://linkedin.com/in/unjica)  
+Email → sanja.malovic2@gmail.com
