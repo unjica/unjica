@@ -1,43 +1,94 @@
-# Sanja Malović
+# Hi, I'm Sanja 👋
 
-Frontend Tech Lead · Senior Software Engineer  
-Scaling SaaS products with a full-stack mindset.
+Senior Full-Stack Engineer passionate about building scalable SaaS products, developer tools, and modern web applications.
 
----
-
-I work where frontend architecture, performance, and product growth intersect.
-
-Over time, my role evolved from feature implementation to technical ownership — reviewing code quality, mentoring developers, and bringing structure when systems grow complex.
-
-I focus on clarity, maintainability, and long-term stability.
+I have 5+ years of experience building production software across the full stack using React, TypeScript, Node.js, Next.js, NestJS, and PostgreSQL. I enjoy taking products from idea to production, solving complex technical problems, and building software that delivers real value.
 
 ---
 
-## What I Do
+## 🚀 What I'm working on
 
-- Lead frontend architecture in growing SaaS products  
-- Review and elevate code quality across teams  
-- Mentor developers and guide technical decisions  
-- Identify and resolve performance bottlenecks  
-- Bridge frontend and backend when systems become fragile  
+### Telemetry Tracker
+An open-source observability platform for modern applications.
 
----
+Features include:
+- Error Tracking
+- Event Analytics
+- Session Tracking
+- Multi-tenant Organizations
+- API Keys
+- Custom SDKs
+- Self-hosted & Cloud deployments
 
-## Current Focus
-
-- Frontend architecture  
-- Performance optimization  
-- Technical leadership  
-- Building systems that scale without becoming brittle  
-
----
-
-## Contact
-
-- 🌐 [tacko.io](https://tacko.io)  
-- 💼 [LinkedIn](https://www.linkedin.com/in/unjica/)  
-- 📫 [sanja.malovic2@gmail.com](mailto:sanja.malovic2@gmail.com)
+🔗 https://telemetry-tracker.tacko.io
 
 ---
 
-> I value ownership, technical clarity, and systems that remain stable as they grow.
+## 🛠 Tech Stack
+
+### Frontend
+- React
+- Next.js
+- Vue.js
+- Nuxt.js
+- React Native
+- TypeScript
+- Tailwind CSS
+
+### Backend
+- Node.js
+- NestJS
+- Fastify
+- REST APIs
+- GraphQL
+
+### Databases
+- PostgreSQL
+- Prisma
+
+### Infrastructure
+- Docker
+- Railway
+- Vercel
+- Cloudflare
+- GitHub Actions
+
+---
+
+## 📌 Featured Projects
+
+### Telemetry Tracker
+Open-source observability platform built from scratch featuring custom SDKs, error tracking, analytics, authentication, RBAC, and multi-tenant architecture.
+
+### Growthflicks
+Frontend Tech Lead on a production SaaS platform, leading frontend architecture, mentoring engineers, improving performance, and collaborating closely with backend teams.
+
+### FishingPoints
+Worked on one of the world's leading fishing platforms, building scalable frontend applications and an SEO platform powering over **30 million** dynamically generated pages.
+
+---
+
+## 🤖 AI-assisted Development
+
+AI is part of my daily engineering workflow.
+
+I regularly use:
+- Cursor
+- Claude Code
+- GitHub Copilot
+- ChatGPT
+
+for architecture discussions, implementation, debugging, testing, documentation, and code reviews.
+
+---
+
+## 🌍 Let's connect
+
+🌐 Portfolio  
+https://tacko.io
+
+💼 LinkedIn  
+https://linkedin.com/in/unjica
+
+📧 Email  
+sanja.malovic2@gmail.com
