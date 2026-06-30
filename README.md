@@ -4,6 +4,8 @@ Building products from idea to production.
 
 Open Source • SaaS • Developer Tools
 
+---
+
 Senior Full-Stack Engineer passionate about building scalable SaaS products, developer tools, and modern web applications.
 
 I have 5+ years of experience building production software across the full stack using React, TypeScript, Node.js, Next.js, NestJS, and PostgreSQL. I enjoy taking products from idea to production, solving complex technical problems, and building software that delivers real value.
@@ -16,14 +18,9 @@ I have 5+ years of experience building production software across the full stack
 
 Open-source observability platform with custom SDKs, multi-tenant architecture, analytics, authentication, and self-hosted deployments.
 
-🌐 Website  
-https://telemetry-tracker.tacko.io
-
-📦 Repository  
-https://github.com/Telemetry-Tracker/telemetry-tracker
-
-📖 Documentation  
-https://telemetry-tracker.tacko.io/docs
+Website → <a href="https://telemetry-tracker.tacko.io" target="_blank" rel="noopener noreferrer">telemetry-tracker.tacko.io</a>  
+Repository → <a href="https://github.com/Telemetry-Tracker/telemetry-tracker" target="_blank" rel="noopener noreferrer">github.com/Telemetry-Tracker/telemetry-tracker</a>  
+Documentation → <a href="https://telemetry-tracker.tacko.io/docs" target="_blank" rel="noopener noreferrer">telemetry-tracker.tacko.io/docs</a>
 
 ---
 
@@ -100,6 +97,6 @@ Daily tools: Cursor • Claude Code • GitHub Copilot • ChatGPT — for archi
 
 ## Contact
 
-Portfolio → [tacko.io](https://tacko.io)  
-LinkedIn → [linkedin.com/in/unjica](https://linkedin.com/in/unjica)  
-Email → sanja.malovic2@gmail.com
+Portfolio → <a href="https://tacko.io" target="_blank" rel="noopener noreferrer">tacko.io</a>  
+LinkedIn → <a href="https://linkedin.com/in/unjica" target="_blank" rel="noopener noreferrer">linkedin.com/in/unjica</a>  
+Email → <a href="mailto:sanja.malovic2@gmail.com" target="_blank" rel="noopener noreferrer">sanja.malovic2@gmail.com</a>
