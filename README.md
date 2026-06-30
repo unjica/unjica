@@ -1,4 +1,4 @@
-# Hi, I'm Sanja 👋
+![Sanja Malović — Full-Stack Engineer](./assets/sanja-malovic-banner.png)
 
 Senior Full-Stack Engineer passionate about building scalable SaaS products, developer tools, and modern web applications.
 
