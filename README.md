@@ -8,7 +8,19 @@ AI-assisted engineering • Product ownership • Developer tooling
 
 ---
 
-Senior Full-Stack Engineer passionate about building scalable SaaS products, developer tools, and modern web applications.
+Senior Full-Stack Engineer / Frontend Tech Lead with 5+ years of
+
+experience building production software.
+
+I enjoy taking products from idea to production – designing
+
+architecture, building scalable frontend systems, collaborating across
+
+the stack, and delivering reliable software that creates real value.
+
+My work combines frontend technical leadership, product ownership,
+
+AI-assisted engineering, and modern SaaS development.
 
 I have 5+ years of experience building production software across the full stack using React, TypeScript, Node.js, Next.js, NestJS, and PostgreSQL. I enjoy taking products from idea to production, solving complex technical problems, and building software that delivers real value.
 
