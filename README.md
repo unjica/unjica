@@ -1,28 +1,48 @@
-![Sanja Malović — Full-Stack Engineer](./assets/sanja-malovic-banner.png)
-
-Building scalable SaaS products from architecture to production.
+![Sanja Malović — Senior Full-Stack Engineer / Frontend Tech Lead](./assets/sanja-malovic-banner.png)
 
 Senior Full-Stack Engineer / Frontend Tech Lead
 
-AI-assisted engineering • Product ownership • Developer tooling
+Building scalable SaaS products from architecture to production.
+
+AI-assisted engineering • Product ownership • Technical leadership • Developer tooling
 
 ---
 
 Senior Full-Stack Engineer / Frontend Tech Lead with 5+ years of experience building production software.
 
-I enjoy taking products from idea to production – designing architecture, building scalable frontend systems, collaborating across the stack, and delivering reliable software that creates real value.
+I build products from idea to production – designing architecture, building scalable systems, collaborating across the stack, and delivering reliable software that creates real value.
 
 My work combines frontend technical leadership, product ownership, AI-assisted engineering, and modern SaaS development.
 
 ---
 
+## How I work
+
+I contribute across architecture, product decisions, technical leadership, mentoring, and production delivery.
+
+My favorite projects usually sit at the intersection of:
+
+- frontend technical leadership
+
+- product ownership
+
+- AI-assisted engineering
+
+- developer tooling
+
+- modern SaaS architecture
+
+- emerging technologies
+
+I learn quickly, adapt rapidly, and continuously explore emerging technologies that create real value for products and engineering teams.
+
+---
+
 ## AI-native Engineering
 
-AI is part of my daily engineering workflow.
+AI is an integral part of my engineering workflow.
 
-I actively use Cursor, Claude Code, ChatGPT, Codex, and GitHub Copilot
-
-for:
+I actively use Cursor, Claude Code, ChatGPT, Codex, and GitHub Copilot for:
 
 - architecture exploration
 
@@ -38,9 +58,7 @@ for:
 
 - rapid prototyping
 
-I treat AI as a force multiplier while keeping correctness,
-
-maintainability, and engineering judgement human-owned.
+I treat AI as a force multiplier while keeping correctness, maintainability, and engineering judgement human-owned.
 
 ---
 
@@ -64,7 +82,7 @@ Open-source observability platform built end-to-end featuring:
 
 - Production-ready developer tooling
 
-Designed, implemented, documented, and maintained independently.
+Designed, implemented, deployed, documented, and maintained independently.
 
 Website → <a href="https://telemetry-tracker.tacko.io" target="_blank" rel="noopener noreferrer">telemetry-tracker.tacko.io</a>  
 Repository → <a href="https://github.com/Telemetry-Tracker/telemetry-tracker" target="_blank" rel="noopener noreferrer">github.com/Telemetry-Tracker/telemetry-tracker</a>  
@@ -82,11 +100,9 @@ Documentation → <a href="https://telemetry-tracker.tacko.io/docs" target="_bla
 
 - Product architecture and technical leadership
 
-- Exploring emerging technologies and turning ideas into production software
-
 ---
 
-## 📌 Featured Projects
+## 📌 Selected Work
 
 ### Telemetry Tracker
 Open-source observability platform built from scratch featuring custom SDKs, error tracking, analytics, authentication, RBAC, and multi-tenant architecture.
@@ -97,13 +113,11 @@ Frontend Tech Lead on a production SaaS platform, leading frontend architecture,
 ### FishingPoints
 Worked on one of the world's leading fishing platforms, building scalable frontend applications and an SEO platform powering over **30 million** dynamically generated pages.
 
----
+### Besedolov
+Cross-platform word game built with React Native featuring XP progression, achievements, leaderboards, authentication, and mobile-first gameplay across iOS, Android, and the web.
 
-## 🤖 AI-assisted Development
-
-AI is part of my daily engineering workflow.
-
-Daily tools: Cursor • Claude Code • GitHub Copilot • ChatGPT — for architecture discussions, implementation, debugging, testing, documentation, and code reviews.
+### Unjica
+AI-assisted publishing platform exploring automated content generation, SEO optimization, and scalable publishing workflows.
 
 ---
 
