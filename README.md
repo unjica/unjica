@@ -78,6 +78,20 @@ Documentation → <a href="https://telemetry-tracker.tacko.io/docs" target="_bla
 
 ---
 
+## Current focus
+
+- AI-native engineering workflows
+
+- Developer tooling and observability
+
+- Full-stack SaaS products
+
+- Product architecture and technical leadership
+
+- Exploring emerging technologies and turning ideas into production software
+
+---
+
 ## 📌 Featured Projects
 
 ### Telemetry Tracker
