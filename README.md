@@ -1,8 +1,10 @@
 ![Sanja Malović — Full-Stack Engineer](./assets/sanja-malovic-banner.png)
 
-Building products from idea to production.
+Building scalable SaaS products from architecture to production.
 
-Open Source • SaaS • Developer Tools
+Senior Full-Stack Engineer / Frontend Tech Lead
+
+AI-assisted engineering • Product ownership • Developer tooling
 
 ---
 
