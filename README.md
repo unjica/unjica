@@ -16,65 +16,59 @@ My work combines frontend technical leadership, product ownership, AI-assisted e
 
 ---
 
+## AI-native Engineering
+
+AI is part of my daily engineering workflow.
+
+I actively use Cursor, Claude Code, ChatGPT, Codex, and GitHub Copilot
+
+for:
+
+- architecture exploration
+
+- implementation
+
+- debugging
+
+- testing
+
+- documentation
+
+- code reviews
+
+- rapid prototyping
+
+I treat AI as a force multiplier while keeping correctness,
+
+maintainability, and engineering judgement human-owned.
+
+---
+
 ## What I'm working on
 
 🚀 **Telemetry Tracker**
 
-Open-source observability platform with custom SDKs, multi-tenant architecture, analytics, authentication, and self-hosted deployments.
+Open-source observability platform built end-to-end featuring:
+
+- Multi-tenant SaaS architecture
+
+- Custom telemetry SDKs
+
+- Usage metering and API key management
+
+- Authentication and organization management
+
+- Full-stack dashboard applications
+
+- Dockerized deployments and CI/CD
+
+- Production-ready developer tooling
+
+Designed, implemented, documented, and maintained independently.
 
 Website → <a href="https://telemetry-tracker.tacko.io" target="_blank" rel="noopener noreferrer">telemetry-tracker.tacko.io</a>  
 Repository → <a href="https://github.com/Telemetry-Tracker/telemetry-tracker" target="_blank" rel="noopener noreferrer">github.com/Telemetry-Tracker/telemetry-tracker</a>  
 Documentation → <a href="https://telemetry-tracker.tacko.io/docs" target="_blank" rel="noopener noreferrer">telemetry-tracker.tacko.io/docs</a>
-
----
-
-## 🛠 Tech Stack
-
-<table>
-<tr>
-<td valign="top" width="50%">
-
-**Frontend**  
-![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB)
-![Next.js](https://img.shields.io/badge/Next.js-000?style=flat-square&logo=nextdotjs&logoColor=white)
-![Vue.js](https://img.shields.io/badge/Vue.js-4FC08D?style=flat-square&logo=vuedotjs&logoColor=white)
-![Nuxt.js](https://img.shields.io/badge/Nuxt.js-00DC82?style=flat-square&logo=nuxtdotjs&logoColor=white)
-![React Native](https://img.shields.io/badge/React_Native-20232A?style=flat-square&logo=react&logoColor=61DAFB)
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
-
-</td>
-<td valign="top" width="50%">
-
-**Backend**  
-![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white)
-![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=flat-square&logo=nestjs&logoColor=white)
-![Fastify](https://img.shields.io/badge/Fastify-000?style=flat-square&logo=fastify&logoColor=white)
-![REST](https://img.shields.io/badge/REST-555?style=flat-square)
-![GraphQL](https://img.shields.io/badge/GraphQL-E10098?style=flat-square&logo=graphql&logoColor=white)
-
-</td>
-</tr>
-<tr>
-<td valign="top" width="50%">
-
-**Data**  
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white)
-![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=flat-square&logo=prisma&logoColor=white)
-
-</td>
-<td valign="top" width="50%">
-
-**Infra**  
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
-![Railway](https://img.shields.io/badge/Railway-0B0D0E?style=flat-square&logo=railway&logoColor=white)
-![Vercel](https://img.shields.io/badge/Vercel-000?style=flat-square&logo=vercel&logoColor=white)
-![Cloudflare](https://img.shields.io/badge/Cloudflare-F38020?style=flat-square&logo=cloudflare&logoColor=white)
-![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white)
-
-</td>
-</tr>
-</table>
 
 ---
 
