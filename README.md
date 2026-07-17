@@ -1,4 +1,4 @@
-![Sanja Malović — Senior Full-Stack Engineer / Frontend Tech Lead](./assets/sanja-malovic-banner.png)
+![Sanja Malović — Senior Full-Stack Engineer / Frontend Tech Lead](./assets/sanja-malovic-banner.jpeg)
 
 Senior Full-Stack Engineer / Frontend Tech Lead
 
