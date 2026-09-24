@@ -1,6 +1,4 @@
-![Sanja Malović — Senior Full-Stack Engineer / Frontend Tech Lead](./assets/sanja-malovic-banner.jpeg)
-
-Full-Stack Engineer / Frontend Tech Lead
+Software Engineer
 
 Building scalable SaaS products from architecture to production.
 
