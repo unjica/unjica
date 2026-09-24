@@ -84,7 +84,7 @@ Designed, implemented, deployed, documented, and maintained independently.
 
 Website → <a href="https://telemetry-tracker.com" target="_blank" rel="noopener noreferrer">telemetry-tracker.com</a>  
 Repository → <a href="https://github.com/Telemetry-Tracker/telemetry-tracker" target="_blank" rel="noopener noreferrer">github.com/Telemetry-Tracker/telemetry-tracker</a>  
-Documentation → <a href="https://telemetry-tracker.tacko.io/docs" target="_blank" rel="noopener noreferrer">telemetry-tracker.tacko.io/docs</a>
+Documentation → <a href="https://telemetry-tracker.com/docs" target="_blank" rel="noopener noreferrer">telemetry-tracker.com/docs</a>
 
 ---
 
