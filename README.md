@@ -1,4 +1,4 @@
-Software Engineer
+Senior Full-Stack Engineer · Product & AI
 
 Building scalable SaaS products from architecture to production.
 
