@@ -1,126 +1,130 @@
-Senior Full-Stack Engineer · Product & AI
+# Hey, I'm Sanja 👋
 
-Building scalable SaaS products from architecture to production.
+**Senior Full-Stack Engineer · Product & AI**
 
-AI-assisted engineering • Product ownership • Technical leadership • Developer tooling
+*I make things work. Eventually. Probably. 🙃*
 
----
+I build software from idea to production, working across frontend, backend, architecture, and everything in between.
 
-Senior Full-Stack Engineer / Frontend Tech Lead with 5+ years of experience building production software.
+I like finding simple solutions to complex problems. Occasionally, the other way around.
 
-I build products from idea to production – designing architecture, building scalable systems, collaborating across the stack, and delivering reliable software that creates real value.
+Currently building open-source tools, SaaS products, and occasionally things nobody asked for.
 
-My work combines frontend technical leadership, product ownership, AI-assisted engineering, and modern SaaS development.
-
----
-
-## How I work
-
-I contribute across architecture, product decisions, technical leadership, mentoring, and production delivery.
-
-My favorite projects usually sit at the intersection of:
-
-- frontend technical leadership
-
-- product ownership
-
-- AI-assisted engineering
-
-- developer tooling
-
-- modern SaaS architecture
-
-- emerging technologies
-
-I learn quickly, adapt rapidly, and continuously explore emerging technologies that create real value for products and engineering teams.
+**Open to interesting opportunities and collaborations.**
 
 ---
 
-## AI-native Engineering
+## 👩‍💻 A little about me
 
-AI is an integral part of my engineering workflow.
+- 💻 5+ years of experience building production software.
+- 🛠️ Full-stack development with TypeScript, React, Vue, Node.js, and PostgreSQL.
+- 🚀 I enjoy taking ideas from concept to production.
+- 🤖 AI is part of my daily development workflow.
+- ⚡ I automate things to save time. How much time? Let's not get into that.
+- 🐛 I write bugs. Occasionally, I fix them too.
 
-I actively use Cursor, Claude Code, ChatGPT, Codex, and GitHub Copilot for:
-
-- architecture exploration
-
-- implementation
-
-- debugging
-
-- testing
-
-- documentation
-
-- code reviews
-
-- rapid prototyping
-
-I treat AI as a force multiplier while keeping correctness, maintainability, and engineering judgement human-owned.
+Somewhere between frontend, backend, SaaS, and AI, I occasionally finish a project before starting another one.
 
 ---
 
-## What I'm working on
+## 🚀 What I'm building
 
-🚀 **Telemetry Tracker**
+### 🔭 Telemetry Tracker
 
-Open-source observability platform built end-to-end featuring:
+**Open-source observability for developers.**
 
-- Multi-tenant SaaS architecture
+Because apparently, writing bugs wasn't enough — I also wanted to track them.
 
-- Custom telemetry SDKs
+Telemetry Tracker is an open-source observability platform I've built from scratch.
 
-- Usage metering and API key management
+It includes:
 
-- Authentication and organization management
+- Error tracking and monitoring
+- Custom SDKs for JavaScript, React, Next.js, Node.js, and React Native
+- Sessions, events, and performance monitoring
+- Multi-tenant architecture with organizations and projects
+- API keys, usage limits, and subscription billing
+- Alerts, webhooks, and integrations
+- Self-hosting with Docker
+- CI/CD and production infrastructure
 
-- Full-stack dashboard applications
+From architecture and development to deployment, documentation, and maintenance — it's a one-person operation.
 
-- Dockerized deployments and CI/CD
-
-- Production-ready developer tooling
-
-Designed, implemented, deployed, documented, and maintained independently.
-
-Website → <a href="https://telemetry-tracker.com" target="_blank" rel="noopener noreferrer">telemetry-tracker.com</a>  
-Repository → <a href="https://github.com/Telemetry-Tracker/telemetry-tracker" target="_blank" rel="noopener noreferrer">github.com/Telemetry-Tracker/telemetry-tracker</a>  
-Documentation → <a href="https://telemetry-tracker.com/docs" target="_blank" rel="noopener noreferrer">telemetry-tracker.com/docs</a>
-
----
-
-## Current focus
-
-- AI-native engineering workflows
-
-- Developer tooling and observability
-
-- Full-stack SaaS products
-
-- Product architecture and technical leadership
+🌐 [Website](https://telemetry-tracker.com)  
+💻 [GitHub Repository](https://github.com/Telemetry-Tracker/telemetry-tracker)  
+📚 [Documentation](https://telemetry-tracker.com/docs)
 
 ---
 
-## 📌 Selected Work
+## 🛠️ My toolbox
 
-### Telemetry Tracker
-Open-source observability platform built from scratch featuring custom SDKs, error tracking, analytics, authentication, RBAC, and multi-tenant architecture.
+**Frontend**  
+TypeScript · JavaScript · React · Next.js · Vue · Nuxt · React Native
 
-### Growthflicks
-Frontend Tech Lead on a production SaaS platform, leading frontend architecture, mentoring engineers, improving performance, and collaborating closely with backend teams.
+**Backend & Databases**  
+Node.js · PostgreSQL · Prisma · REST APIs
 
-### FishingPoints
-Worked on one of the world's leading fishing platforms, building scalable frontend applications and an SEO platform powering over **30 million** dynamically generated pages.
+**Infrastructure & Tools**  
+Docker · GitHub Actions · Railway · CI/CD
 
-### Besedolov
-Cross-platform word game built with React Native featuring XP progression, achievements, leaderboards, authentication, and mobile-first gameplay across iOS, Android, and the web.
+**AI-assisted Development**  
+Cursor · Claude Code · ChatGPT · Codex · GitHub Copilot
 
-### Unjica
-AI-assisted publishing platform exploring automated content generation, SEO optimization, and scalable publishing workflows.
+I use whatever gets the job done. Sometimes that means learning something new at 2 AM.
 
 ---
 
-## Contact
+## 📌 Selected projects
 
-Portfolio → <a href="https://tacko.io" target="_blank" rel="noopener noreferrer">tacko.io</a>  
-LinkedIn → <a href="https://linkedin.com/in/unjica" target="_blank" rel="noopener noreferrer">linkedin.com/in/unjica</a>  
-Email → <a href="mailto:sanja.malovic2@gmail.com" target="_blank" rel="noopener noreferrer">sanja.malovic2@gmail.com</a>
+### 🚀 Telemetry Tracker
+Open-source observability platform featuring error tracking, analytics, performance monitoring, custom SDKs, and multi-tenant SaaS architecture.
+
+[Explore Telemetry Tracker →](https://github.com/Telemetry-Tracker/telemetry-tracker)
+
+### 📈 Growthflicks
+Worked as Frontend Tech Lead on a production SaaS platform.
+
+Focused on frontend architecture, performance, mentoring, and collaboration across engineering teams.
+
+### 🎣 FishingPoints
+Worked on a large-scale fishing platform using Vue, Nuxt, Strapi, Hugo, and Chart.js.
+
+Contributed to frontend development and an SEO platform powering over **30 million dynamically generated pages**.
+
+### 🔤 Besedolov
+A cross-platform Slovenian word game built with React Native.
+
+Features daily challenges, achievements, XP progression, leaderboards, and real-time competition.
+
+Available on iOS, Android, and the web.
+
+### 🤖 Unjica
+AI-assisted publishing platform exploring automated content generation, SEO optimization, and publishing workflows.
+
+---
+
+## 🤖 AI & automation
+
+I'm particularly interested in finding ways to make development faster, smarter, and less repetitive.
+
+I use AI tools throughout my workflow — from exploring ideas and architecture to implementation, testing, debugging, and documentation.
+
+I also enjoy building automated workflows that handle repetitive tasks.
+
+**Why spend five minutes doing something manually when you can spend five hours automating it?**
+
+---
+
+## 💬 Let's connect
+
+I'm always open to interesting opportunities, collaborations, and projects worth building.
+
+I promise to ask at least one question before saying "sure, why not?"
+
+🌐 **Portfolio:** [tacko.io](https://tacko.io)
+💼 **LinkedIn:** [Connect with me](https://linkedin.com/in/sanja-malovic)
+📧 **Email:** [Get in touch](mailto:info@unjica.com)
+
+---
+
+*Still building. Still debugging. Still pretending this was all part of the plan.* 🙃
