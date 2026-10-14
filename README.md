@@ -120,7 +120,9 @@ I'm always open to interesting opportunities, collaborations, and projects worth
 I promise to ask at least one question before saying "sure, why not?"
 
 🌐 **Portfolio:** [tacko.io](https://tacko.io)
+
 💼 **LinkedIn:** [Connect with me](https://linkedin.com/in/sanja-malovic)
+
 📧 **Email:** [Get in touch](mailto:info@unjica.com)
 
 ---
