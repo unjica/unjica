@@ -2,8 +2,6 @@
 
 **Senior Full-Stack Engineer · Product & AI**
 
-*I make things work. Eventually. Probably. 🙃*
-
 I build software from idea to production, working across frontend, backend, architecture, and everything in between.
 
 I like finding simple solutions to complex problems. Occasionally, the other way around.
