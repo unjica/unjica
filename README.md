@@ -52,6 +52,8 @@ From architecture and development to deployment, documentation, and maintenance 
 💻 [GitHub Repository](https://github.com/Telemetry-Tracker/telemetry-tracker)  
 📚 [Documentation](https://telemetry-tracker.com/docs)
 
+[![XERJ Corpus Hub contributor](https://hub.xerj.org/contributors/unjica/badge.svg)](https://hub.xerj.org/contributors/unjica)
+
 ---
 
 ## 🛠️ My toolbox
