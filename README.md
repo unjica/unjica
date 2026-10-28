@@ -56,6 +56,18 @@ From architecture and development to deployment, documentation, and maintenance 
 
 ---
 
+## 🧩 Open-source contributions
+
+Bugs I didn't write, but fixed anyway. Upstream contributions to open-source projects:
+
+- **TanStack Router** — [fix(router-core): handle skipped view transition promises](https://github.com/TanStack/router/pull/8802) *(in review)*
+- **Better Auth** — [fix(oauth): keep database OAuth state valid during the DST fall-back hour](https://github.com/better-auth/better-auth/pull/12047) *(in review)*. Yes, a bug that only exists one hour a year.
+- **MSW / interceptors** — [root-caused unflushed stream response headers](https://github.com/mswjs/interceptors/issues/888) and offered a tested fix
+
+[See all my upstream PRs →](https://github.com/pulls?q=is%3Apr+author%3Aunjica+-user%3Aunjica+-org%3ATelemetry-Tracker)
+
+---
+
 ## 🛠️ My toolbox
 
 **Frontend**  
