@@ -93,6 +93,11 @@ Open-source observability platform featuring error tracking, analytics, performa
 
 [Explore Telemetry Tracker →](https://github.com/Telemetry-Tracker/telemetry-tracker)
 
+### 🧹 pii-scrub
+Zero-dependency, best-effort scrubbing of emails, tokens, API keys and card numbers from logs, telemetry payloads and `Error` objects. TypeScript, ESM + CJS, ReDoS-tested.
+
+[npm: @tacko/pii-scrub](https://www.npmjs.com/package/@tacko/pii-scrub) · [GitHub](https://github.com/unjica/pii-scrub)
+
 ### 📈 Growthflicks
 Worked as Frontend Tech Lead on a production SaaS platform.
 
