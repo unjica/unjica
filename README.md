@@ -61,8 +61,9 @@ From architecture and development to deployment, documentation, and maintenance 
 Bugs I didn't write, but fixed anyway. Upstream contributions to open-source projects:
 
 - **Vite (`@vitejs/plugin-react`)** — Contributed a fix so `reactCompilerPreset()` works with Babel's `parallel: true` processing (the preset is referenced by module path so it can be sent to worker threads). Shipped in [`@vitejs/plugin-react` v6.3.0](https://github.com/vitejs/vite-plugin-react/releases/tag/plugin-react%406.3.0). [Merged PR →](https://github.com/vitejs/vite-plugin-react/pull/1549)
+- **ocache (UnJS)** — Contributed a fix so a background SWR refresh that throws keeps the last successful cached entry, bounded by `staleMaxAge` and the storage TTL, matching Nitro 2. Client errors such as 404 still evict. Shipped in [ocache v0.3.2](https://github.com/unjs/ocache/releases/tag/v0.3.2). [Merged PR →](https://github.com/unjs/ocache/pull/113)
+- **Better Auth** — Co-authored a fix so OAuth sign-in does not fail with `state_mismatch` during the daylight saving time fall-back hour when OAuth state is stored in the database. Shipped in [better-auth v1.7.19](https://github.com/better-auth/better-auth/releases/tag/v1.7.19). [Merged PR →](https://github.com/better-auth/better-auth/pull/12320). Yes, a bug that only exists one hour a year.
 - **TanStack Router** — [fix(router-core): handle skipped view transition promises](https://github.com/TanStack/router/pull/8802) *(in review)*
-- **Better Auth** — [fix(oauth): keep database OAuth state valid during the DST fall-back hour](https://github.com/better-auth/better-auth/pull/12047) *(closed; approach superseded upstream)*. Yes, a bug that only exists one hour a year.
 - **MSW / interceptors** — [root-caused unflushed stream response headers](https://github.com/mswjs/interceptors/issues/888) and offered a tested fix
 
 [See all my upstream PRs →](https://github.com/pulls?q=is%3Apr+author%3Aunjica+-user%3Aunjica+-org%3ATelemetry-Tracker)
